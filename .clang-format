@@ -1,0 +1,26 @@
+---
+AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: WithoutElse
+SpaceBeforeParensOptions: {}
+SpaceBeforeParens: Never
+BreakConstructorInitializers: BeforeColon
+AllowShortFunctionsOnASingleLine: InlineOnly
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignArrayOfStructures: Right
+AlignAfterOpenBracket: Align
+BinPackParameters: true
+AlignConsecutiveDeclarations:
+  Enabled: false
+AllowShortCaseLabelsOnASingleLine: true
+ReflowComments: true
+AlignTrailingComments: {}
+SpaceAfterCStyleCast: false
+SortIncludes: Never
+RemoveSemicolon: true
+RemoveParentheses: MultipleParentheses
+TabWidth: 4
+UseTab: Always
+IndentWidth: 4
+MaxEmptyLinesToKeep: 2
+ColumnLimit: 120
