@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-std=c++11 -g -O0
 
 SOURCES=\
-		  main.cpp
+		  src/main.cpp
 NAME=gb-emu
 
 build:
