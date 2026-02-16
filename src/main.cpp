@@ -1,9 +1,8 @@
-#include "cpu.hpp"
-#include "catridge.hpp"
+#include "gameboy.hpp"
 
 int main(void) {
-	Cpu cpu;
-	Catridge catridge("../gb-roms/tetris.gb");
-	catridge.debug();
+	GameBoy gb("../gb-roms/tetris.gb");
+	gb.start();
+
 	return 0;
 }

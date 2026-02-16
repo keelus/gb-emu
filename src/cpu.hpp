@@ -1,9 +1,11 @@
 #pragma once
+
+#include "memory.hpp"
 #include <cstdint>
 
 class Cpu {
   public:
-	Cpu() {
+	Cpu(Memory &memory) : m_memory(memory) {
 		m_A = 0;
 		m_F = 0;
 
@@ -17,7 +19,9 @@ class Cpu {
 		m_L = 0;
 
 		m_SP = 0;
-		m_PC = 0;
+		m_PC = 0x100;
+
+		m_halted = false;
 	}
 
 	enum class Flag : uint8_t {
@@ -55,10 +59,16 @@ class Cpu {
 	uint16_t SP(void) const { return m_SP; }
 	uint16_t PC(void) const { return m_PC; }
 
+	int executeInstruction(void);
+
   private:
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
 	uint8_t m_D, m_E;
 	uint8_t m_H, m_L;
 	uint16_t m_SP, m_PC;
+
+	bool m_halted;
+
+	Memory &m_memory;
 };
