@@ -16,9 +16,233 @@ int Cpu::executeInstruction(void) {
 	switch(opcode) {
 	case 0x00: // NOP
 		break;
+
+	case 0x02: // LD [BC], A
+		m_memory.write8(BC(), m_A);
+		break;
+	case 0x0A: // LD A, [BC]
+		doLd(m_A, m_memory.read8(BC()));
+		break;
+
+	case 0x12: // LD [DE], A
+		m_memory.write8(DE(), m_A);
+		break;
+	case 0x1A: // LD A, [DE]
+		doLd(m_A, m_memory.read8(DE()));
+		break;
+
+	case 0x22: // LD [HL+], A
+		m_memory.write8(HL(), m_A);
+		incHL();
+		break;
+	case 0x2A: // LD A, [HL+]
+		doLd(m_A, m_memory.read8(HL()));
+		incHL();
+		break;
+
+	case 0x32: // LD [HL-], A
+		m_memory.write8(HL(), m_A);
+		decHL();
+		break;
+	case 0x3A: // LD A, [HL-]
+		doLd(m_A, m_memory.read8(HL()));
+		decHL();
+		break;
+
+	case 0x40: // LD B, B
+		doLd(m_B, m_B);
+		break;
+	case 0x41: // LD B, C
+		doLd(m_B, m_C);
+		break;
+	case 0x42: // LD B, D
+		doLd(m_B, m_D);
+		break;
+	case 0x43: // LD B, E
+		doLd(m_B, m_E);
+		break;
+	case 0x44: // LD B, H
+		doLd(m_B, m_H);
+		break;
+	case 0x45: // LD B, L
+		doLd(m_B, m_L);
+		break;
+	case 0x46: // LD B, [HL]
+		doLd(m_B, m_memory.read8(HL()));
+		break;
+	case 0x47: // LD B, A
+		doLd(m_B, m_A);
+		break;
+	case 0x48: // LD C, B
+		doLd(m_C, m_B);
+		break;
+	case 0x49: // LD C, C
+		doLd(m_C, m_C);
+		break;
+	case 0x4a: // LD C, D
+		doLd(m_C, m_D);
+		break;
+	case 0x4b: // LD C, E
+		doLd(m_C, m_E);
+		break;
+	case 0x4c: // LD C, H
+		doLd(m_C, m_H);
+		break;
+	case 0x4d: // LD C, L
+		doLd(m_C, m_L);
+		break;
+	case 0x4e: // LD C, [HL]
+		doLd(m_C, m_memory.read8(HL()));
+		break;
+	case 0x4f: // LD C, A
+		doLd(m_C, m_A);
+		break;
+	case 0x50: // LD D, B
+		doLd(m_D, m_B);
+		break;
+	case 0x51: // LD D, C
+		doLd(m_D, m_C);
+		break;
+	case 0x52: // LD D, D
+		doLd(m_D, m_D);
+		break;
+	case 0x53: // LD D, E
+		doLd(m_D, m_E);
+		break;
+	case 0x54: // LD D, H
+		doLd(m_D, m_H);
+		break;
+	case 0x55: // LD D, L
+		doLd(m_D, m_L);
+		break;
+	case 0x56: // LD D, [HL]
+		doLd(m_D, m_memory.read8(HL()));
+		break;
+	case 0x57: // LD D, A
+		doLd(m_D, m_A);
+		break;
+	case 0x58: // LD E, B
+		doLd(m_E, m_B);
+		break;
+	case 0x59: // LD E, C
+		doLd(m_E, m_C);
+		break;
+	case 0x5a: // LD E, D
+		doLd(m_E, m_D);
+		break;
+	case 0x5b: // LD E, E
+		doLd(m_E, m_E);
+		break;
+	case 0x5c: // LD E, H
+		doLd(m_E, m_H);
+		break;
+	case 0x5d: // LD E, L
+		doLd(m_E, m_L);
+		break;
+	case 0x5e: // LD E, [HL]
+		doLd(m_E, m_memory.read8(HL()));
+		break;
+	case 0x5f: // LD E, A
+		doLd(m_E, m_A);
+		break;
+	case 0x60: // LD H, B
+		doLd(m_H, m_B);
+		break;
+	case 0x61: // LD H, C
+		doLd(m_H, m_C);
+		break;
+	case 0x62: // LD H, D
+		doLd(m_H, m_D);
+		break;
+	case 0x63: // LD H, E
+		doLd(m_H, m_E);
+		break;
+	case 0x64: // LD H, H
+		doLd(m_H, m_H);
+		break;
+	case 0x65: // LD H, L
+		doLd(m_H, m_L);
+		break;
+	case 0x66: // LD H, [HL]
+		doLd(m_H, m_memory.read8(HL()));
+		break;
+	case 0x67: // LD H, A
+		doLd(m_H, m_A);
+		break;
+	case 0x68: // LD L, B
+		doLd(m_L, m_B);
+		break;
+	case 0x69: // LD L, C
+		doLd(m_L, m_C);
+		break;
+	case 0x6a: // LD L, D
+		doLd(m_L, m_D);
+		break;
+	case 0x6b: // LD L, E
+		doLd(m_L, m_E);
+		break;
+	case 0x6c: // LD L, H
+		doLd(m_L, m_H);
+		break;
+	case 0x6d: // LD L, L
+		doLd(m_L, m_L);
+		break;
+	case 0x6e: // LD L, [HL]
+		doLd(m_L, m_memory.read8(HL()));
+		break;
+	case 0x6f: // LD L, A
+		doLd(m_L, m_A);
+		break;
+	case 0x70: // LD [HL], B
+		m_memory.write8(HL(), m_B);
+		break;
+	case 0x71: // LD [HL], C
+		m_memory.write8(HL(), m_C);
+		break;
+	case 0x72: // LD [HL], D
+		m_memory.write8(HL(), m_D);
+		break;
+	case 0x73: // LD [HL], E
+		m_memory.write8(HL(), m_E);
+		break;
+	case 0x74: // LD [HL], H
+		m_memory.write8(HL(), m_H);
+		break;
+	case 0x75: // LD [HL], L
+		m_memory.write8(HL(), m_L);
+		break;
 	case 0x76: // HALT
 		m_halted = true;
 		break;
+	case 0x77: // LD [HL], A
+		m_memory.write8(HL(), m_A);
+		break;
+	case 0x78: // LD A, B
+		doLd(m_A, m_B);
+		break;
+	case 0x79: // LD A, C
+		doLd(m_A, m_C);
+		break;
+	case 0x7a: // LD A, D
+		doLd(m_A, m_D);
+		break;
+	case 0x7b: // LD A, E
+		doLd(m_A, m_E);
+		break;
+	case 0x7c: // LD A, H
+		doLd(m_A, m_H);
+		break;
+	case 0x7d: // LD A, L
+		doLd(m_A, m_L);
+		break;
+	case 0x7e: // LD A, [HL]
+		doLd(m_A, m_memory.read8(HL()));
+		break;
+	case 0x7f: // LD A, A
+		doLd(m_A, m_A);
+		break;
+
+
 	default: {
 		std::stringstream ss;
 		ss << "Unhandled instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"

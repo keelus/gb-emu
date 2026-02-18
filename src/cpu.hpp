@@ -62,6 +62,19 @@ class Cpu {
 	int executeInstruction(void);
 
   private:
+  	void incHL(void) {
+		uint16_t hl = HL() + 1;
+		m_H = static_cast<uint8_t>(hl >> 8);
+		m_L = static_cast<uint8_t>(hl);
+	}
+	void decHL(void) {
+		uint16_t hl = HL() - 1;
+		m_H = static_cast<uint8_t>(hl >> 8);
+		m_L = static_cast<uint8_t>(hl);
+	}
+
+	void doLd(uint8_t &a, const uint8_t b) { a = b; }
+
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
 	uint8_t m_D, m_E;

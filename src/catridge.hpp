@@ -136,6 +136,8 @@ class Catridge {
 
 	void write8(const uint16_t address, const uint8_t value) { m_data[address] = value; }
 
+	const char *data() const { return m_data; }
+
   private:
-	char m_data[0x4000];
+	char m_data[CATRIDGE_SIZE];
 };
