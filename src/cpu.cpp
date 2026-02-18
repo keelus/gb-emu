@@ -8,7 +8,7 @@
 int Cpu::executeInstruction(void) {
 	if(m_halted) { return 0; }
 
-	uint8_t opcode = m_memory.read8(m_PC);
+	uint8_t opcode = m_memory.read8(m_PC++);
 	std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"
 			  << std::hex << std::setw(4) << std::setfill('0') << int(m_PC) << ": \""
 			  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
@@ -16,37 +16,85 @@ int Cpu::executeInstruction(void) {
 	switch(opcode) {
 	case 0x00: // NOP
 		break;
-
+	case 0x01: // LD BC, imm16
+		m_C = m_memory.read8(m_PC++);
+		m_B = m_memory.read8(m_PC++);
+		break;
 	case 0x02: // LD [BC], A
 		m_memory.write8(BC(), m_A);
 		break;
+	case 0x06: // LD B, imm8
+		doLd(m_B, m_memory.read8(m_PC++));
+		break;
+	case 0x08: { // LD [imm16], SP
+		uint8_t low = m_memory.read8(m_PC++);
+		uint8_t high = m_memory.read8(m_PC++);
+		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		m_memory.write16(address, m_SP);
+		break;
+	}
 	case 0x0A: // LD A, [BC]
 		doLd(m_A, m_memory.read8(BC()));
 		break;
+	case 0x0E: // LD C, imm8
+		doLd(m_C, m_memory.read8(m_PC++));
+		break;
 
+	case 0x11: // LD DE, imm16
+		m_E = m_memory.read8(m_PC++);
+		m_D = m_memory.read8(m_PC++);
+		break;
 	case 0x12: // LD [DE], A
 		m_memory.write8(DE(), m_A);
+		break;
+	case 0x16: // LD D, imm8
+		doLd(m_D, m_memory.read8(m_PC++));
 		break;
 	case 0x1A: // LD A, [DE]
 		doLd(m_A, m_memory.read8(DE()));
 		break;
+	case 0x1E: // LD E, imm8
+		doLd(m_E, m_memory.read8(m_PC++));
+		break;
 
+	case 0x21: // LD HL, imm16
+		m_L = m_memory.read8(m_PC++);
+		m_H = m_memory.read8(m_PC++);
+		break;
 	case 0x22: // LD [HL+], A
 		m_memory.write8(HL(), m_A);
 		incHL();
+		break;
+	case 0x26: // LD H, imm8
+		doLd(m_H, m_memory.read8(m_PC++));
 		break;
 	case 0x2A: // LD A, [HL+]
 		doLd(m_A, m_memory.read8(HL()));
 		incHL();
 		break;
+	case 0x2E: // LD L, imm8
+		doLd(m_L, m_memory.read8(m_PC++));
+		break;
 
+	case 0x31: { // LD SP, imm16
+		uint8_t low = m_memory.read8(m_PC++);
+		uint8_t high = m_memory.read8(m_PC++);
+		m_SP = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		break;
+	}
 	case 0x32: // LD [HL-], A
 		m_memory.write8(HL(), m_A);
 		decHL();
 		break;
+	case 0x36: // LD [HL], imm8
+		m_memory.write8(HL(), m_memory.read8(m_PC++));
+		break;
 	case 0x3A: // LD A, [HL-]
 		doLd(m_A, m_memory.read8(HL()));
 		decHL();
+		break;
+	case 0x3E: // LD A, imm8
+		doLd(m_A, m_memory.read8(m_PC++));
 		break;
 
 	case 0x40: // LD B, B
@@ -242,6 +290,61 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_A);
 		break;
 
+	case 0xE0: { // LDH [imm8], A
+		uint8_t low = m_memory.read8(m_PC++);
+		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
+		m_memory.write8(address, m_A);
+		break;
+	}
+	case 0xE2: { // LDH [C], A
+		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
+		m_memory.write8(address, m_A);
+		break;
+	}
+	case 0xEA: { // LD [imm16], A
+		uint8_t low = m_memory.read8(m_PC++);
+		uint8_t high = m_memory.read8(m_PC++);
+		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		m_memory.write8(address, m_A);
+		break;
+	}
+
+	case 0xF0: { // LDH A, [imm8]
+		uint8_t low = m_memory.read8(m_PC++);
+		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
+		doLd(m_A, m_memory.read8(address));
+		break;
+	}
+	case 0xF2: { // LDH A, [C]
+		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
+		doLd(m_A, m_memory.read8(address));
+		break;
+	}
+	case 0xF8: { // LD HL, SP+e8
+		uint16_t imm8 = static_cast<uint16_t>(m_memory.read8(m_PC++));
+		uint16_t result = (m_SP + imm8);
+
+		m_H = static_cast<uint8_t>(static_cast<uint16_t>(result) >> 8);
+		m_L = static_cast<uint8_t>(static_cast<uint16_t>(result));
+
+		setFlag<Cpu::Flag::Z>(0);
+		setFlag<Cpu::Flag::N>(0);
+		setFlag<Cpu::Flag::H>(((m_SP ^ imm8 ^ result) & (1 << 4)) == (1 << 4));
+		setFlag<Cpu::Flag::C>(((m_SP ^ imm8 ^ result) & (1 << 8)) == (1 << 8));
+
+		break;
+	}
+	case 0xF9: { // LD SP, HL
+		m_SP = HL();
+		break;
+	}
+	case 0xFA: { // LD A, [imm16]
+		uint8_t low = m_memory.read8(m_PC++);
+		uint8_t high = m_memory.read8(m_PC++);
+		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		doLd(m_A, m_memory.read8(address));
+		break;
+	}
 
 	default: {
 		std::stringstream ss;
@@ -252,8 +355,6 @@ int Cpu::executeInstruction(void) {
 		throw std::runtime_error(ss.str());
 	}
 	}
-
-	m_PC++;
 
 	return CPU_INSTRUCTION_CYCLES.at(opcode);
 }

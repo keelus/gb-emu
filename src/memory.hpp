@@ -17,6 +17,10 @@ class Memory {
 
 	uint8_t read8(const uint16_t address) const;
 	void write8(const uint16_t address, const uint8_t value);
+
+	uint16_t read16(const uint16_t address) const;
+	void write16(const uint16_t address, const uint16_t value);
+
 	void load(const uint16_t address, const uint8_t *buffer, size_t size) {
 		if(address + size > MEMORY_SIZE) { throw std::runtime_error("Buffer to load in memory overflown."); }
 		memcpy(m_data + address, buffer, size);
