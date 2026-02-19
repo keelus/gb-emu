@@ -33,6 +33,9 @@ int Cpu::executeInstruction(void) {
 		m_memory.write16(address, m_SP);
 		break;
 	}
+	case 0x09: // LD HL, BC
+		doAdd16ToHL(BC());
+		break;
 	case 0x0A: // LD A, [BC]
 		doLd(m_A, m_memory.read8(BC()));
 		break;
@@ -49,6 +52,9 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x16: // LD D, imm8
 		doLd(m_D, m_memory.read8(m_PC++));
+		break;
+	case 0x19: // LD HL, DE
+		doAdd16ToHL(DE());
 		break;
 	case 0x1A: // LD A, [DE]
 		doLd(m_A, m_memory.read8(DE()));
@@ -67,6 +73,9 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x26: // LD H, imm8
 		doLd(m_H, m_memory.read8(m_PC++));
+		break;
+	case 0x29: // LD HL, HL
+		doAdd16ToHL(HL());
 		break;
 	case 0x2A: // LD A, [HL+]
 		doLd(m_A, m_memory.read8(HL()));
@@ -88,6 +97,9 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x36: // LD [HL], imm8
 		m_memory.write8(HL(), m_memory.read8(m_PC++));
+		break;
+	case 0x39: // LD HL, SP
+		doAdd16ToHL(SP());
 		break;
 	case 0x3A: // LD A, [HL-]
 		doLd(m_A, m_memory.read8(HL()));
@@ -290,6 +302,62 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_A);
 		break;
 
+	case 0x80: // ADD A, B
+		doAdd(m_A, m_B);
+		break;
+	case 0x81: // ADD A, C
+		doAdd(m_A, m_C);
+		break;
+	case 0x82: // ADD A, D
+		doAdd(m_A, m_D);
+		break;
+	case 0x83: // ADD A, E
+		doAdd(m_A, m_E);
+		break;
+	case 0x84: // ADD A, H
+		doAdd(m_A, m_H);
+		break;
+	case 0x85: // ADD A, L
+		doAdd(m_A, m_L);
+		break;
+	case 0x86: // ADD A, [HL]
+		doAdd(m_A, m_memory.read8(HL()));
+		break;
+	case 0x87: // ADD A, A
+		doAdd(m_A, m_A);
+		break;
+	case 0x88: // ADC A, B
+		doAdc(m_A, m_B);
+		break;
+	case 0x89: // ADC A, C
+		doAdc(m_A, m_C);
+		break;
+	case 0x8A: // ADC A, D
+		doAdc(m_A, m_D);
+		break;
+	case 0x8B: // ADC A, E
+		doAdc(m_A, m_E);
+		break;
+	case 0x8C: // ADC A, H
+		doAdc(m_A, m_H);
+		break;
+	case 0x8D: // ADC A, L
+		doAdc(m_A, m_L);
+		break;
+	case 0x8E: // ADC A, [HL]
+		doAdc(m_A, m_memory.read8(HL()));
+		break;
+	case 0x8F: // ADC A, A
+		doAdc(m_A, m_A);
+		break;
+
+	case 0xC6: // ADD A, imm8
+		doAdd(m_A, m_memory.read8(m_PC++));
+		break;
+	case 0xCE: // ADC A, imm8
+		doAdc(m_A, m_memory.read8(m_PC++));
+		break;
+
 	case 0xE0: { // LDH [imm8], A
 		uint8_t low = m_memory.read8(m_PC++);
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
@@ -299,6 +367,18 @@ int Cpu::executeInstruction(void) {
 	case 0xE2: { // LDH [C], A
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
 		m_memory.write8(address, m_A);
+		break;
+	}
+	case 0xE8: { // ADD SP, e8
+		uint16_t imm8 = static_cast<uint16_t>(m_memory.read8(m_PC++));
+		uint16_t result = (m_SP + imm8);
+
+		setFlag<Cpu::Flag::Z>(0);
+		setFlag<Cpu::Flag::N>(0);
+		setFlag<Cpu::Flag::H>(((m_SP ^ imm8 ^ result) & (1 << 4)) == (1 << 4));
+		setFlag<Cpu::Flag::C>(((m_SP ^ imm8 ^ result) & (1 << 8)) == (1 << 8));
+
+		m_SP = result;
 		break;
 	}
 	case 0xEA: { // LD [imm16], A

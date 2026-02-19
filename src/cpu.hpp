@@ -1,7 +1,9 @@
 #pragma once
 
-#include "memory.hpp"
 #include <cstdint>
+
+#include "alu.hpp"
+#include "memory.hpp"
 
 class Cpu {
   public:
@@ -62,7 +64,7 @@ class Cpu {
 	int executeInstruction(void);
 
   private:
-  	void incHL(void) {
+	void incHL(void) {
 		uint16_t hl = HL() + 1;
 		m_H = static_cast<uint8_t>(hl >> 8);
 		m_L = static_cast<uint8_t>(hl);
@@ -74,6 +76,30 @@ class Cpu {
 	}
 
 	void doLd(uint8_t &a, const uint8_t b) { a = b; }
+	void doAdd(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::add8(a, b);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doAdd16ToHL(const uint16_t b) {
+		ALU::Result16 res = ALU::add16(HL(), b);
+		m_H = static_cast<uint8_t>(res.value >> 8);
+		m_L = static_cast<uint8_t>(res.value);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doAdc(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::add8WithCarry(a, b, getFlag<Flag::C>());
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
 
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
