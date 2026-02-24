@@ -24,8 +24,8 @@ class ALU {
 		res.value = static_cast<uint8_t>(result);
 		res.flag_z = res.value == 0;
 		res.flag_n = 0;
-		res.flag_h = (((a ^ b ^ res.value) & (1 << 4)) == (1 << 4));
-		res.flag_c = (((a ^ b ^ res.value) & (1 << 8)) == (1 << 8));
+		res.flag_h = (((a & 0xF) + (b & 0xF)) > 0xF);
+		res.flag_c = ((result & 0x100) != 0);
 
 		return res;
 	}
@@ -37,8 +37,8 @@ class ALU {
 		res.value = static_cast<uint16_t>(result);
 		res.flag_z = 0;
 		res.flag_n = 0;
-		res.flag_h = (((a ^ b ^ res.value) & (1 << 4)) == (1 << 12));
-		res.flag_c = (((a ^ b ^ res.value) & (1 << 8)) == (1 << 16));
+		res.flag_h = (((a & 0xFFF) + (b & 0xFFF)) > 0xFFF);
+		res.flag_c = ((result & 0x10000) != 0);
 
 		return res;
 	}
