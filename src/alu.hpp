@@ -55,4 +55,89 @@ class ALU {
 
 		return res;
 	}
+
+	static Result8 sub8(uint8_t a, uint8_t b) {
+		uint16_t result = static_cast<uint16_t>(a) - static_cast<uint16_t>(b);
+		Result8 res;
+
+		res.value = static_cast<uint8_t>(result);
+		res.flag_z = res.value == 0;
+		res.flag_n = 1;
+		res.flag_h = (((static_cast<int16_t>(a) & 0xF) - (static_cast<int16_t>(b) & 0xF)) < 0);
+		res.flag_c = (a < b);
+
+		return res;
+	}
+
+	static Result16 sub16(uint16_t a, uint16_t b) {
+		uint32_t result = static_cast<uint32_t>(a) - static_cast<uint32_t>(b);
+		Result16 res;
+
+		res.value = static_cast<uint16_t>(result);
+
+		return res;
+	}
+
+	static Result8 sub8WithCarry(uint8_t a, uint8_t b, bool carry) {
+		int16_t result = static_cast<uint16_t>(a) - static_cast<uint16_t>(b) - (carry ? 1 : 0);
+		Result8 res;
+
+		res.value = static_cast<uint8_t>(result);
+		res.flag_z = res.value == 0;
+		res.flag_n = 0;
+		res.flag_h = ((a & 0xF) - (b & 0xF) - carry) < 0;
+		res.flag_c = result < 0;
+
+		return res;
+	}
+
+	static Result8 gateAnd(uint8_t a, uint8_t b) {
+		uint8_t result = a & b;
+		Result8 res;
+
+		res.value = static_cast<uint8_t>(result);
+		res.flag_z = res.value == 0;
+
+		return res;
+	}
+
+	static Result8 gateXor(uint8_t a, uint8_t b) {
+		uint8_t result = a ^ b;
+		Result8 res;
+
+		res.value = static_cast<uint8_t>(result);
+		res.flag_z = res.value == 0;
+
+		return res;
+	}
+
+	static Result8 gateOr(uint8_t a, uint8_t b) {
+		uint8_t result = a | b;
+		Result8 res;
+
+		res.value = static_cast<uint8_t>(result);
+		res.flag_z = res.value == 0;
+
+		return res;
+	}
+
+	static Result8 inc8(uint8_t a) {
+		Result8 res = add8(a, 1);
+		return res;
+	}
+
+	static Result16 inc16(uint16_t a) {
+		Result16 res = add16(a, 1);
+		return res;
+	}
+
+	static Result8 dec8(uint8_t a) {
+		Result8 res = sub8(a, 1);
+		return res;
+	}
+
+	static Result16 dec16(uint16_t a) {
+		Result16 res = sub16(a, 1);
+		return res;
+	}
 };

@@ -23,6 +23,15 @@ int Cpu::executeInstruction(void) {
 	case 0x02: // LD [BC], A
 		m_memory.write8(BC(), m_A);
 		break;
+	case 0x03: // INC BC
+		doInc16(m_B, m_C);
+		break;
+	case 0x04: // INC B
+		doInc(m_B);
+		break;
+	case 0x05: // DEC B
+		doDec(m_B);
+		break;
 	case 0x06: // LD B, imm8
 		doLd(m_B, m_memory.read8(m_PC++));
 		break;
@@ -39,6 +48,12 @@ int Cpu::executeInstruction(void) {
 	case 0x0A: // LD A, [BC]
 		doLd(m_A, m_memory.read8(BC()));
 		break;
+	case 0x0C: // INC C
+		doInc(m_C);
+		break;
+	case 0x0D: // DEC C
+		doDec(m_C);
+		break;
 	case 0x0E: // LD C, imm8
 		doLd(m_C, m_memory.read8(m_PC++));
 		break;
@@ -50,6 +65,15 @@ int Cpu::executeInstruction(void) {
 	case 0x12: // LD [DE], A
 		m_memory.write8(DE(), m_A);
 		break;
+	case 0x13: // INC DE
+		doInc16(m_D, m_E);
+		break;
+	case 0x14: // INC D
+		doInc(m_D);
+		break;
+	case 0x15: // DEC D
+		doDec(m_D);
+		break;
 	case 0x16: // LD D, imm8
 		doLd(m_D, m_memory.read8(m_PC++));
 		break;
@@ -58,6 +82,12 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x1A: // LD A, [DE]
 		doLd(m_A, m_memory.read8(DE()));
+		break;
+	case 0x1C: // INC E
+		doInc(m_E);
+		break;
+	case 0x1D: // DEC E
+		doDec(m_E);
 		break;
 	case 0x1E: // LD E, imm8
 		doLd(m_E, m_memory.read8(m_PC++));
@@ -71,6 +101,15 @@ int Cpu::executeInstruction(void) {
 		m_memory.write8(HL(), m_A);
 		incHL();
 		break;
+	case 0x23: // INC HL
+		doInc16(m_H, m_L);
+		break;
+	case 0x24: // INC H
+		doInc(m_H);
+		break;
+	case 0x25: // DEC H
+		doDec(m_H);
+		break;
 	case 0x26: // LD H, imm8
 		doLd(m_H, m_memory.read8(m_PC++));
 		break;
@@ -80,6 +119,12 @@ int Cpu::executeInstruction(void) {
 	case 0x2A: // LD A, [HL+]
 		doLd(m_A, m_memory.read8(HL()));
 		incHL();
+		break;
+	case 0x2C: // INC L
+		doInc(m_L);
+		break;
+	case 0x2D: // DEC L
+		doDec(m_L);
 		break;
 	case 0x2E: // LD L, imm8
 		doLd(m_L, m_memory.read8(m_PC++));
@@ -95,6 +140,16 @@ int Cpu::executeInstruction(void) {
 		m_memory.write8(HL(), m_A);
 		decHL();
 		break;
+	case 0x33: // INC SP
+		doInc16(m_SP);
+		break;
+	case 0x34: { // INC [HL]
+		doInc(HL());
+		break;
+	}
+	case 0x35: // DEC [HL]
+		doDec(HL());
+		break;
 	case 0x36: // LD [HL], imm8
 		m_memory.write8(HL(), m_memory.read8(m_PC++));
 		break;
@@ -104,6 +159,12 @@ int Cpu::executeInstruction(void) {
 	case 0x3A: // LD A, [HL-]
 		doLd(m_A, m_memory.read8(HL()));
 		decHL();
+		break;
+	case 0x3C: // INC A
+		doInc(m_A);
+		break;
+	case 0x3D: // DEC A
+		doDec(m_A);
 		break;
 	case 0x3E: // LD A, imm8
 		doLd(m_A, m_memory.read8(m_PC++));
@@ -139,22 +200,22 @@ int Cpu::executeInstruction(void) {
 	case 0x49: // LD C, C
 		doLd(m_C, m_C);
 		break;
-	case 0x4a: // LD C, D
+	case 0x4A: // LD C, D
 		doLd(m_C, m_D);
 		break;
-	case 0x4b: // LD C, E
+	case 0x4B: // LD C, E
 		doLd(m_C, m_E);
 		break;
-	case 0x4c: // LD C, H
+	case 0x4C: // LD C, H
 		doLd(m_C, m_H);
 		break;
-	case 0x4d: // LD C, L
+	case 0x4D: // LD C, L
 		doLd(m_C, m_L);
 		break;
-	case 0x4e: // LD C, [HL]
+	case 0x4E: // LD C, [HL]
 		doLd(m_C, m_memory.read8(HL()));
 		break;
-	case 0x4f: // LD C, A
+	case 0x4F: // LD C, A
 		doLd(m_C, m_A);
 		break;
 	case 0x50: // LD D, B
@@ -187,22 +248,22 @@ int Cpu::executeInstruction(void) {
 	case 0x59: // LD E, C
 		doLd(m_E, m_C);
 		break;
-	case 0x5a: // LD E, D
+	case 0x5A: // LD E, D
 		doLd(m_E, m_D);
 		break;
-	case 0x5b: // LD E, E
+	case 0x5B: // LD E, E
 		doLd(m_E, m_E);
 		break;
-	case 0x5c: // LD E, H
+	case 0x5C: // LD E, H
 		doLd(m_E, m_H);
 		break;
-	case 0x5d: // LD E, L
+	case 0x5D: // LD E, L
 		doLd(m_E, m_L);
 		break;
-	case 0x5e: // LD E, [HL]
+	case 0x5E: // LD E, [HL]
 		doLd(m_E, m_memory.read8(HL()));
 		break;
-	case 0x5f: // LD E, A
+	case 0x5F: // LD E, A
 		doLd(m_E, m_A);
 		break;
 	case 0x60: // LD H, B
@@ -235,22 +296,22 @@ int Cpu::executeInstruction(void) {
 	case 0x69: // LD L, C
 		doLd(m_L, m_C);
 		break;
-	case 0x6a: // LD L, D
+	case 0x6A: // LD L, D
 		doLd(m_L, m_D);
 		break;
-	case 0x6b: // LD L, E
+	case 0x6B: // LD L, E
 		doLd(m_L, m_E);
 		break;
-	case 0x6c: // LD L, H
+	case 0x6C: // LD L, H
 		doLd(m_L, m_H);
 		break;
-	case 0x6d: // LD L, L
+	case 0x6D: // LD L, L
 		doLd(m_L, m_L);
 		break;
-	case 0x6e: // LD L, [HL]
+	case 0x6E: // LD L, [HL]
 		doLd(m_L, m_memory.read8(HL()));
 		break;
-	case 0x6f: // LD L, A
+	case 0x6F: // LD L, A
 		doLd(m_L, m_A);
 		break;
 	case 0x70: // LD [HL], B
@@ -283,25 +344,24 @@ int Cpu::executeInstruction(void) {
 	case 0x79: // LD A, C
 		doLd(m_A, m_C);
 		break;
-	case 0x7a: // LD A, D
+	case 0x7A: // LD A, D
 		doLd(m_A, m_D);
 		break;
-	case 0x7b: // LD A, E
+	case 0x7B: // LD A, E
 		doLd(m_A, m_E);
 		break;
-	case 0x7c: // LD A, H
+	case 0x7C: // LD A, H
 		doLd(m_A, m_H);
 		break;
-	case 0x7d: // LD A, L
+	case 0x7D: // LD A, L
 		doLd(m_A, m_L);
 		break;
-	case 0x7e: // LD A, [HL]
+	case 0x7E: // LD A, [HL]
 		doLd(m_A, m_memory.read8(HL()));
 		break;
-	case 0x7f: // LD A, A
+	case 0x7F: // LD A, A
 		doLd(m_A, m_A);
 		break;
-
 	case 0x80: // ADD A, B
 		doAdd(m_A, m_B);
 		break;
@@ -350,12 +410,163 @@ int Cpu::executeInstruction(void) {
 	case 0x8F: // ADC A, A
 		doAdc(m_A, m_A);
 		break;
+	case 0x90: // SUB A, B
+		doSub(m_A, m_B);
+		break;
+	case 0x91: // SUB A, C
+		doSub(m_A, m_C);
+		break;
+	case 0x92: // SUB A, D
+		doSub(m_A, m_D);
+		break;
+	case 0x93: // SUB A, E
+		doSub(m_A, m_E);
+		break;
+	case 0x94: // SUB A, H
+		doSub(m_A, m_H);
+		break;
+	case 0x95: // SUB A, L
+		doSub(m_A, m_L);
+		break;
+	case 0x96: // SUB A, [HL]
+		doSub(m_A, m_memory.read8(HL()));
+		break;
+	case 0x97: // SUB A, A
+		doSub(m_A, m_A);
+		break;
+	case 0x98: // SBC A, B
+		doSbc(m_A, m_B);
+		break;
+	case 0x99: // SBC A, C
+		doSbc(m_A, m_C);
+		break;
+	case 0x9A: // SBC A, D
+		doSbc(m_A, m_D);
+		break;
+	case 0x9B: // SBC A, E
+		doSbc(m_A, m_E);
+		break;
+	case 0x9C: // SBC A, H
+		doSbc(m_A, m_H);
+		break;
+	case 0x9D: // SBC A, L
+		doSbc(m_A, m_L);
+		break;
+	case 0x9E: // SBC A, [HL]
+		doSbc(m_A, m_memory.read8(HL()));
+		break;
+	case 0x9F: // SBC A, A
+		doSbc(m_A, m_A);
+		break;
+	case 0xA0: // AND A, B
+		doAnd(m_A, m_B);
+		break;
+	case 0xA1: // AND A, C
+		doAnd(m_A, m_C);
+		break;
+	case 0xA2: // AND A, D
+		doAnd(m_A, m_D);
+		break;
+	case 0xA3: // AND A, E
+		doAnd(m_A, m_E);
+		break;
+	case 0xA4: // AND A, H
+		doAnd(m_A, m_H);
+		break;
+	case 0xA5: // AND A, L
+		doAnd(m_A, m_L);
+		break;
+	case 0xA6: // AND A, [HL]
+		doAnd(m_A, m_memory.read8(HL()));
+		break;
+	case 0xA7: // AND A, A
+		doAnd(m_A, m_A);
+		break;
+	case 0xA8: // XOR A, B
+		doXor(m_A, m_B);
+		break;
+	case 0xA9: // XOR A, C
+		doXor(m_A, m_C);
+		break;
+	case 0xAA: // XOR A, D
+		doXor(m_A, m_D);
+		break;
+	case 0xAB: // XOR A, E
+		doXor(m_A, m_E);
+		break;
+	case 0xAC: // XOR A, H
+		doXor(m_A, m_H);
+		break;
+	case 0xAD: // XOR A, L
+		doXor(m_A, m_L);
+		break;
+	case 0xAE: // XOR A, [HL]
+		doXor(m_A, m_memory.read8(HL()));
+		break;
+	case 0xAF: // XOR A, A
+		doXor(m_A, m_A);
+		break;
+	case 0xB0: // OR A, B
+		doOr(m_A, m_B);
+		break;
+	case 0xB1: // OR A, C
+		doOr(m_A, m_C);
+		break;
+	case 0xB2: // OR A, D
+		doOr(m_A, m_D);
+		break;
+	case 0xB3: // OR A, E
+		doOr(m_A, m_E);
+		break;
+	case 0xB4: // OR A, H
+		doOr(m_A, m_H);
+		break;
+	case 0xB5: // OR A, L
+		doOr(m_A, m_L);
+		break;
+	case 0xB6: // OR A, [HL]
+		doOr(m_A, m_memory.read8(HL()));
+		break;
+	case 0xB7: // OR A, A
+		doOr(m_A, m_A);
+		break;
+	case 0xB8: // CP A, B
+		doCp(m_A, m_B);
+		break;
+	case 0xB9: // CP A, C
+		doCp(m_A, m_C);
+		break;
+	case 0xBA: // CP A, D
+		doCp(m_A, m_D);
+		break;
+	case 0xBB: // CP A, E
+		doCp(m_A, m_E);
+		break;
+	case 0xBC: // CP A, H
+		doCp(m_A, m_H);
+		break;
+	case 0xBD: // CP A, L
+		doCp(m_A, m_L);
+		break;
+	case 0xBE: // CP A, [HL]
+		doCp(m_A, m_memory.read8(HL()));
+		break;
+	case 0xBF: // CP A, A
+		doCp(m_A, m_A);
+		break;
 
 	case 0xC6: // ADD A, imm8
 		doAdd(m_A, m_memory.read8(m_PC++));
 		break;
 	case 0xCE: // ADC A, imm8
 		doAdc(m_A, m_memory.read8(m_PC++));
+		break;
+
+	case 0xD6: // SUB A, imm8
+		doSub(m_A, m_memory.read8(m_PC++));
+		break;
+	case 0xDE: // SBC A, imm8
+		doSbc(m_A, m_memory.read8(m_PC++));
 		break;
 
 	case 0xE0: { // LDH [imm8], A
@@ -369,6 +580,9 @@ int Cpu::executeInstruction(void) {
 		m_memory.write8(address, m_A);
 		break;
 	}
+	case 0xE6: // AND A, imm8
+		doAnd(m_A, m_memory.read8(m_PC++));
+		break;
 	case 0xE8: { // ADD SP, e8
 		uint16_t imm8 = static_cast<uint16_t>(m_memory.read8(m_PC++));
 		uint16_t result = (m_SP + imm8);
@@ -388,6 +602,9 @@ int Cpu::executeInstruction(void) {
 		m_memory.write8(address, m_A);
 		break;
 	}
+	case 0xEE: // XOR A, imm8
+		doXor(m_A, m_memory.read8(m_PC++));
+		break;
 
 	case 0xF0: { // LDH A, [imm8]
 		uint8_t low = m_memory.read8(m_PC++);
@@ -400,6 +617,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_memory.read8(address));
 		break;
 	}
+	case 0xF6: // OR A, imm8
+		doOr(m_A, m_memory.read8(m_PC++));
+		break;
 	case 0xF8: { // LD HL, SP+e8
 		uint16_t imm8 = static_cast<uint16_t>(m_memory.read8(m_PC++));
 		uint16_t result = (m_SP + imm8);
@@ -425,6 +645,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_memory.read8(address));
 		break;
 	}
+	case 0xFE: // CP A, imm8
+		doCp(m_A, m_memory.read8(m_PC++));
+		break;
 
 	default: {
 		std::stringstream ss;

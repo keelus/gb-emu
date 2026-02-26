@@ -101,6 +101,111 @@ class Cpu {
 		setFlag<Flag::C>(res.flag_c);
 	}
 
+	void doSub(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::sub8(a, b);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(1);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doSbc(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::sub8WithCarry(a, b, getFlag<Flag::C>());
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(1);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doAnd(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::gateAnd(a, b);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(1);
+		setFlag<Flag::C>(0);
+	}
+	void doXor(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::gateXor(a, b);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(0);
+	}
+	void doOr(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::gateOr(a, b);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(0);
+	}
+	void doCp(uint8_t &a, const uint8_t b) {
+		ALU::Result8 res = ALU::sub8(a, b);
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(1);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doInc(uint8_t &a) {
+		ALU::Result8 res = ALU::inc8(a);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doInc(uint16_t address) {
+		uint8_t value = m_memory.read8(address);
+
+		ALU::Result8 res = ALU::inc8(value);
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+
+		m_memory.write8(address, res.value);
+	}
+
+	void doInc16(uint16_t &value) { value = ALU::inc16(value).value; }
+	void doInc16(uint8_t &upper, uint8_t lower) {
+		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		uint16_t result = ALU::inc16(value).value;
+
+		upper = static_cast<uint8_t>(result >> 8);
+		lower = static_cast<uint8_t>(result);
+	}
+
+	void doDec(uint8_t &a) {
+		ALU::Result8 res = ALU::dec8(a);
+		a = res.value;
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(1);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doDec(uint16_t address) {
+		uint16_t value = m_memory.read8(address);
+
+		ALU::Result8 res = ALU::dec8(value);
+		setFlag<Flag::Z>(res.flag_z);
+		setFlag<Flag::N>(1);
+		setFlag<Flag::H>(res.flag_h);
+		setFlag<Flag::C>(res.flag_c);
+
+		m_memory.write8(address, value);
+	}
+	void doDec(uint8_t &upper, uint8_t lower) {
+		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		uint16_t result = ALU::dec16(value).value;
+
+		upper = static_cast<uint8_t>(result >> 8);
+		lower = static_cast<uint8_t>(result);
+	}
+
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
 	uint8_t m_D, m_E;
