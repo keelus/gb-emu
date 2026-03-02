@@ -569,6 +569,9 @@ int Cpu::executeInstruction(void) {
 	case 0xBF: // CP A, A
 		doCp(m_A, m_A);
 		break;
+	case 0xC0: // RET NZ
+		doRet(!getFlag<Flag::Z>());
+		break;
 	case 0xC1: // POP BC
 		doPop(m_B, m_C);
 		break;
@@ -578,24 +581,45 @@ int Cpu::executeInstruction(void) {
 	case 0xC3: // JP imm16
 		doJp();
 		break;
+	case 0xC4: // CALL NZ, imm16
+		doCall(!getFlag<Flag::Z>());
+		break;
 	case 0xC5: // PUSH BC
 		doPush(BC());
 		break;
 	case 0xC6: // ADD A, imm8
 		doAdd(m_A, m_memory.read8(m_PC++));
 		break;
+	case 0xC8: // RET Z
+		doRet(getFlag<Flag::Z>());
+		break;
+	case 0xC9: // RET
+		doRet();
+		break;
 	case 0xCA: // JP Z, imm16
 		doJp(getFlag<Flag::Z>());
+		break;
+	case 0xCC: // CALL Z, imm16
+		doCall(getFlag<Flag::Z>());
+		break;
+	case 0xCD: // CALL imm16
+		doCall();
 		break;
 	case 0xCE: // ADC A, imm8
 		doAdc(m_A, m_memory.read8(m_PC++));
 		break;
 
+	case 0xD0: // RET NC
+		doRet(!getFlag<Flag::C>());
+		break;
 	case 0xD1: // POP DE
 		doPop(m_D, m_E);
 		break;
 	case 0xD2: // JP NC, imm16
 		doJp(!getFlag<Flag::C>());
+		break;
+	case 0xD4: // CALL NC, imm16
+		doCall(!getFlag<Flag::C>());
 		break;
 	case 0xD5: // PUSH DE
 		doPush(DE());
@@ -603,8 +627,14 @@ int Cpu::executeInstruction(void) {
 	case 0xD6: // SUB A, imm8
 		doSub(m_A, m_memory.read8(m_PC++));
 		break;
+	case 0xD8: // RET C
+		doRet(getFlag<Flag::C>());
+		break;
 	case 0xDA: // JP C, imm16
 		doJp(getFlag<Flag::C>());
+		break;
+	case 0xDC: // CALL C, imm16
+		doCall(getFlag<Flag::C>());
 		break;
 	case 0xDE: // SBC A, imm8
 		doSbc(m_A, m_memory.read8(m_PC++));

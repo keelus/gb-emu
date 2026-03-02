@@ -217,18 +217,39 @@ class Cpu {
 
 	void doJp() { m_PC = m_memory.read16(m_PC); }
 	void doJp(bool condition) {
-		uint16_t offset = m_memory.read16(m_PC);
+		uint16_t address = m_memory.read16(m_PC);
 		m_PC += 2;
-		if(condition) { m_PC = offset; }
+		if(condition) { m_PC = address; }
 	}
 
 	void doPush(uint16_t value) {
 		m_memory.write8(--m_SP, static_cast<uint8_t>(value >> 8));
 		m_memory.write8(--m_SP, static_cast<uint8_t>(value));
 	}
+	void doPop(uint16_t &value) {
+		uint8_t upper, lower;
+		doPop(upper, lower);
+		value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+	}
 	void doPop(uint8_t &upper, uint8_t &lower) {
 		lower = m_memory.read8(m_SP++);
 		upper = m_memory.read8(m_SP++);
+	}
+
+	void doCall() { doCall(true); }
+	void doCall(bool condition) {
+		uint16_t address = m_memory.read16(m_PC);
+		m_PC += 2;
+
+		if(condition) {
+			doPush(m_PC);
+			m_PC = address;
+		}
+	}
+
+	void doRet() { doPop(m_PC); }
+	void doRet(bool condition) {
+		if(condition) { doPop(m_PC); }
 	}
 
 	uint8_t m_A, m_F;
