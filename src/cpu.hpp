@@ -222,6 +222,15 @@ class Cpu {
 		if(condition) { m_PC = offset; }
 	}
 
+	void doPush(uint16_t value) {
+		m_memory.write8(--m_SP, static_cast<uint8_t>(value >> 8));
+		m_memory.write8(--m_SP, static_cast<uint8_t>(value));
+	}
+	void doPop(uint8_t &upper, uint8_t &lower) {
+		lower = m_memory.read8(m_SP++);
+		upper = m_memory.read8(m_SP++);
+	}
+
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
 	uint8_t m_D, m_E;

@@ -569,12 +569,17 @@ int Cpu::executeInstruction(void) {
 	case 0xBF: // CP A, A
 		doCp(m_A, m_A);
 		break;
-
+	case 0xC1: // POP BC
+		doPop(m_B, m_C);
+		break;
 	case 0xC2: // JP NZ, imm16
 		doJp(!getFlag<Flag::Z>());
 		break;
 	case 0xC3: // JP imm16
 		doJp();
+		break;
+	case 0xC5: // PUSH BC
+		doPush(BC());
 		break;
 	case 0xC6: // ADD A, imm8
 		doAdd(m_A, m_memory.read8(m_PC++));
@@ -586,8 +591,14 @@ int Cpu::executeInstruction(void) {
 		doAdc(m_A, m_memory.read8(m_PC++));
 		break;
 
+	case 0xD1: // POP DE
+		doPop(m_D, m_E);
+		break;
 	case 0xD2: // JP NC, imm16
 		doJp(!getFlag<Flag::C>());
+		break;
+	case 0xD5: // PUSH DE
+		doPush(DE());
 		break;
 	case 0xD6: // SUB A, imm8
 		doSub(m_A, m_memory.read8(m_PC++));
@@ -605,11 +616,17 @@ int Cpu::executeInstruction(void) {
 		m_memory.write8(address, m_A);
 		break;
 	}
+	case 0xE1: // POP HL
+		doPop(m_H, m_L);
+		break;
 	case 0xE2: { // LDH [C], A
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
 		m_memory.write8(address, m_A);
 		break;
 	}
+	case 0xE5: // PUSH HL
+		doPush(HL());
+		break;
 	case 0xE6: // AND A, imm8
 		doAnd(m_A, m_memory.read8(m_PC++));
 		break;
@@ -645,11 +662,17 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_memory.read8(address));
 		break;
 	}
+	case 0xF1: // POP AF
+		doPop(m_A, m_F);
+		break;
 	case 0xF2: { // LDH A, [C]
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
 		doLd(m_A, m_memory.read8(address));
 		break;
 	}
+	case 0xF5: // PUSH AF
+		doPush(AF());
+		break;
 	case 0xF6: // OR A, imm8
 		doOr(m_A, m_memory.read8(m_PC++));
 		break;
