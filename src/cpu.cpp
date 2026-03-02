@@ -77,6 +77,9 @@ int Cpu::executeInstruction(void) {
 	case 0x16: // LD D, imm8
 		doLd(m_D, m_memory.read8(m_PC++));
 		break;
+	case 0x18: // JR imm8
+		doJr();
+		break;
 	case 0x19: // LD HL, DE
 		doAdd16ToHL(DE());
 		break;
@@ -93,6 +96,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_E, m_memory.read8(m_PC++));
 		break;
 
+	case 0x20: // JR NZ, imm8
+		doJr(!getFlag<Flag::Z>());
+		break;
 	case 0x21: // LD HL, imm16
 		m_L = m_memory.read8(m_PC++);
 		m_H = m_memory.read8(m_PC++);
@@ -113,6 +119,9 @@ int Cpu::executeInstruction(void) {
 	case 0x26: // LD H, imm8
 		doLd(m_H, m_memory.read8(m_PC++));
 		break;
+	case 0x28: // JR Z, imm8
+		doJr(getFlag<Flag::Z>());
+		break;
 	case 0x29: // LD HL, HL
 		doAdd16ToHL(HL());
 		break;
@@ -130,6 +139,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_L, m_memory.read8(m_PC++));
 		break;
 
+	case 0x30: // JR NC, imm8
+		doJr(!getFlag<Flag::C>());
+		break;
 	case 0x31: { // LD SP, imm16
 		uint8_t low = m_memory.read8(m_PC++);
 		uint8_t high = m_memory.read8(m_PC++);
@@ -152,6 +164,9 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x36: // LD [HL], imm8
 		m_memory.write8(HL(), m_memory.read8(m_PC++));
+		break;
+	case 0x38: // JR C, imm8
+		doJr(getFlag<Flag::C>());
 		break;
 	case 0x39: // LD HL, SP
 		doAdd16ToHL(SP());
@@ -555,15 +570,30 @@ int Cpu::executeInstruction(void) {
 		doCp(m_A, m_A);
 		break;
 
+	case 0xC2: // JP NZ, imm16
+		doJp(!getFlag<Flag::Z>());
+		break;
+	case 0xC3: // JP imm16
+		doJp();
+		break;
 	case 0xC6: // ADD A, imm8
 		doAdd(m_A, m_memory.read8(m_PC++));
+		break;
+	case 0xCA: // JP Z, imm16
+		doJp(getFlag<Flag::Z>());
 		break;
 	case 0xCE: // ADC A, imm8
 		doAdc(m_A, m_memory.read8(m_PC++));
 		break;
 
+	case 0xD2: // JP NC, imm16
+		doJp(!getFlag<Flag::C>());
+		break;
 	case 0xD6: // SUB A, imm8
 		doSub(m_A, m_memory.read8(m_PC++));
+		break;
+	case 0xDA: // JP C, imm16
+		doJp(getFlag<Flag::C>());
 		break;
 	case 0xDE: // SBC A, imm8
 		doSbc(m_A, m_memory.read8(m_PC++));
@@ -595,6 +625,9 @@ int Cpu::executeInstruction(void) {
 		m_SP = result;
 		break;
 	}
+	case 0xE9: // JP HL
+		m_PC = HL();
+		break;
 	case 0xEA: { // LD [imm16], A
 		uint8_t low = m_memory.read8(m_PC++);
 		uint8_t high = m_memory.read8(m_PC++);

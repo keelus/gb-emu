@@ -206,6 +206,22 @@ class Cpu {
 		lower = static_cast<uint8_t>(result);
 	}
 
+	void doJr() {
+		uint8_t offset = m_memory.read8(m_PC++);
+		m_PC += static_cast<uint16_t>(offset);
+	}
+	void doJr(bool condition) {
+		uint8_t offset = m_memory.read8(m_PC++);
+		if(condition) { m_PC += static_cast<uint16_t>(offset); }
+	}
+
+	void doJp() { m_PC = m_memory.read16(m_PC); }
+	void doJp(bool condition) {
+		uint16_t offset = m_memory.read16(m_PC);
+		m_PC += 2;
+		if(condition) { m_PC = offset; }
+	}
+
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
 	uint8_t m_D, m_E;
