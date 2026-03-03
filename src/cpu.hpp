@@ -252,6 +252,40 @@ class Cpu {
 		if(condition) { doPop(m_PC); }
 	}
 
+	void doRlca() {
+		ALU::Result8 res = ALU::rlca(m_A);
+		m_A = res.value;
+		setFlag<Flag::Z>(0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doRrca() {
+		ALU::Result8 res = ALU::rrca(m_A);
+		m_A = res.value;
+		setFlag<Flag::Z>(0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doRla() {
+		ALU::Result8 res = ALU::rla(m_A, getFlag<Flag::C>());
+		m_A = res.value;
+		setFlag<Flag::Z>(0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+	void doRra() {
+		ALU::Result8 res = ALU::rra(m_A, getFlag<Flag::C>());
+		m_A = res.value;
+		setFlag<Flag::Z>(0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
 	uint8_t m_A, m_F;
 	uint8_t m_B, m_C;
 	uint8_t m_D, m_E;

@@ -140,4 +140,24 @@ class ALU {
 		Result16 res = sub16(a, 1);
 		return res;
 	}
+
+	static Result8 rlca(uint8_t a) { return rla(a, a >> 7); }
+	static Result8 rla(uint8_t a, bool flag_c) {
+		Result8 res;
+
+		res.flag_c = a >> 7;
+		res.value = (a << 1) | static_cast<uint8_t>(flag_c);
+
+		return res;
+	}
+
+	static Result8 rrca(uint8_t a) { return rra(a, a & 1); }
+	static Result8 rra(uint8_t a, bool flag_c) {
+		Result8 res;
+
+		res.flag_c = a & 1;
+		res.value = (a >> 1) | (static_cast<uint8_t>(flag_c) << 7);
+
+		return res;
+	}
 };
