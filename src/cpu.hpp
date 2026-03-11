@@ -23,6 +23,8 @@ class Cpu {
 		m_SP = 0;
 		m_PC = 0x100;
 
+		m_IME = false;
+
 		m_halted = false;
 	}
 
@@ -291,6 +293,8 @@ class Cpu {
 	uint8_t m_D, m_E;
 	uint8_t m_H, m_L;
 	uint16_t m_SP, m_PC;
+
+	bool m_IME;
 
 	bool m_halted;
 

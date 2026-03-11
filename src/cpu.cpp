@@ -713,6 +713,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_bus.read8(address));
 		break;
 	}
+	case 0xF3: // DI
+		m_IME = false;
+		break;
 	case 0xF5: // PUSH AF
 		doPush(AF());
 		break;
@@ -744,6 +747,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_bus.read8(address));
 		break;
 	}
+	case 0xFB: // EI
+		m_IME = true;
+		break;
 	case 0xFE: // CP A, imm8
 		doCp(m_A, m_bus.read8(m_PC++));
 		break;
