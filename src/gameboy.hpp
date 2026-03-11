@@ -14,6 +14,7 @@ class GameBoy {
 	}
 
 	void start(void);
+	void debugCartridge(void) const { m_cartridge.debug(); }
 
   private:
 	Bus m_bus;

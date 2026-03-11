@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #define CARTRIDGE_ROM_SIZE (1 << 15)
@@ -40,8 +42,17 @@
 #define CARTRIDGE_ROM_SIZE_OFFSET 0x148
 #define CARTRIDGE_ROM_SIZE_LEN 1
 
+constexpr std::array<const char *, 5> ROM_SIZE_DEBUG = {
+	"32 KiB (2 ROM banks)",	  "64 KiB (4 ROM banks)",	"128 KiB (8 ROM banks)",
+	"256 KiB (16 ROM banks)", "512 KiB (32 ROM banks)",
+};
+
 #define CARTRIDGE_RAM_SIZE_OFFSET 0x149
 #define CARTRIDGE_RAM_SIZE_LEN 1
+
+constexpr std::array<const char *, 6> RAM_SIZE_DEBUG = {
+	"0 (no RAM)", "-", "8 KiB (1 bank)", "32 KiB (4 banks)", "128 KiB (16 banks)", "64 KiB (8 banks)",
+};
 
 #define CARTRIDGE_DESTINATION_CODE_OFFSET 0x14A
 #define CARTRIDGE_DESTINATION_CODE_LEN 1
@@ -54,6 +65,7 @@
 
 #define CARTRIDGE_HEADER_CHECKSUM_OFFSET 0x14D
 #define CARTRIDGE_HEADER_CHECKSUM_LEN 1
+
 
 class Cartridge {
   public:
@@ -87,17 +99,17 @@ class Cartridge {
 		std::cout << "== ROM DEBUG ==" << std::endl;
 		std::cout << "- Title: \"" << title() << "\"" << std::endl;
 		std::cout << "- Type: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(type()) << std::endl;
-		std::cout << "- ROM size(code): 0x" << std::hex << std::setw(2) << std::setfill('0') << int(romSize())
-				  << std::endl;
-		std::cout << "- RAM size(code): 0x" << std::hex << std::setw(2) << std::setfill('0') << int(ramSize())
-				  << std::endl;
+		std::cout << "- ROM size(code): 0x" << std::hex << std::setw(2) << std::setfill('0') << int(romSize()) << " ["
+				  << ROM_SIZE_DEBUG[romSize()] << "]" << std::endl;
+		std::cout << "- RAM size(code): 0x" << std::hex << std::setw(2) << std::setfill('0') << int(ramSize()) << " ["
+				  << RAM_SIZE_DEBUG[ramSize()] << "]" << std::endl;
 		std::cout << "- ROM version: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(romVersion())
 				  << std::endl;
 		std::cout << "- Destination code: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(destinationCode())
 				  << std::endl;
 		std::cout << "- Licensee code (" << (oldLicenseeCode() == 0x33 ? "new" : "old") << "): 0x" << std::hex
 				  << std::setw(2) << std::setfill('0') << int(licenseeCode()) << std::endl;
-		std::cout << "- Header checksum(" << (calculateHeaderChecksum() == headerChecksum() ? "correct" : "incorrect")
+		std::cout << "- Header checksum (" << (calculateHeaderChecksum() == headerChecksum() ? "correct" : "incorrect")
 				  << "): 0x" << std::hex << std::setw(2) << std::setfill('0') << int(headerChecksum()) << std::endl;
 	}
 
