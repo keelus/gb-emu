@@ -1,20 +1,42 @@
-#include "memory.hpp"
 #include <cstdint>
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+
+#include "memory.hpp"
 
 uint8_t Memory::read8(const uint16_t address) const {
-	return m_data[address];
+	if(address >= 0xC000 && address <= 0xDFFF) {
+		return m_wram[address - 0xC000];
+	} else if(address >= 0xFF80 && address <= 0xFFFE) {
+		return m_hram[address - 0xFF80];
+	} else if(address >= 0xE000 && address <= 0xFDFF) {
+		return m_wram[address - 0xE000];
+	} else {
+		std::stringstream stream;
+		stream << "Memory: Illegal read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
+			   << std::endl;
+		throw std::runtime_error(stream.str());
+	}
 }
 
 void Memory::write8(const uint16_t address, const uint8_t value) {
-	if(ADDRESS_IS_CATRIDGE_ROM(address)) {
-		throw std::runtime_error("Cannot write to ROM");
+	if(address >= 0xC000 && address <= 0xDFFF) {
+		m_wram[address - 0xC000] = value;
+	} else if(address >= 0xFF80 && address <= 0xFFFE) {
+		m_hram[address - 0xFF80] = value;
+	} else if(address >= 0xE000 && address <= 0xFDFF) {
+		m_wram[address - 0xE000] = value;
 	} else {
-		m_data[address] = value;
+		std::stringstream stream;
+		stream << "Memory: Illegal write on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
+			   << std::endl;
+		throw std::runtime_error(stream.str());
 	}
 }
 
 uint16_t Memory::read16(const uint16_t address) const {
-	return (static_cast<uint16_t>(m_data[address + 1]) << 8) | static_cast<uint16_t>(m_data[address]);
+	return (static_cast<uint16_t>(read8(address + 1)) << 8) | static_cast<uint16_t>(read8(address));
 }
 
 void Memory::write16(const uint16_t address, const uint16_t value) {

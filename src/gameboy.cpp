@@ -3,8 +3,8 @@
 #include <stdexcept>
 
 void GameBoy::start(void) {
-	m_catridge.debug();
-	if(m_catridge.type() != 0) { throw std::runtime_error("ROM only catridges are supported.\n"); }
+	m_cartridge.debug();
+	if(m_cartridge.type() != 0) { throw std::runtime_error("ROM only cartridges are supported.\n"); }
 
 	for(;;) {
 		int cycles = m_cpu.executeInstruction();

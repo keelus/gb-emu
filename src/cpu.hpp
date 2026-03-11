@@ -3,11 +3,11 @@
 #include <cstdint>
 
 #include "alu.hpp"
-#include "memory.hpp"
+#include "bus.hpp"
 
 class Cpu {
   public:
-	Cpu(Memory &memory) : m_memory(memory) {
+	Cpu(Bus &bus) : m_bus(bus) {
 		m_A = 0;
 		m_F = 0;
 
@@ -159,7 +159,7 @@ class Cpu {
 		setFlag<Flag::C>(res.flag_c);
 	}
 	void doInc(uint16_t address) {
-		uint8_t value = m_memory.read8(address);
+		uint8_t value = m_bus.read8(address);
 
 		ALU::Result8 res = ALU::inc8(value);
 		setFlag<Flag::Z>(res.flag_z);
@@ -167,7 +167,7 @@ class Cpu {
 		setFlag<Flag::H>(res.flag_h);
 		setFlag<Flag::C>(res.flag_c);
 
-		m_memory.write8(address, res.value);
+		m_bus.write8(address, res.value);
 	}
 
 	void doInc16(uint16_t &value) { value = ALU::inc16(value).value; }
@@ -188,7 +188,7 @@ class Cpu {
 		setFlag<Flag::C>(res.flag_c);
 	}
 	void doDec(uint16_t address) {
-		uint16_t value = m_memory.read8(address);
+		uint16_t value = m_bus.read8(address);
 
 		ALU::Result8 res = ALU::dec8(value);
 		setFlag<Flag::Z>(res.flag_z);
@@ -196,7 +196,7 @@ class Cpu {
 		setFlag<Flag::H>(res.flag_h);
 		setFlag<Flag::C>(res.flag_c);
 
-		m_memory.write8(address, value);
+		m_bus.write8(address, value);
 	}
 	void doDec(uint8_t &upper, uint8_t lower) {
 		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
@@ -207,24 +207,24 @@ class Cpu {
 	}
 
 	void doJr() {
-		uint8_t offset = m_memory.read8(m_PC++);
+		uint8_t offset = m_bus.read8(m_PC++);
 		m_PC += static_cast<uint16_t>(offset);
 	}
 	void doJr(bool condition) {
-		uint8_t offset = m_memory.read8(m_PC++);
+		uint8_t offset = m_bus.read8(m_PC++);
 		if(condition) { m_PC += static_cast<uint16_t>(offset); }
 	}
 
-	void doJp() { m_PC = m_memory.read16(m_PC); }
+	void doJp() { m_PC = m_bus.read16(m_PC); }
 	void doJp(bool condition) {
-		uint16_t address = m_memory.read16(m_PC);
+		uint16_t address = m_bus.read16(m_PC);
 		m_PC += 2;
 		if(condition) { m_PC = address; }
 	}
 
 	void doPush(uint16_t value) {
-		m_memory.write8(--m_SP, static_cast<uint8_t>(value >> 8));
-		m_memory.write8(--m_SP, static_cast<uint8_t>(value));
+		m_bus.write8(--m_SP, static_cast<uint8_t>(value >> 8));
+		m_bus.write8(--m_SP, static_cast<uint8_t>(value));
 	}
 	void doPop(uint16_t &value) {
 		uint8_t upper, lower;
@@ -232,13 +232,13 @@ class Cpu {
 		value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
 	}
 	void doPop(uint8_t &upper, uint8_t &lower) {
-		lower = m_memory.read8(m_SP++);
-		upper = m_memory.read8(m_SP++);
+		lower = m_bus.read8(m_SP++);
+		upper = m_bus.read8(m_SP++);
 	}
 
 	void doCall() { doCall(true); }
 	void doCall(bool condition) {
-		uint16_t address = m_memory.read16(m_PC);
+		uint16_t address = m_bus.read16(m_PC);
 		m_PC += 2;
 
 		if(condition) {
@@ -294,5 +294,5 @@ class Cpu {
 
 	bool m_halted;
 
-	Memory &m_memory;
+	Bus &m_bus;
 };

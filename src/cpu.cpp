@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <iomanip>
 #include <ios>
+#include <iostream>
 #include <sstream>
 
 int Cpu::executeInstruction(void) {
 	if(m_halted) { return 0; }
 
-	uint8_t opcode = m_memory.read8(m_PC++);
+	uint8_t opcode = m_bus.read8(m_PC++);
 	std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"
 			  << std::hex << std::setw(4) << std::setfill('0') << int(m_PC) << ": \""
 			  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
@@ -17,11 +18,11 @@ int Cpu::executeInstruction(void) {
 	case 0x00: // NOP
 		break;
 	case 0x01: // LD BC, imm16
-		m_C = m_memory.read8(m_PC++);
-		m_B = m_memory.read8(m_PC++);
+		m_C = m_bus.read8(m_PC++);
+		m_B = m_bus.read8(m_PC++);
 		break;
 	case 0x02: // LD [BC], A
-		m_memory.write8(BC(), m_A);
+		m_bus.write8(BC(), m_A);
 		break;
 	case 0x03: // INC BC
 		doInc16(m_B, m_C);
@@ -33,20 +34,23 @@ int Cpu::executeInstruction(void) {
 		doDec(m_B);
 		break;
 	case 0x06: // LD B, imm8
-		doLd(m_B, m_memory.read8(m_PC++));
+		doLd(m_B, m_bus.read8(m_PC++));
+		break;
+	case 0x07: // RLCA
+		doRlca();
 		break;
 	case 0x08: { // LD [imm16], SP
-		uint8_t low = m_memory.read8(m_PC++);
-		uint8_t high = m_memory.read8(m_PC++);
+		uint8_t low = m_bus.read8(m_PC++);
+		uint8_t high = m_bus.read8(m_PC++);
 		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
-		m_memory.write16(address, m_SP);
+		m_bus.write16(address, m_SP);
 		break;
 	}
 	case 0x09: // LD HL, BC
 		doAdd16ToHL(BC());
 		break;
 	case 0x0A: // LD A, [BC]
-		doLd(m_A, m_memory.read8(BC()));
+		doLd(m_A, m_bus.read8(BC()));
 		break;
 	case 0x0C: // INC C
 		doInc(m_C);
@@ -55,15 +59,18 @@ int Cpu::executeInstruction(void) {
 		doDec(m_C);
 		break;
 	case 0x0E: // LD C, imm8
-		doLd(m_C, m_memory.read8(m_PC++));
+		doLd(m_C, m_bus.read8(m_PC++));
+		break;
+	case 0x0F: // RRCA
+		doRrca();
 		break;
 
 	case 0x11: // LD DE, imm16
-		m_E = m_memory.read8(m_PC++);
-		m_D = m_memory.read8(m_PC++);
+		m_E = m_bus.read8(m_PC++);
+		m_D = m_bus.read8(m_PC++);
 		break;
 	case 0x12: // LD [DE], A
-		m_memory.write8(DE(), m_A);
+		m_bus.write8(DE(), m_A);
 		break;
 	case 0x13: // INC DE
 		doInc16(m_D, m_E);
@@ -75,7 +82,10 @@ int Cpu::executeInstruction(void) {
 		doDec(m_D);
 		break;
 	case 0x16: // LD D, imm8
-		doLd(m_D, m_memory.read8(m_PC++));
+		doLd(m_D, m_bus.read8(m_PC++));
+		break;
+	case 0x17: // RLA
+		doRla();
 		break;
 	case 0x18: // JR imm8
 		doJr();
@@ -84,7 +94,7 @@ int Cpu::executeInstruction(void) {
 		doAdd16ToHL(DE());
 		break;
 	case 0x1A: // LD A, [DE]
-		doLd(m_A, m_memory.read8(DE()));
+		doLd(m_A, m_bus.read8(DE()));
 		break;
 	case 0x1C: // INC E
 		doInc(m_E);
@@ -93,18 +103,21 @@ int Cpu::executeInstruction(void) {
 		doDec(m_E);
 		break;
 	case 0x1E: // LD E, imm8
-		doLd(m_E, m_memory.read8(m_PC++));
+		doLd(m_E, m_bus.read8(m_PC++));
+		break;
+	case 0x1F: // RRA
+		doRra();
 		break;
 
 	case 0x20: // JR NZ, imm8
 		doJr(!getFlag<Flag::Z>());
 		break;
 	case 0x21: // LD HL, imm16
-		m_L = m_memory.read8(m_PC++);
-		m_H = m_memory.read8(m_PC++);
+		m_L = m_bus.read8(m_PC++);
+		m_H = m_bus.read8(m_PC++);
 		break;
 	case 0x22: // LD [HL+], A
-		m_memory.write8(HL(), m_A);
+		m_bus.write8(HL(), m_A);
 		incHL();
 		break;
 	case 0x23: // INC HL
@@ -117,7 +130,7 @@ int Cpu::executeInstruction(void) {
 		doDec(m_H);
 		break;
 	case 0x26: // LD H, imm8
-		doLd(m_H, m_memory.read8(m_PC++));
+		doLd(m_H, m_bus.read8(m_PC++));
 		break;
 	case 0x28: // JR Z, imm8
 		doJr(getFlag<Flag::Z>());
@@ -126,7 +139,7 @@ int Cpu::executeInstruction(void) {
 		doAdd16ToHL(HL());
 		break;
 	case 0x2A: // LD A, [HL+]
-		doLd(m_A, m_memory.read8(HL()));
+		doLd(m_A, m_bus.read8(HL()));
 		incHL();
 		break;
 	case 0x2C: // INC L
@@ -136,20 +149,20 @@ int Cpu::executeInstruction(void) {
 		doDec(m_L);
 		break;
 	case 0x2E: // LD L, imm8
-		doLd(m_L, m_memory.read8(m_PC++));
+		doLd(m_L, m_bus.read8(m_PC++));
 		break;
 
 	case 0x30: // JR NC, imm8
 		doJr(!getFlag<Flag::C>());
 		break;
 	case 0x31: { // LD SP, imm16
-		uint8_t low = m_memory.read8(m_PC++);
-		uint8_t high = m_memory.read8(m_PC++);
+		uint8_t low = m_bus.read8(m_PC++);
+		uint8_t high = m_bus.read8(m_PC++);
 		m_SP = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
 		break;
 	}
 	case 0x32: // LD [HL-], A
-		m_memory.write8(HL(), m_A);
+		m_bus.write8(HL(), m_A);
 		decHL();
 		break;
 	case 0x33: // INC SP
@@ -163,7 +176,7 @@ int Cpu::executeInstruction(void) {
 		doDec(HL());
 		break;
 	case 0x36: // LD [HL], imm8
-		m_memory.write8(HL(), m_memory.read8(m_PC++));
+		m_bus.write8(HL(), m_bus.read8(m_PC++));
 		break;
 	case 0x38: // JR C, imm8
 		doJr(getFlag<Flag::C>());
@@ -172,7 +185,7 @@ int Cpu::executeInstruction(void) {
 		doAdd16ToHL(SP());
 		break;
 	case 0x3A: // LD A, [HL-]
-		doLd(m_A, m_memory.read8(HL()));
+		doLd(m_A, m_bus.read8(HL()));
 		decHL();
 		break;
 	case 0x3C: // INC A
@@ -182,7 +195,7 @@ int Cpu::executeInstruction(void) {
 		doDec(m_A);
 		break;
 	case 0x3E: // LD A, imm8
-		doLd(m_A, m_memory.read8(m_PC++));
+		doLd(m_A, m_bus.read8(m_PC++));
 		break;
 
 	case 0x40: // LD B, B
@@ -204,7 +217,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_B, m_L);
 		break;
 	case 0x46: // LD B, [HL]
-		doLd(m_B, m_memory.read8(HL()));
+		doLd(m_B, m_bus.read8(HL()));
 		break;
 	case 0x47: // LD B, A
 		doLd(m_B, m_A);
@@ -228,7 +241,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_C, m_L);
 		break;
 	case 0x4E: // LD C, [HL]
-		doLd(m_C, m_memory.read8(HL()));
+		doLd(m_C, m_bus.read8(HL()));
 		break;
 	case 0x4F: // LD C, A
 		doLd(m_C, m_A);
@@ -252,7 +265,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_D, m_L);
 		break;
 	case 0x56: // LD D, [HL]
-		doLd(m_D, m_memory.read8(HL()));
+		doLd(m_D, m_bus.read8(HL()));
 		break;
 	case 0x57: // LD D, A
 		doLd(m_D, m_A);
@@ -276,7 +289,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_E, m_L);
 		break;
 	case 0x5E: // LD E, [HL]
-		doLd(m_E, m_memory.read8(HL()));
+		doLd(m_E, m_bus.read8(HL()));
 		break;
 	case 0x5F: // LD E, A
 		doLd(m_E, m_A);
@@ -300,7 +313,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_H, m_L);
 		break;
 	case 0x66: // LD H, [HL]
-		doLd(m_H, m_memory.read8(HL()));
+		doLd(m_H, m_bus.read8(HL()));
 		break;
 	case 0x67: // LD H, A
 		doLd(m_H, m_A);
@@ -324,34 +337,34 @@ int Cpu::executeInstruction(void) {
 		doLd(m_L, m_L);
 		break;
 	case 0x6E: // LD L, [HL]
-		doLd(m_L, m_memory.read8(HL()));
+		doLd(m_L, m_bus.read8(HL()));
 		break;
 	case 0x6F: // LD L, A
 		doLd(m_L, m_A);
 		break;
 	case 0x70: // LD [HL], B
-		m_memory.write8(HL(), m_B);
+		m_bus.write8(HL(), m_B);
 		break;
 	case 0x71: // LD [HL], C
-		m_memory.write8(HL(), m_C);
+		m_bus.write8(HL(), m_C);
 		break;
 	case 0x72: // LD [HL], D
-		m_memory.write8(HL(), m_D);
+		m_bus.write8(HL(), m_D);
 		break;
 	case 0x73: // LD [HL], E
-		m_memory.write8(HL(), m_E);
+		m_bus.write8(HL(), m_E);
 		break;
 	case 0x74: // LD [HL], H
-		m_memory.write8(HL(), m_H);
+		m_bus.write8(HL(), m_H);
 		break;
 	case 0x75: // LD [HL], L
-		m_memory.write8(HL(), m_L);
+		m_bus.write8(HL(), m_L);
 		break;
 	case 0x76: // HALT
 		m_halted = true;
 		break;
 	case 0x77: // LD [HL], A
-		m_memory.write8(HL(), m_A);
+		m_bus.write8(HL(), m_A);
 		break;
 	case 0x78: // LD A, B
 		doLd(m_A, m_B);
@@ -372,7 +385,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_L);
 		break;
 	case 0x7E: // LD A, [HL]
-		doLd(m_A, m_memory.read8(HL()));
+		doLd(m_A, m_bus.read8(HL()));
 		break;
 	case 0x7F: // LD A, A
 		doLd(m_A, m_A);
@@ -396,7 +409,7 @@ int Cpu::executeInstruction(void) {
 		doAdd(m_A, m_L);
 		break;
 	case 0x86: // ADD A, [HL]
-		doAdd(m_A, m_memory.read8(HL()));
+		doAdd(m_A, m_bus.read8(HL()));
 		break;
 	case 0x87: // ADD A, A
 		doAdd(m_A, m_A);
@@ -420,7 +433,7 @@ int Cpu::executeInstruction(void) {
 		doAdc(m_A, m_L);
 		break;
 	case 0x8E: // ADC A, [HL]
-		doAdc(m_A, m_memory.read8(HL()));
+		doAdc(m_A, m_bus.read8(HL()));
 		break;
 	case 0x8F: // ADC A, A
 		doAdc(m_A, m_A);
@@ -444,7 +457,7 @@ int Cpu::executeInstruction(void) {
 		doSub(m_A, m_L);
 		break;
 	case 0x96: // SUB A, [HL]
-		doSub(m_A, m_memory.read8(HL()));
+		doSub(m_A, m_bus.read8(HL()));
 		break;
 	case 0x97: // SUB A, A
 		doSub(m_A, m_A);
@@ -468,7 +481,7 @@ int Cpu::executeInstruction(void) {
 		doSbc(m_A, m_L);
 		break;
 	case 0x9E: // SBC A, [HL]
-		doSbc(m_A, m_memory.read8(HL()));
+		doSbc(m_A, m_bus.read8(HL()));
 		break;
 	case 0x9F: // SBC A, A
 		doSbc(m_A, m_A);
@@ -492,7 +505,7 @@ int Cpu::executeInstruction(void) {
 		doAnd(m_A, m_L);
 		break;
 	case 0xA6: // AND A, [HL]
-		doAnd(m_A, m_memory.read8(HL()));
+		doAnd(m_A, m_bus.read8(HL()));
 		break;
 	case 0xA7: // AND A, A
 		doAnd(m_A, m_A);
@@ -516,7 +529,7 @@ int Cpu::executeInstruction(void) {
 		doXor(m_A, m_L);
 		break;
 	case 0xAE: // XOR A, [HL]
-		doXor(m_A, m_memory.read8(HL()));
+		doXor(m_A, m_bus.read8(HL()));
 		break;
 	case 0xAF: // XOR A, A
 		doXor(m_A, m_A);
@@ -540,7 +553,7 @@ int Cpu::executeInstruction(void) {
 		doOr(m_A, m_L);
 		break;
 	case 0xB6: // OR A, [HL]
-		doOr(m_A, m_memory.read8(HL()));
+		doOr(m_A, m_bus.read8(HL()));
 		break;
 	case 0xB7: // OR A, A
 		doOr(m_A, m_A);
@@ -564,7 +577,7 @@ int Cpu::executeInstruction(void) {
 		doCp(m_A, m_L);
 		break;
 	case 0xBE: // CP A, [HL]
-		doCp(m_A, m_memory.read8(HL()));
+		doCp(m_A, m_bus.read8(HL()));
 		break;
 	case 0xBF: // CP A, A
 		doCp(m_A, m_A);
@@ -588,7 +601,7 @@ int Cpu::executeInstruction(void) {
 		doPush(BC());
 		break;
 	case 0xC6: // ADD A, imm8
-		doAdd(m_A, m_memory.read8(m_PC++));
+		doAdd(m_A, m_bus.read8(m_PC++));
 		break;
 	case 0xC8: // RET Z
 		doRet(getFlag<Flag::Z>());
@@ -606,7 +619,7 @@ int Cpu::executeInstruction(void) {
 		doCall();
 		break;
 	case 0xCE: // ADC A, imm8
-		doAdc(m_A, m_memory.read8(m_PC++));
+		doAdc(m_A, m_bus.read8(m_PC++));
 		break;
 
 	case 0xD0: // RET NC
@@ -625,7 +638,7 @@ int Cpu::executeInstruction(void) {
 		doPush(DE());
 		break;
 	case 0xD6: // SUB A, imm8
-		doSub(m_A, m_memory.read8(m_PC++));
+		doSub(m_A, m_bus.read8(m_PC++));
 		break;
 	case 0xD8: // RET C
 		doRet(getFlag<Flag::C>());
@@ -637,13 +650,13 @@ int Cpu::executeInstruction(void) {
 		doCall(getFlag<Flag::C>());
 		break;
 	case 0xDE: // SBC A, imm8
-		doSbc(m_A, m_memory.read8(m_PC++));
+		doSbc(m_A, m_bus.read8(m_PC++));
 		break;
 
 	case 0xE0: { // LDH [imm8], A
-		uint8_t low = m_memory.read8(m_PC++);
+		uint8_t low = m_bus.read8(m_PC++);
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
-		m_memory.write8(address, m_A);
+		m_bus.write8(address, m_A);
 		break;
 	}
 	case 0xE1: // POP HL
@@ -651,17 +664,17 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xE2: { // LDH [C], A
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
-		m_memory.write8(address, m_A);
+		m_bus.write8(address, m_A);
 		break;
 	}
 	case 0xE5: // PUSH HL
 		doPush(HL());
 		break;
 	case 0xE6: // AND A, imm8
-		doAnd(m_A, m_memory.read8(m_PC++));
+		doAnd(m_A, m_bus.read8(m_PC++));
 		break;
 	case 0xE8: { // ADD SP, e8
-		uint16_t imm8 = static_cast<uint16_t>(m_memory.read8(m_PC++));
+		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
 		uint16_t result = (m_SP + imm8);
 
 		setFlag<Cpu::Flag::Z>(0);
@@ -676,20 +689,20 @@ int Cpu::executeInstruction(void) {
 		m_PC = HL();
 		break;
 	case 0xEA: { // LD [imm16], A
-		uint8_t low = m_memory.read8(m_PC++);
-		uint8_t high = m_memory.read8(m_PC++);
+		uint8_t low = m_bus.read8(m_PC++);
+		uint8_t high = m_bus.read8(m_PC++);
 		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
-		m_memory.write8(address, m_A);
+		m_bus.write8(address, m_A);
 		break;
 	}
 	case 0xEE: // XOR A, imm8
-		doXor(m_A, m_memory.read8(m_PC++));
+		doXor(m_A, m_bus.read8(m_PC++));
 		break;
 
 	case 0xF0: { // LDH A, [imm8]
-		uint8_t low = m_memory.read8(m_PC++);
+		uint8_t low = m_bus.read8(m_PC++);
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
-		doLd(m_A, m_memory.read8(address));
+		doLd(m_A, m_bus.read8(address));
 		break;
 	}
 	case 0xF1: // POP AF
@@ -697,17 +710,17 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xF2: { // LDH A, [C]
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);
-		doLd(m_A, m_memory.read8(address));
+		doLd(m_A, m_bus.read8(address));
 		break;
 	}
 	case 0xF5: // PUSH AF
 		doPush(AF());
 		break;
 	case 0xF6: // OR A, imm8
-		doOr(m_A, m_memory.read8(m_PC++));
+		doOr(m_A, m_bus.read8(m_PC++));
 		break;
 	case 0xF8: { // LD HL, SP+e8
-		uint16_t imm8 = static_cast<uint16_t>(m_memory.read8(m_PC++));
+		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
 		uint16_t result = (m_SP + imm8);
 
 		m_H = static_cast<uint8_t>(static_cast<uint16_t>(result) >> 8);
@@ -725,14 +738,14 @@ int Cpu::executeInstruction(void) {
 		break;
 	}
 	case 0xFA: { // LD A, [imm16]
-		uint8_t low = m_memory.read8(m_PC++);
-		uint8_t high = m_memory.read8(m_PC++);
+		uint8_t low = m_bus.read8(m_PC++);
+		uint8_t high = m_bus.read8(m_PC++);
 		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
-		doLd(m_A, m_memory.read8(address));
+		doLd(m_A, m_bus.read8(address));
 		break;
 	}
 	case 0xFE: // CP A, imm8
-		doCp(m_A, m_memory.read8(m_PC++));
+		doCp(m_A, m_bus.read8(m_PC++));
 		break;
 
 	default: {
