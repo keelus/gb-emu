@@ -18,7 +18,7 @@ uint8_t Bus::read8(const uint16_t address) const {
 	} else if(IS_MEMORY(address)) {
 		return m_memory->read8(address);
 	} else if(IS_IO(address)) {
-		throw std::runtime_error("I/O not implemented.");
+		return ioRead8(address);
 	} else if(IS_IE(address)) {
 		throw std::runtime_error("Interrupt Enable Register not implemented.");
 	} else {
@@ -41,7 +41,7 @@ void Bus::write8(const uint16_t address, const uint8_t value) {
 	} else if(IS_MEMORY(address)) {
 		m_memory->write8(address, value);
 	} else if(IS_IO(address)) {
-		throw std::runtime_error("I/O not implemented.");
+		ioWrite8(address, value);
 	} else if(IS_IE(address)) {
 		throw std::runtime_error("Interrupt Enable Register not implemented.");
 	} else {
@@ -55,4 +55,27 @@ void Bus::write8(const uint16_t address, const uint8_t value) {
 void Bus::write16(const uint16_t address, const uint16_t value) {
 	write8(address, static_cast<uint8_t>(value));
 	write8(address + 1, static_cast<uint8_t>(value >> 8));
+}
+
+
+uint8_t Bus::ioRead8(const uint16_t address) const {
+	switch(address) {
+	default: {
+		std::stringstream stream;
+		stream << "Bus: Illegal I/O read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
+			   << std::endl;
+		throw std::runtime_error(stream.str());
+	}
+	}
+}
+
+void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
+	switch(address) {
+	default: {
+		std::stringstream stream;
+		stream << "Bus: Illegal I/O write on address 0x" << std::hex << std::setw(4) << std::setfill('0')
+			   << int(address) << std::endl;
+		throw std::runtime_error(stream.str());
+	}
+	}
 }

@@ -25,6 +25,9 @@ class Bus {
 	void write16(const uint16_t address, const uint16_t value);
 
   private:
+	uint8_t ioRead8(const uint16_t address) const;
+	void ioWrite8(const uint16_t address, const uint8_t value);
+
 	Memory *m_memory;
 	Cpu *m_cpu;
 	Cartridge *m_cartridge;
