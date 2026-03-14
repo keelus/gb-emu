@@ -1137,6 +1137,9 @@ int Cpu::executeInstruction(void) {
 	case 0xCA: // JP Z, imm16
 		doJp(getFlag<Flag::Z>());
 		break;
+	case 0xCB: // PREFIX
+		executeCbInstruction();
+		break;
 	case 0xCC: // CALL Z, imm16
 		doCall(getFlag<Flag::Z>());
 		break;

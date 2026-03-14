@@ -141,8 +141,8 @@ class ALU {
 		return res;
 	}
 
-	static Result8 rlca(uint8_t a) { return rla(a, a >> 7); }
-	static Result8 rla(uint8_t a, bool flag_c) {
+	static Result8 rlc(uint8_t a) { return rl(a, a >> 7); }
+	static Result8 rl(uint8_t a, bool flag_c) {
 		Result8 res;
 
 		res.flag_c = a >> 7;
@@ -151,12 +151,39 @@ class ALU {
 		return res;
 	}
 
-	static Result8 rrca(uint8_t a) { return rra(a, a & 1); }
-	static Result8 rra(uint8_t a, bool flag_c) {
+	static Result8 rrc(uint8_t a) { return rr(a, a & 1); }
+	static Result8 rr(uint8_t a, bool flag_c) {
 		Result8 res;
 
 		res.flag_c = a & 1;
 		res.value = (a >> 1) | (static_cast<uint8_t>(flag_c) << 7);
+
+		return res;
+	}
+
+	static Result8 sla(uint8_t a) {
+		Result8 res;
+
+		res.flag_c = a >> 7;
+		res.value = (a << 1);
+
+		return res;
+	}
+
+	static Result8 sra(uint8_t a) {
+		Result8 res;
+
+		res.flag_c = a & 1;
+		res.value = (a & 0x80) | (a >> 1);
+
+		return res;
+	}
+
+	static Result8 srl(uint8_t a) {
+		Result8 res;
+
+		res.flag_c = a & 1;
+		res.value = (a >> 1);
 
 		return res;
 	}

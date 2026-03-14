@@ -20,8 +20,9 @@ class Cpu {
 		m_H = 0;
 		m_L = 0;
 
-		m_SP = 0;
-		m_PC = 0x100;
+		m_SP = 0xFFFE;
+		// m_PC = 0x100;
+		m_PC = 0;
 
 		m_IME = false;
 
@@ -64,6 +65,7 @@ class Cpu {
 	uint16_t PC(void) const { return m_PC; }
 
 	int executeInstruction(void);
+	int executeCbInstruction(void);
 
   private:
 	void incHL(void) {
@@ -254,38 +256,143 @@ class Cpu {
 		if(condition) { doPop(m_PC); }
 	}
 
-	void doRlca() {
-		ALU::Result8 res = ALU::rlca(m_A);
-		m_A = res.value;
-		setFlag<Flag::Z>(0);
-		setFlag<Flag::N>(0);
-		setFlag<Flag::H>(0);
-		setFlag<Flag::C>(res.flag_c);
-	}
-	void doRrca() {
-		ALU::Result8 res = ALU::rrca(m_A);
-		m_A = res.value;
-		setFlag<Flag::Z>(0);
+	void doRlc(uint8_t &reg) {
+		ALU::Result8 res = ALU::rlc(reg);
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
 		setFlag<Flag::N>(0);
 		setFlag<Flag::H>(0);
 		setFlag<Flag::C>(res.flag_c);
 	}
 
-	void doRla() {
-		ALU::Result8 res = ALU::rla(m_A, getFlag<Flag::C>());
-		m_A = res.value;
+	void doRlc(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doRlc(value);
+		m_bus.write8(address, value);
+	}
+
+	void doRlca() {
+		doRlc(m_A);
 		setFlag<Flag::Z>(0);
+	}
+
+	void doRrc(uint8_t &reg) {
+		ALU::Result8 res = ALU::rrc(reg);
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
 		setFlag<Flag::N>(0);
 		setFlag<Flag::H>(0);
 		setFlag<Flag::C>(res.flag_c);
 	}
-	void doRra() {
-		ALU::Result8 res = ALU::rra(m_A, getFlag<Flag::C>());
-		m_A = res.value;
+
+	void doRrc(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doRrc(value);
+		m_bus.write8(address, value);
+	}
+
+	void doRrca() {
+		doRrc(m_A);
 		setFlag<Flag::Z>(0);
+	}
+
+	void doRl(uint8_t &reg) {
+		ALU::Result8 res = ALU::rl(reg, getFlag<Flag::C>());
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
 		setFlag<Flag::N>(0);
 		setFlag<Flag::H>(0);
 		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doRl(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doRl(value);
+		m_bus.write8(address, value);
+	}
+
+	void doRla() {
+		doRl(m_A);
+		setFlag<Flag::Z>(0);
+	}
+
+	void doRr(uint8_t &reg) {
+		ALU::Result8 res = ALU::rr(reg, getFlag<Flag::C>());
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doRr(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doRr(value);
+		m_bus.write8(address, value);
+	}
+
+	void doRra() {
+		doRr(m_A);
+		setFlag<Flag::Z>(0);
+	}
+
+	void doSla(uint8_t &reg) {
+		ALU::Result8 res = ALU::sla(reg);
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doSla(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doSla(value);
+		m_bus.write8(address, value);
+	}
+
+	void doSra(uint8_t &reg) {
+		ALU::Result8 res = ALU::sra(reg);
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doSra(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doSra(value);
+		m_bus.write8(address, value);
+	}
+
+	void doSwap(uint8_t &reg) {
+		reg = ((reg & 0xF) << 4) | ((reg & 0xF0) >> 4);
+		setFlag<Flag::Z>(reg == 0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(0);
+	}
+
+	void doSwap(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doSwap(value);
+		m_bus.write8(address, value);
+	}
+
+	void doSrl(uint8_t &reg) {
+		ALU::Result8 res = ALU::srl(reg);
+		reg = res.value;
+		setFlag<Flag::Z>(res.value == 0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(0);
+		setFlag<Flag::C>(res.flag_c);
+	}
+
+	void doSrl(uint16_t address) {
+		uint8_t value = m_bus.read8(address);
+		doSrl(value);
+		m_bus.write8(address, value);
 	}
 
 	uint8_t m_A, m_F;
