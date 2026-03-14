@@ -4,13 +4,15 @@
 #include "cartridge.hpp"
 #include "cpu.hpp"
 #include "memory.hpp"
+#include "ppu.hpp"
 
 class GameBoy {
   public:
-	GameBoy(const std::string &romPath) : m_cartridge(romPath), m_cpu(m_bus) {
+	GameBoy(const std::string &romPath) : m_cartridge(romPath), m_cpu(m_bus), m_ppu(m_bus) {
+		m_bus.addCartridge(&m_cartridge);
 		m_bus.addCpu(&m_cpu);
 		m_bus.addMemory(&m_memory);
-		m_bus.addCartridge(&m_cartridge);
+		m_bus.addPpu(&m_ppu);
 	}
 
 	void start(void);
@@ -21,4 +23,5 @@ class GameBoy {
 	Cartridge m_cartridge;
 	Cpu m_cpu;
 	Memory m_memory;
+	Ppu m_ppu;
 };

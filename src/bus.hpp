@@ -3,8 +3,10 @@
 #include "cartridge.hpp"
 #include "memory.hpp"
 #include <cstdint>
+#include <cstring>
 
 class Cpu;
+class Ppu;
 
 class Bus {
   public:
@@ -12,11 +14,14 @@ class Bus {
 		m_memory = NULL;
 		m_cpu = NULL;
 		m_cartridge = NULL;
+
+		memset(m_iomem, 0, sizeof(uint8_t) * IO_MEM_SIZE);
 	}
 
+	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
 	void addCpu(Cpu *cpu) { m_cpu = cpu; }
 	void addMemory(Memory *memory) { m_memory = memory; }
-	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
+	void addPpu(Ppu *ppu) { m_ppu = ppu; }
 
 	uint8_t read8(const uint16_t address) const;
 	uint16_t read16(const uint16_t address) const;
@@ -28,7 +33,8 @@ class Bus {
 	uint8_t ioRead8(const uint16_t address) const;
 	void ioWrite8(const uint16_t address, const uint8_t value);
 
-	Memory *m_memory;
-	Cpu *m_cpu;
 	Cartridge *m_cartridge;
+	Cpu *m_cpu;
+	Memory *m_memory;
+	Ppu *m_ppu;
 };

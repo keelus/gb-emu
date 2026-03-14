@@ -1,4 +1,5 @@
 #include "bus.hpp"
+#include "ppu.hpp"
 #include <cstdint>
 #include <sstream>
 #include <stdexcept>
@@ -14,7 +15,7 @@ uint8_t Bus::read8(const uint16_t address) const {
 	if(IS_CARTRIDGE(address)) {
 		return m_cartridge->read8(address);
 	} else if(IS_PPU(address)) {
-		throw std::runtime_error("PPU not implemented.");
+		return m_ppu->read8(address);
 	} else if(IS_MEMORY(address)) {
 		return m_memory->read8(address);
 	} else if(IS_IO(address)) {
@@ -37,7 +38,7 @@ void Bus::write8(const uint16_t address, const uint8_t value) {
 	if(IS_CARTRIDGE(address)) {
 		m_cartridge->write8(address, value);
 	} else if(IS_PPU(address)) {
-		throw std::runtime_error("PPU not implemented.");
+		return m_ppu->write8(address, value);
 	} else if(IS_MEMORY(address)) {
 		m_memory->write8(address, value);
 	} else if(IS_IO(address)) {
