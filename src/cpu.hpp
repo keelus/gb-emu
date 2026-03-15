@@ -175,7 +175,7 @@ class Cpu {
 	}
 
 	void doInc16(uint16_t &value) { value = ALU::inc16(value).value; }
-	void doInc16(uint8_t &upper, uint8_t lower) {
+	void doInc16(uint8_t &upper, uint8_t &lower) {
 		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
 		uint16_t result = ALU::inc16(value).value;
 
@@ -210,13 +210,22 @@ class Cpu {
 		lower = static_cast<uint8_t>(result);
 	}
 
+	void doDec16(uint16_t &value) { value = ALU::dec16(value).value; }
+	void doDec16(uint8_t &upper, uint8_t &lower) {
+		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		uint16_t result = ALU::dec16(value).value;
+
+		upper = static_cast<uint8_t>(result >> 8);
+		lower = static_cast<uint8_t>(result);
+	}
+
 	void doJr() {
-		uint8_t offset = m_bus.read8(m_PC++);
-		m_PC += static_cast<uint16_t>(offset);
+		int8_t offset = m_bus.read8(m_PC++);
+		m_PC = static_cast<uint16_t>(static_cast<int32_t>(m_PC) + offset);
 	}
 	void doJr(bool condition) {
-		uint8_t offset = m_bus.read8(m_PC++);
-		if(condition) { m_PC += static_cast<uint16_t>(offset); }
+		int8_t offset = m_bus.read8(m_PC++);
+		if(condition) { m_PC = static_cast<uint16_t>(static_cast<int32_t>(m_PC) + offset); }
 	}
 
 	void doJp() { m_PC = m_bus.read16(m_PC); }
@@ -392,6 +401,34 @@ class Cpu {
 	void doSrl(uint16_t address) {
 		uint8_t value = m_bus.read8(address);
 		doSrl(value);
+		m_bus.write8(address, value);
+	}
+
+	void doBit(uint8_t &reg, uint8_t bit) {
+		setFlag<Flag::Z>(((reg >> bit) & 1) == 0);
+		setFlag<Flag::N>(0);
+		setFlag<Flag::H>(1);
+	}
+
+	void doBit(uint16_t address, uint8_t bit) {
+		uint8_t value = m_bus.read8(address);
+		doBit(value, bit);
+		m_bus.write8(address, value);
+	}
+
+	void doRes(uint8_t &reg, uint8_t bit) { reg &= ~(1 << bit); }
+
+	void doRes(uint16_t address, uint8_t bit) {
+		uint8_t value = m_bus.read8(address);
+		doRes(value, bit);
+		m_bus.write8(address, value);
+	}
+
+	void doSet(uint8_t &reg, uint8_t bit) { reg |= (1 << bit); }
+
+	void doSet(uint16_t address, uint8_t bit) {
+		uint8_t value = m_bus.read8(address);
+		doSet(value, bit);
 		m_bus.write8(address, value);
 	}
 

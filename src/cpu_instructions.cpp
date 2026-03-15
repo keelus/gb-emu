@@ -535,9 +535,11 @@ int Cpu::executeInstruction(void) {
 	if(m_halted) { return 0; }
 
 	uint8_t opcode = m_bus.read8(m_PC++);
-	std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"
-			  << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 1) << ": \""
-			  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
+	if(opcode != 0xCB) {
+		std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"
+				  << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 1) << ": \""
+				  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
+	}
 
 	switch(opcode) {
 	case 0x00: // NOP
@@ -576,6 +578,9 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x0A: // LD A, [BC]
 		doLd(m_A, m_bus.read8(BC()));
+		break;
+	case 0x0B: // DEC BC
+		doDec16(m_B, m_C);
 		break;
 	case 0x0C: // INC C
 		doInc(m_C);
@@ -620,6 +625,9 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x1A: // LD A, [DE]
 		doLd(m_A, m_bus.read8(DE()));
+		break;
+	case 0x1B: // DEC DE
+		doDec16(m_D, m_E);
 		break;
 	case 0x1C: // INC E
 		doInc(m_E);
@@ -667,6 +675,9 @@ int Cpu::executeInstruction(void) {
 		doLd(m_A, m_bus.read8(HL()));
 		incHL();
 		break;
+	case 0x2B: // DEC HL
+		doDec16(m_H, m_L);
+		break;
 	case 0x2C: // INC L
 		doInc(m_L);
 		break;
@@ -712,6 +723,9 @@ int Cpu::executeInstruction(void) {
 	case 0x3A: // LD A, [HL-]
 		doLd(m_A, m_bus.read8(HL()));
 		decHL();
+		break;
+	case 0x3B: // DEC SP
+		doDec16(m_SP);
 		break;
 	case 0x3C: // INC A
 		doInc(m_A);
