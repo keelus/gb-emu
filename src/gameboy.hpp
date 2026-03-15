@@ -5,6 +5,7 @@
 #include "cpu.hpp"
 #include "memory.hpp"
 #include "ppu.hpp"
+#include <cstddef>
 
 class GameBoy {
   public:
@@ -17,6 +18,8 @@ class GameBoy {
 
 	void start(void);
 	void debugCartridge(void) const { m_cartridge.debug(); }
+
+	void tick(size_t tickCycles);
 
   private:
 	Bus m_bus;

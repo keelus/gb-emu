@@ -7,9 +7,10 @@
 #include <iomanip>
 #include <ios>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
+
 #include <vector>
 
 #define CARTRIDGE_ROM_SIZE (1 << 15)
@@ -66,6 +67,9 @@ constexpr std::array<const char *, 6> RAM_SIZE_DEBUG = {
 #define CARTRIDGE_HEADER_CHECKSUM_OFFSET 0x14D
 #define CARTRIDGE_HEADER_CHECKSUM_LEN 1
 
+// clang-format off
+const std::array<uint8_t, 256> BOOT_ROM = {/* TODO: Upload the BOOT ROM OR handle from file */};
+// clang-format on
 
 class Cartridge {
   public:
@@ -154,8 +158,24 @@ class Cartridge {
 		return checksum;
 	}
 
-	uint8_t read8(const uint16_t address) const { return m_rom[address]; }
-	void write8(const uint16_t address, const uint8_t value) { m_rom[address] = value; }
+	uint8_t read8(const uint16_t address) const {
+		if(address < 0x100) {
+			return BOOT_ROM[address];
+		} else {
+			return m_rom[address];
+		}
+	}
+	void write8(const uint16_t address, const uint8_t value) {
+		if(address < 0x100) {
+			std::stringstream stream;
+			stream << "Cartridge: Illegal write to boot ROM on address 0x" << std::hex << std::setw(4)
+				   << std::setfill('0') << int(address) << std::endl;
+			throw std::runtime_error(stream.str());
+
+		} else {
+			m_rom[address] = value;
+		}
+	}
 
 	const char *data() const { return m_rom; }
 

@@ -9,3 +9,10 @@ void GameBoy::start(void) {
 		int cycles = m_cpu.executeInstruction();
 	}
 }
+
+void GameBoy::tick(size_t tickCycles) {
+	for(size_t i = 0; i < tickCycles; i++) {
+		int cycles = m_cpu.executeInstruction();
+		m_ppu.tick(cycles);
+	}
+}

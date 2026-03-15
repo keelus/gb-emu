@@ -61,22 +61,80 @@ void Bus::write16(const uint16_t address, const uint16_t value) {
 
 uint8_t Bus::ioRead8(const uint16_t address) const {
 	switch(address) {
+	case 0xFF10:
+	case 0xFF11:
+	case 0xFF12:
+	case 0xFF13:
+	case 0xFF14:
+	case 0xFF15:
+	case 0xFF16:
+	case 0xFF17:
+	case 0xFF18:
+	case 0xFF19:
+	case 0xFF1A:
+	case 0xFF1B:
+	case 0xFF1C:
+	case 0xFF1D:
+	case 0xFF1E:
+	case 0xFF1F:
+	case 0xFF20:
+	case 0xFF21:
+	case 0xFF22:
+	case 0xFF23:
+	case 0xFF24:
+	case 0xFF25:
+	case 0xFF26: return m_audioMem[address - 0xFF10]; break;
+	case 0xFF40: return m_ppu->getControl(); break;
+	case 0xFF42: return m_ppu->getScy(); break;
+	case 0xFF44: return m_ppu->getLy(); break;
+	case 0xFF47: return m_ppu->getPalette(); break;
+	case 0xFF46: throw std::runtime_error("Bus: Unhandled read to 0xFF46. OAM not implemented."); break;
 	default: {
 		std::stringstream stream;
 		stream << "Bus: Illegal I/O read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
 			   << std::endl;
-		throw std::runtime_error(stream.str());
+		std::cout << "WARNING: " << stream.str();
+		return m_iomem[address - 0xFF00];
 	}
 	}
 }
 
 void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	switch(address) {
+	case 0xFF10:
+	case 0xFF11:
+	case 0xFF12:
+	case 0xFF13:
+	case 0xFF14:
+	case 0xFF15:
+	case 0xFF16:
+	case 0xFF17:
+	case 0xFF18:
+	case 0xFF19:
+	case 0xFF1A:
+	case 0xFF1B:
+	case 0xFF1C:
+	case 0xFF1D:
+	case 0xFF1E:
+	case 0xFF1F:
+	case 0xFF20:
+	case 0xFF21:
+	case 0xFF22:
+	case 0xFF23:
+	case 0xFF24:
+	case 0xFF25:
+	case 0xFF26: m_audioMem[address - 0xFF10] = value; break;
+	case 0xFF40: m_ppu->setControl(value); break;
+	case 0xFF42: m_ppu->setScy(value); break;
+	case 0xFF47: m_ppu->setPalette(value); break;
+	case 0xFF46: throw std::runtime_error("Bus: Unhandled write to 0xFF46. OAM not implemented."); break;
 	default: {
+		m_iomem[address - 0xFF00] = value;
+
 		std::stringstream stream;
 		stream << "Bus: Illegal I/O write on address 0x" << std::hex << std::setw(4) << std::setfill('0')
 			   << int(address) << std::endl;
-		throw std::runtime_error(stream.str());
+		std::cout << "WARNING: " << stream.str();
 	}
 	}
 }

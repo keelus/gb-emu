@@ -536,8 +536,8 @@ int Cpu::executeInstruction(void) {
 
 	uint8_t opcode = m_bus.read8(m_PC++);
 	if(opcode != 0xCB) {
-		std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"
-				  << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 1) << ": \""
+		std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
+				  << " at PC = 0x " << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 1) << ": \""
 				  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
 	}
 
@@ -1245,8 +1245,6 @@ int Cpu::executeInstruction(void) {
 		uint8_t low = m_bus.read8(m_PC++);
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
 		doLd(m_A, m_bus.read8(address));
-		std::cout << "\tLDH loads value 0x" << std::hex << std::setw(4) << std::setfill('0') << int(m_A)
-				  << " at address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address) << std::endl;
 		break;
 	}
 	case 0xF1: // POP AF

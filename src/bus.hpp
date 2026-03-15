@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <cstring>
 
+#define IO_MEM_SIZE 128
+
 class Cpu;
 class Ppu;
 
@@ -37,4 +39,7 @@ class Bus {
 	Cpu *m_cpu;
 	Memory *m_memory;
 	Ppu *m_ppu;
+
+	uint8_t m_iomem[IO_MEM_SIZE]; // Temporal
+	uint8_t m_audioMem[23];		  // Temporal
 };
