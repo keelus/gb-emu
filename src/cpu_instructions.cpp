@@ -1,5 +1,6 @@
 #include <array>
 #include "cpu.hpp"
+#include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <ios>
@@ -302,7 +303,7 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 	OP(0x1D, 4),
 	OP(0x1E, 8),
 	OP(0x1F, 4),
-	OP(0x20, -1),
+	OP(0x20, 8),
 	OP(0x21, 12),
 	OP(0x22, 8),
 	OP(0x23, 8),
@@ -310,7 +311,7 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 	OP(0x25, 4),
 	OP(0x26, 8),
 	OP(0x27, 4),
-	OP(0x28, -1),
+	OP(0x28, 8),
 	OP(0x29, 8),
 	OP(0x2A, 8),
 	OP(0x2B, 8),
@@ -318,7 +319,7 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 	OP(0x2D, 4),
 	OP(0x2E, 8),
 	OP(0x2F, 4),
-	OP(0x30, -1),
+	OP(0x30, 8),
 	OP(0x31, 12),
 	OP(0x32, 8),
 	OP(0x33, 8),
@@ -326,7 +327,7 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 	OP(0x35, 12),
 	OP(0x36, 12),
 	OP(0x37, 4),
-	OP(0x38, -1),
+	OP(0x38, 8),
 	OP(0x39, 8),
 	OP(0x3A, 8),
 	OP(0x3B, 8),
@@ -462,35 +463,35 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 	OP(0xBD, 4),
 	OP(0xBE, 8),
 	OP(0xBF, 4),
-	OP(0xC0, -1),
+	OP(0xC0, 8),
 	OP(0xC1, 12),
-	OP(0xC2, -1),
+	OP(0xC2, 12),
 	OP(0xC3, 16),
-	OP(0xC4, -1),
+	OP(0xC4, 12),
 	OP(0xC5, 16),
 	OP(0xC6, 8),
 	OP(0xC7, 16),
-	OP(0xC8, -1),
+	OP(0xC8, 8),
 	OP(0xC9, 16),
-	OP(0xCA, -1),
+	OP(0xCA, 12),
 	OP(0xCB, 4),
-	OP(0xCC, -1),
+	OP(0xCC, 12),
 	OP(0xCD, 24),
 	OP(0xCE, 8),
 	OP(0xCF, 16),
-	OP(0xD0, -1),
+	OP(0xD0, 8),
 	OP(0xD1, 12),
-	OP(0xD2, -1),
+	OP(0xD2, 12),
 	OP(0xD3, 4),
-	OP(0xD4, -1),
+	OP(0xD4, 12),
 	OP(0xD5, 16),
 	OP(0xD6, 8),
 	OP(0xD7, 16),
-	OP(0xD8, -1),
+	OP(0xD8, 8),
 	OP(0xD9, 16),
-	OP(0xDA, -1),
+	OP(0xDA, 12),
 	OP(0xDB, 4),
-	OP(0xDC, -1),
+	OP(0xDC, 12),
 	OP(0xDD, 4),
 	OP(0xDE, 8),
 	OP(0xDF, 16),
@@ -538,6 +539,8 @@ int Cpu::executeInstruction(void) {
 				  << " at PC = 0x " << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 1) << ": \""
 				  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
 	}
+
+	int cycles = CPU_INSTRUCTION_CYCLES.at(opcode);
 
 	switch(opcode) {
 	case 0x00: // NOP
@@ -641,7 +644,7 @@ int Cpu::executeInstruction(void) {
 		break;
 
 	case 0x20: // JR NZ, imm8
-		doJr(!getFlag<Flag::Z>());
+		if(doJr(!getFlag<Flag::Z>())) { cycles += 4; }
 		break;
 	case 0x21: // LD HL, imm16
 		m_L = m_bus.read8(m_PC++);
@@ -664,7 +667,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_H, m_bus.read8(m_PC++));
 		break;
 	case 0x28: // JR Z, imm8
-		doJr(getFlag<Flag::Z>());
+		if(doJr(getFlag<Flag::Z>())) { cycles += 4; }
 		break;
 	case 0x29: // LD HL, HL
 		doAdd16ToHL(HL());
@@ -687,7 +690,7 @@ int Cpu::executeInstruction(void) {
 		break;
 
 	case 0x30: // JR NC, imm8
-		doJr(!getFlag<Flag::C>());
+		if(doJr(!getFlag<Flag::C>())) { cycles += 4; }
 		break;
 	case 0x31: { // LD SP, imm16
 		uint8_t low = m_bus.read8(m_PC++);
@@ -713,7 +716,7 @@ int Cpu::executeInstruction(void) {
 		m_bus.write8(HL(), m_bus.read8(m_PC++));
 		break;
 	case 0x38: // JR C, imm8
-		doJr(getFlag<Flag::C>());
+		if(doJr(getFlag<Flag::C>())) { cycles += 4; }
 		break;
 	case 0x39: // LD HL, SP
 		doAdd16ToHL(SP());
@@ -1120,19 +1123,19 @@ int Cpu::executeInstruction(void) {
 		doCp(m_A, m_A);
 		break;
 	case 0xC0: // RET NZ
-		doRet(!getFlag<Flag::Z>());
+		if(doRet(!getFlag<Flag::Z>())) { cycles += 12; }
 		break;
 	case 0xC1: // POP BC
 		doPop(m_B, m_C);
 		break;
 	case 0xC2: // JP NZ, imm16
-		doJp(!getFlag<Flag::Z>());
+		if(doJp(!getFlag<Flag::Z>())) { cycles += 4; }
 		break;
 	case 0xC3: // JP imm16
 		doJp();
 		break;
 	case 0xC4: // CALL NZ, imm16
-		doCall(!getFlag<Flag::Z>());
+		if(doCall(!getFlag<Flag::Z>())) { cycles += 12; }
 		break;
 	case 0xC5: // PUSH BC
 		doPush(BC());
@@ -1141,19 +1144,19 @@ int Cpu::executeInstruction(void) {
 		doAdd(m_A, m_bus.read8(m_PC++));
 		break;
 	case 0xC8: // RET Z
-		doRet(getFlag<Flag::Z>());
+		if(doRet(getFlag<Flag::Z>())) { cycles += 12; }
 		break;
 	case 0xC9: // RET
 		doRet();
 		break;
 	case 0xCA: // JP Z, imm16
-		doJp(getFlag<Flag::Z>());
+		if(doJp(getFlag<Flag::Z>())) { cycles += 4; }
 		break;
 	case 0xCB: // PREFIX
 		executeCbInstruction();
 		break;
 	case 0xCC: // CALL Z, imm16
-		doCall(getFlag<Flag::Z>());
+		if(doCall(getFlag<Flag::Z>())) { cycles += 12; }
 		break;
 	case 0xCD: // CALL imm16
 		doCall();
@@ -1163,16 +1166,16 @@ int Cpu::executeInstruction(void) {
 		break;
 
 	case 0xD0: // RET NC
-		doRet(!getFlag<Flag::C>());
+		if(doRet(!getFlag<Flag::C>())) { cycles += 12; }
 		break;
 	case 0xD1: // POP DE
 		doPop(m_D, m_E);
 		break;
 	case 0xD2: // JP NC, imm16
-		doJp(!getFlag<Flag::C>());
+		if(doJp(!getFlag<Flag::C>())) { cycles += 4; }
 		break;
 	case 0xD4: // CALL NC, imm16
-		doCall(!getFlag<Flag::C>());
+		if(doCall(!getFlag<Flag::C>())) { cycles += 12; }
 		break;
 	case 0xD5: // PUSH DE
 		doPush(DE());
@@ -1181,13 +1184,13 @@ int Cpu::executeInstruction(void) {
 		doSub(m_A, m_bus.read8(m_PC++));
 		break;
 	case 0xD8: // RET C
-		doRet(getFlag<Flag::C>());
+		if(doRet(getFlag<Flag::C>())) { cycles += 12; }
 		break;
 	case 0xDA: // JP C, imm16
-		doJp(getFlag<Flag::C>());
+		if(doJp(getFlag<Flag::C>())) { cycles += 4; }
 		break;
 	case 0xDC: // CALL C, imm16
-		doCall(getFlag<Flag::C>());
+		if(doCall(getFlag<Flag::C>())) { cycles += 12; }
 		break;
 	case 0xDE: // SBC A, imm8
 		doSbc(m_A, m_bus.read8(m_PC++));
@@ -1304,5 +1307,5 @@ int Cpu::executeInstruction(void) {
 	}
 	}
 
-	return CPU_INSTRUCTION_CYCLES.at(opcode);
+	return cycles;
 }

@@ -223,16 +223,18 @@ class Cpu {
 		int8_t offset = m_bus.read8(m_PC++);
 		m_PC = static_cast<uint16_t>(static_cast<int32_t>(m_PC) + offset);
 	}
-	void doJr(bool condition) {
+	bool doJr(bool condition) {
 		int8_t offset = m_bus.read8(m_PC++);
 		if(condition) { m_PC = static_cast<uint16_t>(static_cast<int32_t>(m_PC) + offset); }
+		return condition;
 	}
 
 	void doJp() { m_PC = m_bus.read16(m_PC); }
-	void doJp(bool condition) {
+	bool doJp(bool condition) {
 		uint16_t address = m_bus.read16(m_PC);
 		m_PC += 2;
 		if(condition) { m_PC = address; }
+		return condition;
 	}
 
 	void doPush(uint16_t value) {
@@ -250,7 +252,7 @@ class Cpu {
 	}
 
 	void doCall() { doCall(true); }
-	void doCall(bool condition) {
+	bool doCall(bool condition) {
 		uint16_t address = m_bus.read16(m_PC);
 		m_PC += 2;
 
@@ -258,11 +260,13 @@ class Cpu {
 			doPush(m_PC);
 			m_PC = address;
 		}
+		return condition;
 	}
 
 	void doRet() { doPop(m_PC); }
-	void doRet(bool condition) {
+	bool doRet(bool condition) {
 		if(condition) { doPop(m_PC); }
+		return condition;
 	}
 
 	void doRlc(uint8_t &reg) {
