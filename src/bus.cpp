@@ -89,6 +89,7 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF44: return m_ppu->getLy(); break;
 	case 0xFF47: return m_ppu->getPalette(); break;
 	case 0xFF46: throw std::runtime_error("Bus: Unhandled read to 0xFF46. OAM not implemented."); break;
+	case 0xFF50: return m_cartridge->isBootRomMapped(); break;
 	default: {
 		std::stringstream stream;
 		stream << "Bus: Illegal I/O read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
@@ -128,6 +129,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF42: m_ppu->setScy(value); break;
 	case 0xFF47: m_ppu->setPalette(value); break;
 	case 0xFF46: throw std::runtime_error("Bus: Unhandled write to 0xFF46. OAM not implemented."); break;
+	case 0xFF50: m_cartridge->unmapBootRom(); break;
 	default: {
 		m_iomem[address - 0xFF00] = value;
 

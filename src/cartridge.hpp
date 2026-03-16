@@ -10,7 +10,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-
 #include <vector>
 
 #define CARTRIDGE_ROM_SIZE (1 << 15)
@@ -87,6 +86,8 @@ class Cartridge {
 		}
 
 		if(!file.read(m_rom, size)) { throw std::runtime_error("Failed to read file.\n"); }
+
+		m_bootRomMapped = true;
 	}
 
 	Cartridge(const char *rom, const size_t rom_len) {
@@ -159,14 +160,14 @@ class Cartridge {
 	}
 
 	uint8_t read8(const uint16_t address) const {
-		if(address < 0x100) {
+		if(m_bootRomMapped && address < 0x100) {
 			return BOOT_ROM[address];
 		} else {
 			return m_rom[address];
 		}
 	}
 	void write8(const uint16_t address, const uint8_t value) {
-		if(address < 0x100) {
+		if(m_bootRomMapped && address < 0x100) {
 			std::stringstream stream;
 			stream << "Cartridge: Illegal write to boot ROM on address 0x" << std::hex << std::setw(4)
 				   << std::setfill('0') << int(address) << std::endl;
@@ -177,9 +178,14 @@ class Cartridge {
 		}
 	}
 
+	void unmapBootRom() { m_bootRomMapped = false; }
+	bool isBootRomMapped() { return m_bootRomMapped; }
+
 	const char *data() const { return m_rom; }
 
   private:
 	char m_rom[CARTRIDGE_ROM_SIZE];
 	char m_ram[CARTRIDGE_RAM_SIZE];
+
+	bool m_bootRomMapped;
 };

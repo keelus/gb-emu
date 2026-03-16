@@ -119,10 +119,12 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 
 	uint8_t lower = byte0 >> (7 - localX) & 1;
 	uint8_t upper = byte1 >> (7 - localX) & 1;
+	uint8_t colorId = (upper << 1) | lower;
 
-	uint8_t color_raw = (upper << 1) | lower;
+	uint8_t palette = m_bus.read8(0xFF47);
+	uint8_t shade = (palette >> (colorId * 2)) & 0b11;
 	uint32_t color = 0;
-	switch(color_raw) {
+	switch(shade) {
 	case 0b00: {
 		color = 0x00FFFFFF;
 	} break;
