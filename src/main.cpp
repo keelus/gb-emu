@@ -8,6 +8,9 @@
 
 #define SCALE 5
 
+#define CPU_HZ 4194304
+#define CYCLES_PER_FRAME (CPU_HZ / 59.7f)
+
 int main(int argc, char *argv[]) {
 	if(argc != 2) {
 		std::cout << "Usage:" << std::endl;
@@ -69,7 +72,10 @@ int main(int argc, char *argv[]) {
 
 		SDL_RenderClear(renderer);
 
-		gb.tick(1000);
+		int cycles = 0;
+		while(cycles < CYCLES_PER_FRAME) {
+			cycles += gb.tick();
+		}
 
 		SDL_UpdateTexture(texture, NULL, buffer, SCREEN_WIDTH * sizeof(uint32_t));
 		SDL_RenderCopy(renderer, texture, NULL, NULL);

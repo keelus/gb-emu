@@ -19,7 +19,7 @@ class GameBoy {
 	void start(void);
 	void debugCartridge(void) const { m_cartridge.debug(); }
 
-	void tick(size_t tickCycles);
+	int tick();
 
   private:
 	Bus m_bus;
