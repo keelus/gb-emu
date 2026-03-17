@@ -688,7 +688,11 @@ int Cpu::executeInstruction(void) {
 	case 0x2E: // LD L, imm8
 		doLd(m_L, m_bus.read8(m_PC++));
 		break;
-
+	case 0x2F: // CPL
+		m_A = ~m_A;
+		setFlag<Flag::N>(true);
+		setFlag<Flag::H>(true);
+		break;
 	case 0x30: // JR NC, imm8
 		if(doJr(!getFlag<Flag::C>())) { cycles += 4; }
 		break;
@@ -737,7 +741,11 @@ int Cpu::executeInstruction(void) {
 	case 0x3E: // LD A, imm8
 		doLd(m_A, m_bus.read8(m_PC++));
 		break;
-
+	case 0x3F: // CCF
+		setFlag<Flag::C>(!getFlag<Flag::C>());
+		setFlag<Flag::N>(false);
+		setFlag<Flag::H>(false);
+		break;
 	case 0x40: // LD B, B
 		doLd(m_B, m_B);
 		break;
