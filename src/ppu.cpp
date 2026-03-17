@@ -1,13 +1,15 @@
 #include "ppu.hpp"
+#include "common.hpp"
 #include <cstdint>
 #include <cstdio>
+#include <iomanip>
 
 uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
 
 void Ppu::write8(const uint16_t address, const uint8_t value) {
-	if(address >= 0x8000 && address <= 0x9FFF) {
+	if(IN_RANGE(address, 0x8000, 0x9FFF)) {
 		m_vram[address - 0x8000] = value;
-	} else if(address >= 0xFE00 && address <= 0xFE9F) {
+	} else if(IN_RANGE(address, 0xFE00, 0xFE9F)) {
 		m_oam[address - 0xFE00] = value;
 	} else {
 		std::stringstream stream;
@@ -18,9 +20,9 @@ void Ppu::write8(const uint16_t address, const uint8_t value) {
 }
 
 uint8_t Ppu::read8(const uint16_t address) const {
-	if(address >= 0x8000 && address <= 0x9FFF) {
+	if(IN_RANGE(address, 0x8000, 0x9FFF)) {
 		return m_vram[address - 0x8000];
-	} else if(address >= 0xFE00 && address <= 0xFE9F) {
+	} else if(IN_RANGE(address, 0xFE00, 0xFE9F)) {
 		return m_oam[address - 0xFE00];
 	} else {
 		std::stringstream stream;
@@ -65,9 +67,13 @@ void Ppu::tick(const uint8_t cycles) {
 	}
 	case PpuMode::VBLANK: {
 		if(m_cycles >= 456) {
+			m_ly++;
 			m_cycles %= 456;
-			m_mode = PpuMode::OAM_SCAN;
-			m_ly = 0;
+
+			if(m_ly == 154) {
+				m_ly = 0;
+				m_mode = PpuMode::OAM_SCAN;
+			}
 		}
 		break;
 	}

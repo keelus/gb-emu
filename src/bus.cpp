@@ -1,16 +1,20 @@
 #include "bus.hpp"
+#include "cartridge.hpp"
 #include "cpu.hpp"
+#include "common.hpp"
 #include "ppu.hpp"
 #include <cstdint>
+#include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
-#define IN_RANGE(address, start, end) ((address) >= (start) && (address) <= (end))
 #define IS_CARTRIDGE(address) (IN_RANGE(address, 0x0000, 0x7FFF) || IN_RANGE(address, 0xA000, 0xBFFF))
 #define IS_PPU(address) (IN_RANGE(address, 0x8000, 0x9FFF) || IN_RANGE(address, 0xFE00, 0xFE9F))
 #define IS_MEMORY(address) (IN_RANGE(address, 0xC000, 0xFDFF) || IN_RANGE(address, 0xFF80, 0xFFFE))
 #define IS_IO(address) (IN_RANGE(address, 0xFF00, 0xFF7F))
 #define IS_IE(address) (address == 0xFFFF)
+#define IS_FORBIDDEN(address) (IN_RANGE(address, 0xFEA0, 0xFEFF))
 
 uint8_t Bus::read8(const uint16_t address) const {
 	if(IS_CARTRIDGE(address)) {
@@ -22,10 +26,14 @@ uint8_t Bus::read8(const uint16_t address) const {
 	} else if(IS_IO(address)) {
 		return ioRead8(address);
 	} else if(IS_IE(address)) {
-		throw std::runtime_error("Interrupt Enable Register not implemented.");
+		return m_cpu->getInterruptFlagRaw(); // Is this readable?
+	} else if(IS_FORBIDDEN(address)) {
+		std::cout << "Bus: Ignoring read on forbidden address 0x" << std::hex << std::setw(4) << std::setfill('0')
+				  << uint(address) << std::endl;
+		return 0x00;
 	} else {
 		std::stringstream stream;
-		stream << "Bus: Illegal read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
+		stream << "Bus: Illegal read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << uint(address)
 			   << std::endl;
 		throw std::runtime_error(stream.str());
 	}
@@ -45,10 +53,13 @@ void Bus::write8(const uint16_t address, const uint8_t value) {
 	} else if(IS_IO(address)) {
 		ioWrite8(address, value);
 	} else if(IS_IE(address)) {
-		throw std::runtime_error("Interrupt Enable Register not implemented.");
+		m_cpu->setInterruptFlagRaw(address);
+	} else if(IS_FORBIDDEN(address)) {
+		std::cout << "Bus: Ignoring write on forbidden address 0x" << std::hex << std::setw(4) << std::setfill('0')
+				  << uint(address) << std::endl;
 	} else {
 		std::stringstream stream;
-		stream << "Bus: Illegal write on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
+		stream << "Bus: Illegal write on address 0x" << std::hex << std::setw(4) << std::setfill('0') << uint(address)
 			   << std::endl;
 		throw std::runtime_error(stream.str());
 	}
@@ -93,8 +104,8 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF50: return m_cartridge->isBootRomMapped(); break;
 	default: {
 		std::stringstream stream;
-		stream << "Bus: Illegal I/O read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << int(address)
-			   << std::endl;
+		stream << "Bus: Illegal I/O read on address 0x" << std::hex << std::setw(4) << std::setfill('0')
+			   << uint(address) << std::endl;
 		std::cout << "WARNING: " << stream.str();
 		return m_iomem[address - 0xFF00];
 	}
@@ -103,6 +114,7 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 
 void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	switch(address) {
+	case 0xFF0F: m_cpu->setInterruptFlagRaw(value); break;
 	case 0xFF10:
 	case 0xFF11:
 	case 0xFF12:
@@ -139,7 +151,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 
 		std::stringstream stream;
 		stream << "Bus: Illegal I/O write on address 0x" << std::hex << std::setw(4) << std::setfill('0')
-			   << int(address) << std::endl;
+			   << uint(address) << std::endl;
 		std::cout << "WARNING: " << stream.str();
 	}
 	}

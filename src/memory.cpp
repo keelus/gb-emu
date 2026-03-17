@@ -4,13 +4,14 @@
 #include <stdexcept>
 
 #include "memory.hpp"
+#include "common.hpp"
 
 uint8_t Memory::read8(const uint16_t address) const {
-	if(address >= 0xC000 && address <= 0xDFFF) {
+	if(IN_RANGE(address, 0xC000, 0xDFFF)) {
 		return m_wram[address - 0xC000];
-	} else if(address >= 0xFF80 && address <= 0xFFFE) {
+	} else if(IN_RANGE(address, 0xFF80, 0xFFFE)) {
 		return m_hram[address - 0xFF80];
-	} else if(address >= 0xE000 && address <= 0xFDFF) {
+	} else if(IN_RANGE(address, 0xE000, 0xFDFF)) {
 		return m_wram[address - 0xE000];
 	} else {
 		std::stringstream stream;
@@ -21,11 +22,11 @@ uint8_t Memory::read8(const uint16_t address) const {
 }
 
 void Memory::write8(const uint16_t address, const uint8_t value) {
-	if(address >= 0xC000 && address <= 0xDFFF) {
+	if(IN_RANGE(address, 0xC000, 0xDFFF)) {
 		m_wram[address - 0xC000] = value;
-	} else if(address >= 0xFF80 && address <= 0xFFFE) {
+	} else if(IN_RANGE(address, 0xFF80, 0xFFFE)) {
 		m_hram[address - 0xFF80] = value;
-	} else if(address >= 0xE000 && address <= 0xFDFF) {
+	} else if(IN_RANGE(address, 0xE000, 0xFDFF)) {
 		m_wram[address - 0xE000] = value;
 	} else {
 		std::stringstream stream;

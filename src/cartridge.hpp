@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common.hpp"
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -177,21 +178,40 @@ class Cartridge {
 	}
 
 	uint8_t read8(const uint16_t address) const {
-		if(m_bootRomMapped && address < 0x100) {
-			return BOOT_ROM[address];
+		if(address <= 0x7FFF) {
+			if(m_bootRomMapped && address < 0x100) {
+				return BOOT_ROM[address];
+			} else {
+				return m_rom[address];
+			}
+		} else if(IN_RANGE(address, 0xA000, 0xBFFF)) {
+			return m_ram[address - 0xA000];
 		} else {
-			return m_rom[address];
+			std::stringstream stream;
+			stream << "Cartridge: Illegal read on address 0x" << std::hex << std::setw(4) << std::setfill('0')
+				   << int(address) << std::endl;
+			throw std::runtime_error(stream.str());
 		}
 	}
-	void write8(const uint16_t address, const uint8_t value) {
-		if(m_bootRomMapped && address < 0x100) {
-			std::stringstream stream;
-			stream << "Cartridge: Illegal write to boot ROM on address 0x" << std::hex << std::setw(4)
-				   << std::setfill('0') << int(address) << std::endl;
-			throw std::runtime_error(stream.str());
 
+	void write8(const uint16_t address, const uint8_t value) {
+		if(address <= 0x7FFF) {
+			if(m_bootRomMapped && address < 0x100) {
+				std::cout << "m_bootRomMapped=" << std::boolalpha << m_bootRomMapped << std::endl;
+				std::stringstream stream;
+				stream << "Cartridge: Illegal write to boot ROM on address 0x" << std::hex << std::setw(4)
+					   << std::setfill('0') << int(address) << std::endl;
+				throw std::runtime_error(stream.str());
+			} else {
+				m_rom[address] = value;
+			}
+		} else if(IN_RANGE(address, 0xA000, 0xBFFF)) {
+			m_ram[address - 0xA000] = value;
 		} else {
-			m_rom[address] = value;
+			std::stringstream stream;
+			stream << "Cartridge: Illegal write on address 0x" << std::hex << std::setw(4) << std::setfill('0')
+				   << uint(address) << std::endl;
+			throw std::runtime_error(stream.str());
 		}
 	}
 

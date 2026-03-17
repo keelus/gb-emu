@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cstdint>
 
 #include "alu.hpp"
@@ -26,8 +27,6 @@ class Cpu {
 
 		m_IME = false;
 
-		m_halted = false;
-
 		m_interruptEnable = 0;
 	}
 
@@ -46,6 +45,16 @@ class Cpu {
 
 		m_PC = 0x100;
 		m_SP = 0xFFFE;
+	}
+
+	void dump(void) {
+		std::cout << "=== CPU DUMP===" << std::endl;
+		std::cout << "AF = 0x" << std::hex << std::setw(4) << std::setfill('0') << AF() << std::endl;
+		std::cout << "BC = 0x" << std::hex << std::setw(4) << std::setfill('0') << BC() << std::endl;
+		std::cout << "DE = 0x" << std::hex << std::setw(4) << std::setfill('0') << DE() << std::endl;
+		std::cout << "HL = 0x" << std::hex << std::setw(4) << std::setfill('0') << HL() << std::endl;
+		std::cout << "SP = 0x" << std::hex << std::setw(4) << std::setfill('0') << SP() << std::endl;
+		std::cout << "PC = 0x" << std::hex << std::setw(4) << std::setfill('0') << PC() << std::endl;
 	}
 
 	enum class Flag : uint8_t {
@@ -85,6 +94,31 @@ class Cpu {
 
 	int executeInstruction(void);
 	int executeCbInstruction(void);
+
+	enum class InterruptFlag : uint8_t {
+		Joypad = 0b10000,
+		Serial = 0b1000,
+		Timer = 0b100,
+		Lcd = 0b10,
+		VBlank = 0b1,
+	};
+
+	template <InterruptFlag Fbit> bool getInterruptEnable(void) const {
+		return (m_interruptEnable & static_cast<uint8_t>(Fbit)) != 0;
+	}
+	void setInteruptEnableRaw(const uint8_t newInterruptFlag) {
+		m_interruptEnable = newInterruptFlag;
+		std::cout << "Cpu: IE set to 0b" << std::bitset<8>(newInterruptFlag) << std::endl;
+	}
+	uint8_t getInteruptEnableRaw() const { return m_interruptEnable; }
+
+	template <InterruptFlag Fbit> bool getInterruptFlag(void) const {
+		return (m_interruptFlag & static_cast<uint8_t>(Fbit)) != 0;
+	}
+	void setInterruptFlagRaw(const uint8_t newInterruptFlag) { m_interruptFlag = newInterruptFlag; }
+	uint8_t getInterruptFlagRaw() const { return m_interruptFlag; }
+
+	bool getIme() const { return m_IME; }
 
   private:
 	void incHL(void) {
@@ -462,8 +496,8 @@ class Cpu {
 	uint16_t m_SP, m_PC;
 
 	bool m_IME;
-
-	bool m_halted;
+	uint8_t m_interruptEnable;
+	uint8_t m_interruptFlag;
 
 	Bus &m_bus;
 };

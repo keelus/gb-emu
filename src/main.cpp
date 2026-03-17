@@ -83,6 +83,7 @@ int main(int argc, char *argv[]) {
 	}
 
 quit:
+	gb.dump();
 	if(texture) SDL_DestroyTexture(texture);
 	if(renderer) SDL_DestroyRenderer(renderer);
 	if(window) SDL_DestroyWindow(window);

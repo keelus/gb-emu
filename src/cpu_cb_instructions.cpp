@@ -530,8 +530,6 @@ constexpr std::array<int, 256> CPU_CB_INSTRUCTION_CYCLES = {
 // clang-format on
 
 int Cpu::executeCbInstruction(void) {
-	if(m_halted) { return 0; }
-
 	uint8_t opcode = m_bus.read8(m_PC++);
 	std::cout << "Got prefixed instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
 			  << " at PC=0x" << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 2) << ": \""
