@@ -27,6 +27,25 @@ class Cpu {
 		m_IME = false;
 
 		m_halted = false;
+
+		m_interruptEnable = 0;
+	}
+
+	void initializeRegisters(void) {
+		m_A = 0x01;
+		m_F = 0xB0;
+
+		m_B = 0x00;
+		m_C = 0x13;
+
+		m_D = 0x00;
+		m_E = 0xD8;
+
+		m_H = 0x01;
+		m_L = 0x4D;
+
+		m_PC = 0x100;
+		m_SP = 0xFFFE;
 	}
 
 	enum class Flag : uint8_t {

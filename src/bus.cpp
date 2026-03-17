@@ -1,4 +1,5 @@
 #include "bus.hpp"
+#include "cpu.hpp"
 #include "ppu.hpp"
 #include <cstdint>
 #include <sstream>
@@ -129,7 +130,10 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF42: m_ppu->setScy(value); break;
 	case 0xFF47: m_ppu->setPalette(value); break;
 	case 0xFF46: throw std::runtime_error("Bus: Unhandled write to 0xFF46. OAM not implemented."); break;
-	case 0xFF50: m_cartridge->unmapBootRom(); break;
+	case 0xFF50:
+		m_cpu->initializeRegisters();
+		m_cartridge->unmapBootRom();
+		break;
 	default: {
 		m_iomem[address - 0xFF00] = value;
 
