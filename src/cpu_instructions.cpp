@@ -1151,6 +1151,10 @@ int Cpu::executeInstruction(void) {
 	case 0xC6: // ADD A, imm8
 		doAdd(m_A, m_bus.read8(m_PC++));
 		break;
+	case 0xC7: // RST 0x00
+		doPush(m_PC);
+		m_PC = 0x0000;
+		break;
 	case 0xC8: // RET Z
 		if(doRet(getFlag<Flag::Z>())) { cycles += 12; }
 		break;
@@ -1172,7 +1176,10 @@ int Cpu::executeInstruction(void) {
 	case 0xCE: // ADC A, imm8
 		doAdc(m_A, m_bus.read8(m_PC++));
 		break;
-
+	case 0xCF: // RST 0x08
+		doPush(m_PC);
+		m_PC = 0x0800;
+		break;
 	case 0xD0: // RET NC
 		if(doRet(!getFlag<Flag::C>())) { cycles += 12; }
 		break;
@@ -1191,6 +1198,10 @@ int Cpu::executeInstruction(void) {
 	case 0xD6: // SUB A, imm8
 		doSub(m_A, m_bus.read8(m_PC++));
 		break;
+	case 0xD7: // RST 0x10
+		doPush(m_PC);
+		m_PC = 0x1000;
+		break;
 	case 0xD8: // RET C
 		if(doRet(getFlag<Flag::C>())) { cycles += 12; }
 		break;
@@ -1203,7 +1214,10 @@ int Cpu::executeInstruction(void) {
 	case 0xDE: // SBC A, imm8
 		doSbc(m_A, m_bus.read8(m_PC++));
 		break;
-
+	case 0xDF: // RST 0x18
+		doPush(m_PC);
+		m_PC = 0x1800;
+		break;
 	case 0xE0: { // LDH [imm8], A
 		uint8_t low = m_bus.read8(m_PC++);
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
@@ -1223,6 +1237,10 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xE6: // AND A, imm8
 		doAnd(m_A, m_bus.read8(m_PC++));
+		break;
+	case 0xE7: // RST 0x20
+		doPush(m_PC);
+		m_PC = 0x2000;
 		break;
 	case 0xE8: { // ADD SP, e8
 		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
@@ -1249,7 +1267,10 @@ int Cpu::executeInstruction(void) {
 	case 0xEE: // XOR A, imm8
 		doXor(m_A, m_bus.read8(m_PC++));
 		break;
-
+	case 0xEF: // RST 0x28
+		doPush(m_PC);
+		m_PC = 0x2800;
+		break;
 	case 0xF0: { // LDH A, [imm8]
 		uint8_t low = m_bus.read8(m_PC++);
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(low);
@@ -1272,6 +1293,10 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xF6: // OR A, imm8
 		doOr(m_A, m_bus.read8(m_PC++));
+		break;
+	case 0xF7: // RST 0x30
+		doPush(m_PC);
+		m_PC = 0x3000;
 		break;
 	case 0xF8: { // LD HL, SP+e8
 		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
@@ -1304,7 +1329,10 @@ int Cpu::executeInstruction(void) {
 	case 0xFE: // CP A, imm8
 		doCp(m_A, m_bus.read8(m_PC++));
 		break;
-
+	case 0xFF: // RST 0x38
+		doPush(m_PC);
+		m_PC = 0x3800;
+		break;
 	default: {
 		std::stringstream ss;
 		ss << "Unhandled instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode) << " at PC=0x"
