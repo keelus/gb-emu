@@ -55,6 +55,7 @@ void Ppu::tick(const uint8_t cycles) {
 			m_cycles %= 204;
 
 			drawHLine();
+			/* TODO: Draw Window */
 			m_ly++;
 
 			if(m_ly == 144) {
@@ -78,6 +79,9 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	}
+
+	m_lcdStatus =
+		(m_lcdStatus & 0xF8) | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
 }
 
 void Ppu::drawHLine() {

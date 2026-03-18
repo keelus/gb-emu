@@ -16,8 +16,6 @@ class Bus {
 		m_memory = NULL;
 		m_cpu = NULL;
 		m_cartridge = NULL;
-
-		memset(m_iomem, 0, sizeof(uint8_t) * IO_MEM_SIZE);
 	}
 
 	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
@@ -40,6 +38,5 @@ class Bus {
 	Memory *m_memory;
 	Ppu *m_ppu;
 
-	uint8_t m_iomem[IO_MEM_SIZE]; // Temporal
-	uint8_t m_audioMem[23];		  // Temporal
+	uint8_t m_audioMem[23]; // Temporal
 };

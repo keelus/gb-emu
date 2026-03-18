@@ -13,7 +13,7 @@ extern uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
 class Ppu {
   public:
-	enum class PpuMode { OAM_SCAN, DRAWING, HBLANK, VBLANK };
+	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };
 	Ppu(Bus &bus) : m_bus(bus) {
 		m_cycles = 0;
 		m_mode = PpuMode::OAM_SCAN;
@@ -25,9 +25,12 @@ class Ppu {
 		m_scy = 0;
 
 		m_ly = 0;
+		m_lyc = 0;
 
 		memset(m_vram, 0, sizeof(uint8_t) * PPU_OAM_SIZE);
 		memset(m_oam, 0, sizeof(uint8_t) * PPU_OAM_SIZE);
+
+		m_lcdStatus = 0;
 	}
 
 	void tick(uint8_t cycles);
@@ -38,13 +41,42 @@ class Ppu {
 	uint8_t getPalette() const { return m_palette; }
 	void setPalette(const uint8_t newPalette) { m_palette = newPalette; }
 
+	/* TODO */
+	uint8_t getObjPalette0() const { return 0; }
+	void setObjPalette0(const uint8_t newPalette) {}
+
+	/* TODO */
+	uint8_t getObjPalette1() const { return 0; }
+	void setObjPalette1(const uint8_t newPalette) {}
+
+	uint8_t getScx() const { return m_scx; }
+	void setScx(const uint8_t newScx) { m_scx = newScx; }
+
 	uint8_t getScy() const { return m_scy; }
 	void setScy(const uint8_t newScy) { m_scy = newScy; }
 
+	uint8_t getWx() const { return m_wx; }
+	void setWx(const uint8_t newWx) { m_wx = newWx; }
+
+	uint8_t getWy() const { return m_wy; }
+	void setWy(const uint8_t newWy) { m_wy = newWy; }
+
 	uint8_t getLy() const { return m_ly; }
+
+	void setLyc(const uint8_t newLyc) { m_lyc = newLyc; }
+	uint8_t getLyc() const { return m_ly; }
 
 	void write8(const uint16_t address, const uint8_t value);
 	uint8_t read8(const uint16_t address) const;
+
+	uint8_t getLcdStatus() const { return m_lcdStatus; }
+	void setLcdStatus(const uint8_t newLcdStatus) {
+		if(newLcdStatus != 0) {
+			std::cout << "LCD_STATUS = 0x" << std::hex << std::setw(2) << std::setfill('0') << uint(newLcdStatus)
+					  << std::endl;
+		}
+		m_lcdStatus = (newLcdStatus & 0xF8) | (m_lcdStatus & 0x7);
+	}
 
   private:
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1) const;
@@ -60,11 +92,14 @@ class Ppu {
 	uint8_t m_control;
 	uint8_t m_palette;
 
-	uint8_t m_scy, m_scx;
+	uint8_t m_scx, m_scy;
+	uint8_t m_wx, m_wy;
 
-	uint8_t m_ly;
+	uint8_t m_ly, m_lyc;
 
 	PpuMode m_mode;
+
+	uint8_t m_lcdStatus;
 
 	Bus &m_bus;
 };
