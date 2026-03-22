@@ -2,6 +2,7 @@
 
 #include "cartridge.hpp"
 #include "memory.hpp"
+#include "timer.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -13,15 +14,20 @@ class Ppu;
 class Bus {
   public:
 	Bus() {
-		m_memory = NULL;
-		m_cpu = NULL;
 		m_cartridge = NULL;
+		m_cpu = NULL;
+		m_memory = NULL;
+		m_ppu = NULL;
+		m_timer = NULL;
+
+		m_oamSourceAndStart = 0;
 	}
 
 	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
 	void addCpu(Cpu *cpu) { m_cpu = cpu; }
 	void addMemory(Memory *memory) { m_memory = memory; }
 	void addPpu(Ppu *ppu) { m_ppu = ppu; }
+	void addTimer(Timer *timer) { m_timer = timer; }
 
 	uint8_t read8(const uint16_t address) const;
 	uint16_t read16(const uint16_t address) const;
@@ -37,6 +43,7 @@ class Bus {
 	Cpu *m_cpu;
 	Memory *m_memory;
 	Ppu *m_ppu;
+	Timer *m_timer;
 
-	uint8_t m_audioMem[23]; // Temporal
+	uint8_t m_oamSourceAndStart;
 };

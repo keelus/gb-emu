@@ -1174,7 +1174,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xCF: // RST 0x08
 		doPush(m_PC);
-		m_PC = 0x0800;
+		m_PC = 0x08;
 		break;
 	case 0xD0: // RET NC
 		if(doRet(!getFlag<Flag::C>())) { cycles += 12; }
@@ -1196,7 +1196,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xD7: // RST 0x10
 		doPush(m_PC);
-		m_PC = 0x1000;
+		m_PC = 0x10;
 		break;
 	case 0xD8: // RET C
 		if(doRet(getFlag<Flag::C>())) { cycles += 12; }
@@ -1212,7 +1212,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xDF: // RST 0x18
 		doPush(m_PC);
-		m_PC = 0x1800;
+		m_PC = 0x18;
 		break;
 	case 0xE0: { // LDH [imm8], A
 		uint8_t low = m_bus.read8(m_PC++);
@@ -1236,7 +1236,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xE7: // RST 0x20
 		doPush(m_PC);
-		m_PC = 0x2000;
+		m_PC = 0x20;
 		break;
 	case 0xE8: { // ADD SP, e8
 		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
@@ -1265,7 +1265,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xEF: // RST 0x28
 		doPush(m_PC);
-		m_PC = 0x2800;
+		m_PC = 0x28;
 		break;
 	case 0xF0: { // LDH A, [imm8]
 		uint8_t low = m_bus.read8(m_PC++);
@@ -1292,7 +1292,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xF7: // RST 0x30
 		doPush(m_PC);
-		m_PC = 0x3000;
+		m_PC = 0x30;
 		break;
 	case 0xF8: { // LD HL, SP+e8
 		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
@@ -1327,7 +1327,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xFF: // RST 0x38
 		doPush(m_PC);
-		m_PC = 0x3800;
+		m_PC = 0x38;
 		break;
 	default: {
 		std::stringstream ss;
