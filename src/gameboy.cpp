@@ -13,6 +13,7 @@ void GameBoy::start(void) {
 int GameBoy::tick() {
 	int cycles = m_cpu.executeInstruction();
 	m_ppu.tick(cycles);
+	m_timer.tick(cycles);
 
 	return cycles;
 }

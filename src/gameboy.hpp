@@ -5,6 +5,7 @@
 #include "cpu.hpp"
 #include "memory.hpp"
 #include "ppu.hpp"
+#include "timer.hpp"
 
 class GameBoy {
   public:
@@ -13,6 +14,7 @@ class GameBoy {
 		m_bus.addCpu(&m_cpu);
 		m_bus.addMemory(&m_memory);
 		m_bus.addPpu(&m_ppu);
+		m_bus.addTimer(&m_timer);
 	}
 
 	void start(void);
@@ -27,4 +29,5 @@ class GameBoy {
 	Cpu m_cpu;
 	Memory m_memory;
 	Ppu m_ppu;
+	Timer m_timer;
 };
