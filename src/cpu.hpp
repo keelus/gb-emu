@@ -26,6 +26,7 @@ class Cpu {
 		m_PC = 0;
 
 		m_IME = false;
+		m_halted = false;
 
 		m_interruptEnable = 0;
 	}
@@ -222,7 +223,6 @@ class Cpu {
 		setFlag<Flag::Z>(res.flag_z);
 		setFlag<Flag::N>(0);
 		setFlag<Flag::H>(res.flag_h);
-		setFlag<Flag::C>(res.flag_c);
 	}
 	void doInc(uint16_t address) {
 		uint8_t value = m_bus.read8(address);
@@ -231,7 +231,6 @@ class Cpu {
 		setFlag<Flag::Z>(res.flag_z);
 		setFlag<Flag::N>(0);
 		setFlag<Flag::H>(res.flag_h);
-		setFlag<Flag::C>(res.flag_c);
 
 		m_bus.write8(address, res.value);
 	}
@@ -251,18 +250,16 @@ class Cpu {
 		setFlag<Flag::Z>(res.flag_z);
 		setFlag<Flag::N>(1);
 		setFlag<Flag::H>(res.flag_h);
-		setFlag<Flag::C>(res.flag_c);
 	}
 	void doDec(uint16_t address) {
-		uint16_t value = m_bus.read8(address);
+		uint8_t value = m_bus.read8(address);
 
 		ALU::Result8 res = ALU::dec8(value);
 		setFlag<Flag::Z>(res.flag_z);
 		setFlag<Flag::N>(1);
 		setFlag<Flag::H>(res.flag_h);
-		setFlag<Flag::C>(res.flag_c);
 
-		m_bus.write8(address, value);
+		m_bus.write8(address, res.value);
 	}
 	void doDec(uint8_t &upper, uint8_t lower) {
 		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
@@ -507,6 +504,8 @@ class Cpu {
 	bool m_IME;
 	uint8_t m_interruptEnable;
 	uint8_t m_interruptFlag;
+
+	bool m_halted;
 
 	Bus &m_bus;
 };

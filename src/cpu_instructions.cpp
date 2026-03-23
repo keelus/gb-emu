@@ -6,6 +6,7 @@
 #include <ios>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 // Useful to visually see the OPCODE-MNEMONIC/CYCLE
 #define OP(op, data) data
@@ -531,6 +532,7 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 // clang-format on
 
 int Cpu::executeInstruction(void) {
+	if(m_halted) { return 4; } // TODO
 	uint8_t opcode = m_bus.read8(m_PC++);
 	if(opcode != 0xCB) {
 		std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
@@ -716,6 +718,11 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0x36: // LD [HL], imm8
 		m_bus.write8(HL(), m_bus.read8(m_PC++));
+		break;
+	case 0x37: // SCF
+		setFlag<Flag::N>(false);
+		setFlag<Flag::H>(false);
+		setFlag<Flag::C>(true);
 		break;
 	case 0x38: // JR C, imm8
 		if(doJr(getFlag<Flag::C>())) { cycles += 4; }
@@ -906,7 +913,17 @@ int Cpu::executeInstruction(void) {
 	case 0x75: // LD [HL], L
 		m_bus.write8(HL(), m_L);
 		break;
-
+	case 0x76: // HALT
+		if(m_IME == 1) {
+			m_halted = true;
+		} else {
+			if((m_interruptEnable & m_interruptFlag & 0x1F) == 0) {
+				m_halted = true;
+			} else if((m_interruptEnable & m_interruptFlag & 0x1F) != 0) {
+				throw std::runtime_error("Halt bug");
+			}
+		}
+		break;
 	case 0x77: // LD [HL], A
 		m_bus.write8(HL(), m_A);
 		break;
@@ -1279,6 +1296,7 @@ int Cpu::executeInstruction(void) {
 	}
 	case 0xF1: // POP AF
 		doPop(m_A, m_F);
+		m_F &= 0xF0;
 		break;
 	case 0xF2: { // LDH A, [C]
 		uint16_t address = 0xFF00 | static_cast<uint16_t>(m_C);

@@ -51,7 +51,7 @@ class ALU {
 		res.flag_z = res.value == 0;
 		res.flag_n = 0;
 		res.flag_h = (((a ^ b ^ res.value) & (1 << 4)) == (1 << 4));
-		res.flag_c = (((a ^ b ^ res.value) & (1 << 8)) == (1 << 8));
+		res.flag_c = result > 0xFF;
 
 		return res;
 	}
