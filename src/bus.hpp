@@ -13,6 +13,13 @@ class Ppu;
 
 class Bus {
   public:
+	enum class InterruptRequestType {
+		Joypad,
+		Serial,
+		Timer,
+		Lcd,
+		VBlank,
+	};
 	Bus() {
 		m_cartridge = NULL;
 		m_cpu = NULL;
@@ -29,11 +36,15 @@ class Bus {
 	void addPpu(Ppu *ppu) { m_ppu = ppu; }
 	void addTimer(Timer *timer) { m_timer = timer; }
 
+	void doDmaTransfer(void);
+
 	uint8_t read8(const uint16_t address) const;
 	uint16_t read16(const uint16_t address) const;
 
 	void write8(const uint16_t address, const uint8_t value);
 	void write16(const uint16_t address, const uint16_t value);
+
+	void requestInterrupt(InterruptRequestType interruptType);
 
   private:
 	uint8_t ioRead8(const uint16_t address) const;

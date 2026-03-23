@@ -9,7 +9,7 @@
 
 class GameBoy {
   public:
-	GameBoy(const std::string &romPath) : m_cartridge(romPath), m_cpu(m_bus), m_ppu(m_bus) {
+	GameBoy(const std::string &romPath) : m_cartridge(romPath), m_cpu(m_bus), m_ppu(m_bus), m_timer(m_bus) {
 		m_bus.addCartridge(&m_cartridge);
 		m_bus.addCpu(&m_cpu);
 		m_bus.addMemory(&m_memory);

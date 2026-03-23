@@ -11,6 +11,7 @@ void GameBoy::start(void) {
 }
 
 int GameBoy::tick() {
+	m_cpu.handleInterrupts();
 	int cycles = m_cpu.executeInstruction();
 	m_ppu.tick(cycles);
 	m_timer.tick(cycles);

@@ -30,6 +30,8 @@ class Cpu {
 		m_interruptEnable = 0;
 	}
 
+	void handleInterrupts(void);
+
 	void initializeRegisters(void) {
 		m_A = 0x01;
 		m_F = 0xB0;
@@ -106,14 +108,21 @@ class Cpu {
 	template <InterruptFlag Fbit> bool getInterruptEnable(void) const {
 		return (m_interruptEnable & static_cast<uint8_t>(Fbit)) != 0;
 	}
-	void setInteruptEnableRaw(const uint8_t newInterruptFlag) {
+	void setInterruptEnableRaw(const uint8_t newInterruptFlag) {
 		m_interruptEnable = newInterruptFlag;
 		std::cout << "Cpu: IE set to 0b" << std::bitset<8>(newInterruptFlag) << std::endl;
 	}
-	uint8_t getInteruptEnableRaw() const { return m_interruptEnable; }
+	uint8_t getInterruptEnableRaw() const { return m_interruptEnable; }
 
 	template <InterruptFlag Fbit> bool getInterruptFlag(void) const {
 		return (m_interruptFlag & static_cast<uint8_t>(Fbit)) != 0;
+	}
+	template <InterruptFlag Fbit> void setInterruptFlag(bool value) {
+		if(value) {
+			m_interruptFlag |= static_cast<uint8_t>(Fbit);
+		} else {
+			m_interruptFlag &= ~(static_cast<uint8_t>(Fbit));
+		}
 	}
 	void setInterruptFlagRaw(const uint8_t newInterruptFlag) { m_interruptFlag = newInterruptFlag; }
 	uint8_t getInterruptFlagRaw() const { return m_interruptFlag; }

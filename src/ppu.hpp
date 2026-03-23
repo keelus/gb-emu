@@ -27,6 +27,8 @@ class Ppu {
 		m_ly = 0;
 		m_lyc = 0;
 
+		m_requestedVblankInterrupt = false;
+
 		memset(m_vram, 0, sizeof(uint8_t) * PPU_OAM_SIZE);
 		memset(m_oam, 0, sizeof(uint8_t) * PPU_OAM_SIZE);
 
@@ -100,6 +102,8 @@ class Ppu {
 	PpuMode m_mode;
 
 	uint8_t m_lcdStatus;
+
+	bool m_requestedVblankInterrupt;
 
 	Bus &m_bus;
 };

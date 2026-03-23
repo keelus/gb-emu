@@ -1201,6 +1201,10 @@ int Cpu::executeInstruction(void) {
 	case 0xD8: // RET C
 		if(doRet(getFlag<Flag::C>())) { cycles += 12; }
 		break;
+	case 0xD9: // RETI
+		doPop(m_PC);
+		m_IME = 1;
+		break;
 	case 0xDA: // JP C, imm16
 		if(doJp(getFlag<Flag::C>())) { cycles += 4; }
 		break;

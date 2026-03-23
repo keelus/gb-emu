@@ -3,9 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 
+class Bus;
+
 class Timer {
   public:
-	Timer() {
+	Timer(Bus &bus) : m_bus(bus) {
 		m_div = 0xAB;
 		m_tac = 0;
 		m_tma = 0;
@@ -34,18 +36,7 @@ class Timer {
 	void setTima(const uint8_t newTima) { m_tima = newTima; }
 
   private:
-	void tickOne() {
-		m_div++;
-		if(!isTimaEnabled()) { return; }
-
-		m_timaAccTStates++;
-
-		if(m_timaAccTStates >= timaTStatesPerIncrement()) {
-			m_timaAccTStates %= timaTStatesPerIncrement();
-
-			m_tima = m_tma;
-		}
-	}
+	void tickOne();
 
 	bool isTimaEnabled() const { return (m_tac & 0x4) != 0; }
 
@@ -71,4 +62,6 @@ class Timer {
 	uint8_t m_tima;
 
 	size_t m_tStateAcc;
+
+	Bus &m_bus;
 };

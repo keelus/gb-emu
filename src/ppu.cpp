@@ -37,6 +37,7 @@ void Ppu::tick(const uint8_t cycles) {
 
 	switch(m_mode) {
 	case PpuMode::OAM_SCAN: {
+		m_requestedVblankInterrupt = false;
 		if(m_cycles >= 80) {
 			m_cycles %= 80;
 			m_mode = PpuMode::DRAWING;
@@ -44,6 +45,7 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::DRAWING: {
+		m_requestedVblankInterrupt = false;
 		if(m_cycles >= 172) {
 			m_cycles %= 172;
 			m_mode = PpuMode::HBLANK;
@@ -51,6 +53,7 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::HBLANK: {
+		m_requestedVblankInterrupt = false;
 		if(m_cycles >= 204) {
 			m_cycles %= 204;
 
@@ -67,6 +70,11 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::VBLANK: {
+		if(!m_requestedVblankInterrupt) {
+			m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);
+			m_requestedVblankInterrupt = true;
+		}
+
 		if(m_cycles >= 456) {
 			m_ly++;
 			m_cycles %= 456;

@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "ppu.hpp"
 #include <cstdint>
+#include <immintrin.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -26,7 +27,7 @@ uint8_t Bus::read8(const uint16_t address) const {
 	} else if(IS_IO(address)) {
 		return ioRead8(address);
 	} else if(IS_IE(address)) {
-		return m_cpu->getInterruptFlagRaw(); // Is this readable?
+		return m_cpu->getInterruptEnableRaw(); // Is this readable?
 	} else if(IS_FORBIDDEN(address)) {
 		std::cout << "Bus: Ignoring read on forbidden address 0x" << std::hex << std::setw(4) << std::setfill('0')
 				  << uint(address) << std::endl;
@@ -53,7 +54,7 @@ void Bus::write8(const uint16_t address, const uint8_t value) {
 	} else if(IS_IO(address)) {
 		ioWrite8(address, value);
 	} else if(IS_IE(address)) {
-		m_cpu->setInterruptFlagRaw(address);
+		m_cpu->setInterruptEnableRaw(value);
 	} else if(IS_FORBIDDEN(address)) {
 		std::cout << "Bus: Ignoring write on forbidden address 0x" << std::hex << std::setw(4) << std::setfill('0')
 				  << uint(address) << std::endl;
@@ -357,8 +358,8 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF43: m_ppu->setScx(value); break;
 	case 0xFF45: m_ppu->setLyc(value); break;
 	case 0xFF46:
-		throw std::runtime_error("OAM DMA transfer not implemented.");
 		m_oamSourceAndStart = value;
+		doDmaTransfer();
 		break;
 	case 0xFF47: m_ppu->setPalette(value); break;
 	case 0xFF48: m_ppu->setObjPalette0(value); break;
@@ -450,5 +451,38 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 			   << uint(address) << std::endl;
 		throw std::runtime_error(stream.str());
 	}
+	}
+}
+
+void Bus::requestInterrupt(InterruptRequestType interruptType) {
+	switch(interruptType) {
+	case InterruptRequestType::Joypad: m_cpu->setInterruptFlag<Cpu::InterruptFlag::Joypad>(true); break;
+	case InterruptRequestType::Serial:
+		m_cpu->setInterruptFlag<Cpu::InterruptFlag::Serial>(true);
+		break;
+		break;
+	case InterruptRequestType::Timer:
+		m_cpu->setInterruptFlag<Cpu::InterruptFlag::Timer>(true);
+		break;
+		break;
+	case InterruptRequestType::Lcd:
+		m_cpu->setInterruptFlag<Cpu::InterruptFlag::Lcd>(true);
+		break;
+		break;
+	case InterruptRequestType::VBlank:
+		m_cpu->setInterruptFlag<Cpu::InterruptFlag::VBlank>(true);
+		break;
+		break;
+	}
+}
+
+
+void Bus::doDmaTransfer(void) {
+	for(uint8_t offset = 0; offset <= 0x9F; offset++) {
+		const uint16_t source = (static_cast<uint16_t>(m_oamSourceAndStart) << 8) | offset;
+		const uint16_t destination = (static_cast<uint16_t>(m_oamSourceAndStart) << 8) | offset;
+
+		const uint8_t value = read8(source);
+		write8(destination, value);
 	}
 }
