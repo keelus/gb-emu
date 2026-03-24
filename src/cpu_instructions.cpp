@@ -666,6 +666,25 @@ int Cpu::executeInstruction(void) {
 	case 0x26: // LD H, imm8
 		doLd(m_H, m_bus.read8(m_PC++));
 		break;
+	case 0x27: { // DAA
+		uint8_t offset = 0;
+		if((!getFlag<Flag::N>() && (m_A & 0xF) > 0x09) || getFlag<Flag::H>()) { offset |= 0x06; }
+		if((!getFlag<Flag::N>() && m_A > 0x99) || getFlag<Flag::C>()) {
+			offset |= 0x60;
+			setFlag<Flag::C>(true);
+		}
+
+		if(getFlag<Flag::N>()) {
+			m_A -= offset;
+		} else {
+			m_A += offset;
+		}
+
+		setFlag<Flag::Z>(m_A == 0);
+		setFlag<Flag::H>(0);
+
+		break;
+	}
 	case 0x28: // JR Z, imm8
 		if(doJr(getFlag<Flag::Z>())) { cycles += 4; }
 		break;
@@ -1178,7 +1197,7 @@ int Cpu::executeInstruction(void) {
 		if(doJp(getFlag<Flag::Z>())) { cycles += 4; }
 		break;
 	case 0xCB: // PREFIX
-		executeCbInstruction();
+		cycles += executeCbInstruction();
 		break;
 	case 0xCC: // CALL Z, imm16
 		if(doCall(getFlag<Flag::Z>())) { cycles += 12; }
@@ -1260,7 +1279,7 @@ int Cpu::executeInstruction(void) {
 		m_PC = 0x20;
 		break;
 	case 0xE8: { // ADD SP, e8
-		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
+		int8_t imm8 = static_cast<int8_t>(m_bus.read8(m_PC++));
 		uint16_t result = (m_SP + imm8);
 
 		setFlag<Cpu::Flag::Z>(0);
@@ -1317,7 +1336,7 @@ int Cpu::executeInstruction(void) {
 		m_PC = 0x30;
 		break;
 	case 0xF8: { // LD HL, SP+e8
-		uint16_t imm8 = static_cast<uint16_t>(m_bus.read8(m_PC++));
+		int8_t imm8 = static_cast<int8_t>(m_bus.read8(m_PC++));
 		uint16_t result = (m_SP + imm8);
 
 		m_H = static_cast<uint8_t>(static_cast<uint16_t>(result) >> 8);

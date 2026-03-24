@@ -2,9 +2,16 @@
 #include "common.hpp"
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <iomanip>
+#include <stdexcept>
 
 uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
+uint32_t sdl2Buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
+
+void updateSdl2Buffer() {
+	memcpy(sdl2Buffer, buffer, sizeof(uint32_t) * (SCREEN_WIDTH * SCREEN_HEIGHT));
+}
 
 void Ppu::write8(const uint16_t address, const uint8_t value) {
 	if(IN_RANGE(address, 0x8000, 0x9FFF)) {
@@ -38,27 +45,46 @@ void Ppu::tick(const uint8_t cycles) {
 	switch(m_mode) {
 	case PpuMode::OAM_SCAN: {
 		m_requestedVblankInterrupt = false;
+		m_requestedMode0Interrupt = false;
+		m_requestedMode1Interrupt = false;
+
+		if((m_lcdStatus & 0b100000) != 0 && !m_requestedMode2Interrupt) {
+			m_requestedMode2Interrupt = true;
+			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		}
+
 		if(m_cycles >= 80) {
-			m_cycles %= 80;
+			m_cycles -= 80;
 			m_mode = PpuMode::DRAWING;
 		}
 		break;
 	}
 	case PpuMode::DRAWING: {
 		m_requestedVblankInterrupt = false;
+		m_requestedMode0Interrupt = false;
+		m_requestedMode1Interrupt = false;
+		m_requestedMode2Interrupt = false;
 		if(m_cycles >= 172) {
-			m_cycles %= 172;
+			m_cycles -= 172;
 			m_mode = PpuMode::HBLANK;
 		}
 		break;
 	}
 	case PpuMode::HBLANK: {
 		m_requestedVblankInterrupt = false;
+		m_requestedMode1Interrupt = false;
+		m_requestedMode2Interrupt = false;
+		if((m_lcdStatus & 0b1000) != 0 && !m_requestedMode0Interrupt) {
+			m_requestedMode0Interrupt = true;
+			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		}
 		if(m_cycles >= 204) {
-			m_cycles %= 204;
+			m_cycles -= 204;
 
 			drawHLine();
 			/* TODO: Draw Window */
+			if((m_lcdStatus & 0b100) != 0 && m_ly == m_lyc) { m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd); }
+
 			m_ly++;
 
 			if(m_ly == 144) {
@@ -70,16 +96,31 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::VBLANK: {
+		m_requestedVblankInterrupt = false;
+		m_requestedMode0Interrupt = false;
+		m_requestedMode2Interrupt = false;
+
+		if((m_lcdStatus & 0b10000) != 0 && !m_requestedMode1Interrupt) {
+			m_requestedMode1Interrupt = true;
+			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		}
+
 		if(!m_requestedVblankInterrupt) {
 			m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);
 			m_requestedVblankInterrupt = true;
 		}
 
 		if(m_cycles >= 456) {
+			if((m_lcdStatus & 0x0b100) != 0 && m_ly == m_lyc) {
+				m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+			}
 			m_ly++;
-			m_cycles %= 456;
+			m_cycles -= 456;
 
 			if(m_ly == 154) {
+				drawObjects();
+				updateSdl2Buffer();
+
 				m_ly = 0;
 				m_mode = PpuMode::OAM_SCAN;
 			}
@@ -92,7 +133,7 @@ void Ppu::tick(const uint8_t cycles) {
 		(m_lcdStatus & 0xF8) | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
 }
 
-void Ppu::drawHLine() {
+void Ppu::drawHLine() const {
 	size_t y = m_ly + m_scy;
 	size_t tileI = y / 8;
 
@@ -158,4 +199,52 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 	}
 
 	drawPixel(y, x, color);
+}
+
+// TODO: Add priority, flipping, 8x16 mode, transparency, etc.
+void Ppu::drawObjects(void) const {
+	for(size_t i = 0; i < 40; i++) {
+		uint8_t yPos = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 0));
+		uint8_t xPos = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 1));
+
+		if(yPos == 0 || yPos >= 160 || xPos == 0 || xPos >= 168) { continue; }
+
+		yPos -= 16;
+		xPos -= 8;
+
+		uint8_t tileIndex = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 2));
+		uint16_t tileAddress = 0x8000 | (static_cast<uint16_t>(tileIndex) * 16);
+
+		uint8_t byte3 = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 3));
+
+		for(size_t localY = 0; localY < 8; localY++) {
+			uint8_t byte0 = m_bus.read8(tileAddress + localY * 2);
+			uint8_t byte1 = m_bus.read8(tileAddress + localY * 2 + 1);
+			for(size_t localX = 0; localX < 8; localX++) {
+				uint8_t lower = byte0 >> (7 - localX) & 1;
+				uint8_t upper = byte1 >> (7 - localX) & 1;
+				uint8_t colorId = (upper << 1) | lower;
+
+				uint8_t palette = m_bus.read8(0xFF47);
+				uint8_t shade = (palette >> (colorId * 2)) & 0b11;
+				uint32_t color = 0;
+				switch(shade) {
+				case 0b00: {
+					color = 0x00FFFFFF;
+				} break;
+				case 0b01: {
+					color = 0x00AAAAAA;
+				} break;
+				case 0b10: {
+					color = 0x00555555;
+				} break;
+				case 0b11: {
+					color = 0x0;
+				} break;
+				}
+
+				drawPixel(yPos + localY, xPos + localX, color);
+			}
+		}
+	}
 }

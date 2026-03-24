@@ -10,6 +10,7 @@
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
 extern uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+extern uint32_t sdl2Buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
 class Ppu {
   public:
@@ -81,8 +82,9 @@ class Ppu {
 	}
 
   private:
+	void drawObjects(void) const;
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1) const;
-	void drawHLine();
+	void drawHLine() const;
 	void drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uint8_t byte1) const;
 	void drawPixel(uint8_t i, uint8_t j, uint32_t color) const;
 
@@ -104,6 +106,10 @@ class Ppu {
 	uint8_t m_lcdStatus;
 
 	bool m_requestedVblankInterrupt;
+
+	bool m_requestedMode0Interrupt;
+	bool m_requestedMode1Interrupt;
+	bool m_requestedMode2Interrupt;
 
 	Bus &m_bus;
 };

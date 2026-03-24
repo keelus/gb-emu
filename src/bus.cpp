@@ -18,6 +18,7 @@
 #define IS_FORBIDDEN(address) (IN_RANGE(address, 0xFEA0, 0xFEFF))
 
 uint8_t Bus::read8(const uint16_t address) const {
+	uint8_t value;
 	if(IS_CARTRIDGE(address)) {
 		return m_cartridge->read8(address);
 	} else if(IS_PPU(address)) {
@@ -31,7 +32,7 @@ uint8_t Bus::read8(const uint16_t address) const {
 	} else if(IS_FORBIDDEN(address)) {
 		std::cout << "Bus: Ignoring read on forbidden address 0x" << std::hex << std::setw(4) << std::setfill('0')
 				  << uint(address) << std::endl;
-		return 0x00;
+		return 0xFF;
 	} else {
 		std::stringstream stream;
 		stream << "Bus: Illegal read on address 0x" << std::hex << std::setw(4) << std::setfill('0') << uint(address)
@@ -46,7 +47,8 @@ uint16_t Bus::read16(const uint16_t address) const {
 
 void Bus::write8(const uint16_t address, const uint8_t value) {
 	if(IS_CARTRIDGE(address)) {
-		m_cartridge->write8(address, value);
+		std::cout << "Bus: Ignoring write to Cartridge's ROM at address 0x" << std::hex << std::setw(4)
+				  << std::setfill('0') << address << " with value 0x" << std::setw(2) << value << std::endl;
 	} else if(IS_PPU(address)) {
 		return m_ppu->write8(address, value);
 	} else if(IS_MEMORY(address)) {
@@ -269,7 +271,10 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 
 	/* Serial transfers */
 	case 0xFF01:
-	case 0xFF02: break;
+	case 0xFF02: std::cout << uint8_t(value); break;
+
+	/* Unused I/O */
+	case 0xFF03: break;
 
 	/* Timer */
 	case 0xFF04: m_timer->resetDiv(); break;
@@ -356,6 +361,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF41: m_ppu->setLcdStatus(value); break;
 	case 0xFF42: m_ppu->setScy(value); break;
 	case 0xFF43: m_ppu->setScx(value); break;
+	case 0xFF44: break;
 	case 0xFF45: m_ppu->setLyc(value); break;
 	case 0xFF46:
 		m_oamSourceAndStart = value;
@@ -480,7 +486,7 @@ void Bus::requestInterrupt(InterruptRequestType interruptType) {
 void Bus::doDmaTransfer(void) {
 	for(uint8_t offset = 0; offset <= 0x9F; offset++) {
 		const uint16_t source = (static_cast<uint16_t>(m_oamSourceAndStart) << 8) | offset;
-		const uint16_t destination = (static_cast<uint16_t>(m_oamSourceAndStart) << 8) | offset;
+		const uint16_t destination = 0xFE00 | offset;
 
 		const uint8_t value = read8(source);
 		write8(destination, value);

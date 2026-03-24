@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 			cycles += gb.tick();
 		}
 
-		SDL_UpdateTexture(texture, NULL, buffer, SCREEN_WIDTH * sizeof(uint32_t));
+		SDL_UpdateTexture(texture, NULL, sdl2Buffer, SCREEN_WIDTH * sizeof(uint32_t));
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}

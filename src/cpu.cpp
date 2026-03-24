@@ -16,6 +16,7 @@ void Cpu::handleInterrupts(void) {
 		m_PC = 0x40;
 		setInterruptFlag<InterruptFlag::VBlank>(0);
 		m_IME = 0;
+		return;
 	}
 
 	if(getInterruptEnable<InterruptFlag::Lcd>() && getInterruptFlag<InterruptFlag::Lcd>()) {
@@ -23,6 +24,7 @@ void Cpu::handleInterrupts(void) {
 		m_PC = 0x48;
 		setInterruptFlag<InterruptFlag::Lcd>(0);
 		m_IME = 0;
+		return;
 	}
 
 	if(getInterruptEnable<InterruptFlag::Timer>() && getInterruptFlag<InterruptFlag::Timer>()) {
@@ -30,6 +32,7 @@ void Cpu::handleInterrupts(void) {
 		m_PC = 0x50;
 		setInterruptFlag<InterruptFlag::Timer>(0);
 		m_IME = 0;
+		return;
 	}
 
 	if(getInterruptEnable<InterruptFlag::Serial>() && getInterruptFlag<InterruptFlag::Serial>()) {
@@ -37,6 +40,7 @@ void Cpu::handleInterrupts(void) {
 		m_PC = 0x58;
 		setInterruptFlag<InterruptFlag::Serial>(0);
 		m_IME = 0;
+		return;
 	}
 
 	if(getInterruptEnable<InterruptFlag::Joypad>() && getInterruptFlag<InterruptFlag::Joypad>()) {
@@ -44,5 +48,6 @@ void Cpu::handleInterrupts(void) {
 		m_PC = 0x60;
 		setInterruptFlag<InterruptFlag::Joypad>(0);
 		m_IME = 0;
+		return;
 	}
 }
