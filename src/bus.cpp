@@ -18,7 +18,6 @@
 #define IS_FORBIDDEN(address) (IN_RANGE(address, 0xFEA0, 0xFEFF))
 
 uint8_t Bus::read8(const uint16_t address) const {
-	uint8_t value;
 	if(IS_CARTRIDGE(address)) {
 		return m_cartridge->read8(address);
 	} else if(IS_PPU(address)) {
@@ -270,8 +269,8 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF00: break;
 
 	/* Serial transfers */
-	case 0xFF01:
-	case 0xFF02: std::cout << uint8_t(value); break;
+	case 0xFF01: std::cout << uint8_t(value); break;
+	case 0xFF02: break;
 
 	/* Unused I/O */
 	case 0xFF03: break;

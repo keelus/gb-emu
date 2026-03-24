@@ -44,13 +44,11 @@ class Ppu {
 	uint8_t getPalette() const { return m_palette; }
 	void setPalette(const uint8_t newPalette) { m_palette = newPalette; }
 
-	/* TODO */
-	uint8_t getObjPalette0() const { return 0; }
-	void setObjPalette0(const uint8_t newPalette) {}
+	uint8_t getObjPalette0() const { return m_objPalette0; }
+	void setObjPalette0(const uint8_t newPalette) { m_objPalette0 = newPalette; }
 
-	/* TODO */
-	uint8_t getObjPalette1() const { return 0; }
-	void setObjPalette1(const uint8_t newPalette) {}
+	uint8_t getObjPalette1() const { return m_objPalette1; }
+	void setObjPalette1(const uint8_t newPalette) { m_objPalette1 = newPalette; }
 
 	uint8_t getScx() const { return m_scx; }
 	void setScx(const uint8_t newScx) { m_scx = newScx; }
@@ -95,6 +93,8 @@ class Ppu {
 
 	uint8_t m_control;
 	uint8_t m_palette;
+
+	uint8_t m_objPalette0, m_objPalette1;
 
 	uint8_t m_scx, m_scy;
 	uint8_t m_wx, m_wy;

@@ -201,7 +201,7 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 	drawPixel(y, x, color);
 }
 
-// TODO: Add priority, flipping, 8x16 mode, transparency, etc.
+// TODO: Add priority, flipping, 8x16 mode, etc.
 void Ppu::drawObjects(void) const {
 	for(size_t i = 0; i < 40; i++) {
 		uint8_t yPos = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 0));
@@ -215,7 +215,7 @@ void Ppu::drawObjects(void) const {
 		uint8_t tileIndex = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 2));
 		uint16_t tileAddress = 0x8000 | (static_cast<uint16_t>(tileIndex) * 16);
 
-		uint8_t byte3 = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 3));
+		uint8_t attributes = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 3));
 
 		for(size_t localY = 0; localY < 8; localY++) {
 			uint8_t byte0 = m_bus.read8(tileAddress + localY * 2);
@@ -223,9 +223,12 @@ void Ppu::drawObjects(void) const {
 			for(size_t localX = 0; localX < 8; localX++) {
 				uint8_t lower = byte0 >> (7 - localX) & 1;
 				uint8_t upper = byte1 >> (7 - localX) & 1;
-				uint8_t colorId = (upper << 1) | lower;
 
-				uint8_t palette = m_bus.read8(0xFF47);
+				uint8_t colorId = (upper << 1) | lower;
+				if(colorId == 0) { continue; }
+
+				uint8_t palette = (attributes & 0x10) ? m_objPalette1 : m_objPalette0;
+
 				uint8_t shade = (palette >> (colorId * 2)) & 0b11;
 				uint32_t color = 0;
 				switch(shade) {
