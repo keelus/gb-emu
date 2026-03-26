@@ -75,8 +75,8 @@ void Bus::write16(const uint16_t address, const uint16_t value) {
 
 uint8_t Bus::ioRead8(const uint16_t address) const {
 	switch(address) {
-	/* Joypad (TODO) */
-	case 0xFF00: return 0x3C;
+	/* Joypad */
+	case 0xFF00: return m_joypad->read8();
 
 	/* Serial transfers */
 	case 0xFF01:
@@ -265,8 +265,8 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 
 void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	switch(address) {
-	/* Joypad (TODO) */
-	case 0xFF00: break;
+	/* Joypad */
+	case 0xFF00: m_joypad->write8(value); break;
 
 	/* Serial transfers */
 	case 0xFF01: std::cout << uint8_t(value); break;

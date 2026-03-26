@@ -1,7 +1,11 @@
+#include <cstdint>
 #include <iostream>
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <unistd.h>
+#include "SDL_events.h"
+#include "SDL_keycode.h"
+#include "SDL_timer.h"
 #include "ppu.hpp"
 
 #include "gameboy.hpp"
@@ -9,7 +13,11 @@
 #define SCALE 5
 
 #define CPU_HZ 4194304
-#define CYCLES_PER_FRAME (CPU_HZ / 59.7f)
+#define FRAMES_PER_SECOND 59.7f
+#define CYCLES_PER_FRAME (CPU_HZ / FRAMES_PER_SECOND)
+#define MS_PER_FRAME (1 / FRAMES_PER_SECOND * 1000)
+
+uint8_t activeColorPalette = 2;
 
 int main(int argc, char *argv[]) {
 	if(argc != 2) {
@@ -66,8 +74,22 @@ int main(int argc, char *argv[]) {
 	}
 
 	while(running) {
+		Uint32 frameStart = SDL_GetTicks();
 		while(SDL_PollEvent(&e)) {
-			if(e.type == SDL_QUIT) { running = 0; }
+			if(e.type == SDL_QUIT) {
+				running = 0;
+			} else if(e.type == SDL_KEYDOWN) {
+				switch(e.key.keysym.sym) {
+				case SDLK_1: activeColorPalette = 0; break;
+				case SDLK_2: activeColorPalette = 1; break;
+				case SDLK_3: activeColorPalette = 2; break;
+				default: break;
+				}
+
+				gb.handleKeydown(e.key.keysym.sym);
+			} else if(e.type == SDL_KEYUP) {
+				gb.handleKeyup(e.key.keysym.sym);
+			}
 		}
 
 		SDL_RenderClear(renderer);
@@ -80,6 +102,9 @@ int main(int argc, char *argv[]) {
 		SDL_UpdateTexture(texture, NULL, sdl2Buffer, SCREEN_WIDTH * sizeof(uint32_t));
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
+
+		Uint32 frameMs = SDL_GetTicks() - frameStart;
+		if(frameMs < MS_PER_FRAME) { SDL_Delay(MS_PER_FRAME - frameMs); }
 	}
 
 quit:

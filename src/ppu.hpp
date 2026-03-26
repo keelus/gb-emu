@@ -12,6 +12,8 @@
 extern uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 extern uint32_t sdl2Buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
+extern uint8_t activeColorPalette;
+
 class Ppu {
   public:
 	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };

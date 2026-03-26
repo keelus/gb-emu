@@ -3,6 +3,7 @@
 #include "cartridge.hpp"
 #include "memory.hpp"
 #include "timer.hpp"
+#include "joypad.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -23,6 +24,7 @@ class Bus {
 	Bus() {
 		m_cartridge = NULL;
 		m_cpu = NULL;
+		m_joypad = NULL;
 		m_memory = NULL;
 		m_ppu = NULL;
 		m_timer = NULL;
@@ -32,6 +34,7 @@ class Bus {
 
 	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
 	void addCpu(Cpu *cpu) { m_cpu = cpu; }
+	void addJoypad(Joypad *joypad) { m_joypad = joypad; }
 	void addMemory(Memory *memory) { m_memory = memory; }
 	void addPpu(Ppu *ppu) { m_ppu = ppu; }
 	void addTimer(Timer *timer) { m_timer = timer; }
@@ -52,6 +55,7 @@ class Bus {
 
 	Cartridge *m_cartridge;
 	Cpu *m_cpu;
+	Joypad *m_joypad;
 	Memory *m_memory;
 	Ppu *m_ppu;
 	Timer *m_timer;

@@ -9,6 +9,12 @@
 uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
 uint32_t sdl2Buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
 
+uint32_t colorPalettes[3][4] = {
+	{0x00FFFFFF, 0x00AAAAAA, 0x00555555,		 0x0}, // Gray
+	{0x009BBC0F, 0x008BAC0F, 0x00306230, 0x000F380F}, // CRT green
+	{0x00E0C77F, 0x009D8B59, 0x005A5033, 0x0016140D}  // Yellow-ish
+};
+
 void updateSdl2Buffer() {
 	memcpy(sdl2Buffer, buffer, sizeof(uint32_t) * (SCREEN_WIDTH * SCREEN_HEIGHT));
 }
@@ -182,23 +188,7 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 
 	uint8_t palette = m_bus.read8(0xFF47);
 	uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-	uint32_t color = 0;
-	switch(shade) {
-	case 0b00: {
-		color = 0x00FFFFFF;
-	} break;
-	case 0b01: {
-		color = 0x00AAAAAA;
-	} break;
-	case 0b10: {
-		color = 0x00555555;
-	} break;
-	case 0b11: {
-		color = 0x0;
-	} break;
-	}
-
-	drawPixel(y, x, color);
+	drawPixel(y, x, colorPalettes[activeColorPalette][shade]);
 }
 
 // TODO: Add priority, flipping, 8x16 mode, etc.
@@ -228,25 +218,8 @@ void Ppu::drawObjects(void) const {
 				if(colorId == 0) { continue; }
 
 				uint8_t palette = (attributes & 0x10) ? m_objPalette1 : m_objPalette0;
-
 				uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-				uint32_t color = 0;
-				switch(shade) {
-				case 0b00: {
-					color = 0x00FFFFFF;
-				} break;
-				case 0b01: {
-					color = 0x00AAAAAA;
-				} break;
-				case 0b10: {
-					color = 0x00555555;
-				} break;
-				case 0b11: {
-					color = 0x0;
-				} break;
-				}
-
-				drawPixel(yPos + localY, xPos + localX, color);
+				drawPixel(yPos + localY, xPos + localX, colorPalettes[activeColorPalette][shade]);
 			}
 		}
 	}

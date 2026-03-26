@@ -109,10 +109,7 @@ class Cpu {
 	template <InterruptFlag Fbit> bool getInterruptEnable(void) const {
 		return (m_interruptEnable & static_cast<uint8_t>(Fbit)) != 0;
 	}
-	void setInterruptEnableRaw(const uint8_t newInterruptFlag) {
-		m_interruptEnable = newInterruptFlag;
-		std::cout << "Cpu: IE set to 0b" << std::bitset<8>(newInterruptFlag) << std::endl;
-	}
+	void setInterruptEnableRaw(const uint8_t newInterruptFlag) { m_interruptEnable = newInterruptFlag; }
 	uint8_t getInterruptEnableRaw() const { return m_interruptEnable; }
 
 	template <InterruptFlag Fbit> bool getInterruptFlag(void) const {
