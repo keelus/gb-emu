@@ -32,8 +32,8 @@ class Ppu {
 
 		m_requestedVblankInterrupt = false;
 
-		memset(m_vram, 0, sizeof(uint8_t) * PPU_OAM_SIZE);
-		memset(m_oam, 0, sizeof(uint8_t) * PPU_OAM_SIZE);
+		memset(m_vram, 0, sizeof(m_vram));
+		memset(m_oam, 0, sizeof(m_oam));
 
 		m_lcdStatus = 0;
 	}

@@ -1,5 +1,6 @@
 #include "bus.hpp"
 #include "cartridge.hpp"
+#include "config.hpp"
 #include "cpu.hpp"
 #include "common.hpp"
 #include "ppu.hpp"
@@ -269,7 +270,9 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF00: m_joypad->write8(value); break;
 
 	/* Serial transfers */
-	case 0xFF01: std::cout << uint8_t(value); break;
+	case 0xFF01:
+		if(Config::serialOutput) { std::cout << uint8_t(value); }
+		break;
 	case 0xFF02: break;
 
 	/* Unused I/O */

@@ -1,4 +1,7 @@
+#include <cassert>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -7,7 +10,7 @@
 #include "SDL_keycode.h"
 #include "SDL_timer.h"
 #include "ppu.hpp"
-
+#include "config.hpp"
 #include "gameboy.hpp"
 
 #define SCALE 5
@@ -19,14 +22,47 @@
 
 uint8_t activeColorPalette = 2;
 
+void printUsage(const char *argv0, const bool isHelpMessage) {
+	std::cout << "Usage:" << argv0 << " [options] <ROM path>" << std::endl;
+	std::cout << "Options:" << std::endl;
+	std::cout << "\t -s, --serial\tEnable serial output" << std::endl;
+	std::cout << "\t -f, --no-fps\tDisable 59.70fps limit" << std::endl;
+	std::cout << "\t -d, --debug\tEnable debug output" << std::endl;
+	std::cout << "\t -h, --help\tShow " << (isHelpMessage ? "this" : "the") << " help message and exit" << std::endl;
+}
+
 int main(int argc, char *argv[]) {
-	if(argc != 2) {
-		std::cout << "Usage:" << std::endl;
-		std::cout << "\t" << argv[0] << " <ROM path>" << std::endl;
-		return 1;
+	if(argc < 2) {
+		printUsage(argv[0], false);
+		return EXIT_FAILURE;
 	}
 
-	GameBoy gb(argv[1]);
+	const char *romPath = NULL;
+
+	for(size_t i = 1; i < argc; i++) {
+		const char *arg = argv[i];
+
+		if(!strcmp(arg, "-s") || !strcmp(arg, "--serial")) {
+			Config::serialOutput = true;
+		} else if(!strcmp(arg, "-f") || !strcmp(arg, "--no-fps")) {
+			Config::limitFps = false;
+		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
+			Config::debugOutput = true;
+		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
+			printUsage(argv[0], true);
+			return EXIT_SUCCESS;
+		} else {
+			romPath = arg;
+		}
+	}
+
+	if(romPath == NULL) {
+		std::cout << "You must provide the path to a valid Game Boy ROM file." << std::endl;
+		printUsage(argv[0], false);
+		return EXIT_FAILURE;
+	}
+
+	GameBoy gb(romPath);
 	gb.debugCartridge();
 	std::cout << "Press any key to start the Game Boy..." << std::endl;
 	std::cin.get();
@@ -103,8 +139,10 @@ int main(int argc, char *argv[]) {
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 
-		Uint32 frameMs = SDL_GetTicks() - frameStart;
-		if(frameMs < MS_PER_FRAME) { SDL_Delay(MS_PER_FRAME - frameMs); }
+		if(Config::limitFps) {
+			Uint32 frameMs = SDL_GetTicks() - frameStart;
+			if(frameMs < MS_PER_FRAME) { SDL_Delay(MS_PER_FRAME - frameMs); }
+		}
 	}
 
 quit:

@@ -1,4 +1,5 @@
 #include <array>
+#include "config.hpp"
 #include "cpu.hpp"
 #include <cstdint>
 #include <iomanip>
@@ -531,9 +532,11 @@ constexpr std::array<int, 256> CPU_CB_INSTRUCTION_CYCLES = {
 
 int Cpu::executeCbInstruction(void) {
 	uint8_t opcode = m_bus.read8(m_PC++);
-	std::cout << "Got prefixed instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
-			  << " at PC=0x" << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 2) << ": \""
-			  << CPU_CB_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
+	if(Config::debugOutput) {
+		std::cout << "Got prefixed instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
+				  << " at PC=0x" << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 2) << ": \""
+				  << CPU_CB_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
+	}
 
 	switch(opcode) {
 	case 0x00: // RLC B
