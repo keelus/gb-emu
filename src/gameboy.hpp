@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL_keycode.h"
+#include "apu.hpp"
 #include "bus.hpp"
 #include "cartridge.hpp"
 #include "cpu.hpp"
@@ -18,6 +19,7 @@ class GameBoy {
 		m_bus.addMemory(&m_memory);
 		m_bus.addPpu(&m_ppu);
 		m_bus.addTimer(&m_timer);
+		m_bus.addApu(&m_apu);
 	}
 
 	void start(void);
@@ -29,7 +31,10 @@ class GameBoy {
 	void handleKeydown(SDL_Keycode keyCode) { m_joypad.handleKeyDown(keyCode); }
 	void handleKeyup(SDL_Keycode keyCode) { m_joypad.handleKeyUp(keyCode); }
 
+	bool introEnded() const { return m_bus.introEnded(); }
+
   private:
+	Apu m_apu;
 	Bus m_bus;
 	Cartridge m_cartridge;
 	Cpu m_cpu;

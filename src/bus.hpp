@@ -1,5 +1,6 @@
 #pragma once
 
+#include "apu.hpp"
 #include "cartridge.hpp"
 #include "memory.hpp"
 #include "timer.hpp"
@@ -22,6 +23,7 @@ class Bus {
 		VBlank,
 	};
 	Bus() {
+		m_apu = NULL;
 		m_cartridge = NULL;
 		m_cpu = NULL;
 		m_joypad = NULL;
@@ -32,6 +34,7 @@ class Bus {
 		m_oamSourceAndStart = 0;
 	}
 
+	void addApu(Apu *apu) { m_apu = apu; }
 	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
 	void addCpu(Cpu *cpu) { m_cpu = cpu; }
 	void addJoypad(Joypad *joypad) { m_joypad = joypad; }
@@ -49,10 +52,15 @@ class Bus {
 
 	void requestInterrupt(InterruptRequestType interruptType);
 
+	bool introEnded() const { return m_introEnded; }
+
   private:
 	uint8_t ioRead8(const uint16_t address) const;
 	void ioWrite8(const uint16_t address, const uint8_t value);
 
+	bool m_introEnded = false;
+
+	Apu *m_apu;
 	Cartridge *m_cartridge;
 	Cpu *m_cpu;
 	Joypad *m_joypad;

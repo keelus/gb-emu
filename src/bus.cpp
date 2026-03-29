@@ -109,7 +109,7 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF11:
 	case 0xFF12:
 	case 0xFF13:
-	case 0xFF14: return 0xFF;
+	case 0xFF14: return m_apu->read8(address);
 
 	/* Unused I/O */
 	case 0xFF15: return 0xFF;
@@ -134,8 +134,8 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF22:
 	case 0xFF23:
 	case 0xFF24:
-	case 0xFF25:
-	case 0xFF26: return 0xFF;
+	case 0xFF25: return 0xFF;
+	case 0xFF26: return m_apu->read8(address);
 
 	/* Unused I/O */
 	case 0xFF27:
@@ -301,7 +301,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF11:
 	case 0xFF12:
 	case 0xFF13:
-	case 0xFF14: break;
+	case 0xFF14: m_apu->write8(address, value); break;
 
 	/* Unused I/O */
 	case 0xFF15: break;
@@ -326,8 +326,8 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF22:
 	case 0xFF23:
 	case 0xFF24:
-	case 0xFF25:
-	case 0xFF26: break;
+	case 0xFF25: break;
+	case 0xFF26: m_apu->write8(address, value);
 
 	/* Unused I/O */
 	case 0xFF27:
@@ -387,6 +387,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 
 	/* Cartridge & boot ROM */
 	case 0xFF50:
+		m_introEnded = true;
 		m_cpu->initializeRegisters();
 		m_cartridge->unmapBootRom();
 		break;

@@ -1,5 +1,6 @@
 #include "gameboy.hpp"
 #include "cpu.hpp"
+#include <cstdint>
 #include <stdexcept>
 
 void GameBoy::start(void) {
@@ -18,6 +19,12 @@ int GameBoy::tick() {
 	for(size_t i = 0; i < cycles; i += 4) {
 		m_ppu.tick(4);
 		m_timer.tick(4);
+		m_apu.tick(4);
+
+		static uint8_t prevDiv = 0;
+		uint8_t div = m_timer.getDiv();
+		if((prevDiv & 0x10) == 0x10 && (div & 0x10) == 0) { m_apu.increaseDiv(); }
+		prevDiv = div;
 	}
 
 	return cycles;

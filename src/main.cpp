@@ -51,6 +51,8 @@ int main(int argc, char *argv[]) {
 		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
 			printUsage(argv[0], true);
 			return EXIT_SUCCESS;
+		} else if(!strcmp(arg, "-s") || !strcmp(arg, "--skip-intro")) {
+			Config::skipIntro = true;
 		} else {
 			romPath = arg;
 		}
@@ -76,7 +78,7 @@ int main(int argc, char *argv[]) {
 	SDL_Event e;
 	int running = 1;
 
-	if(SDL_Init(SDL_INIT_VIDEO) != 0) {
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
 		std::cerr << "SDL: SDL_Init error: " << SDL_GetError() << std::endl;
 		res = 1;
 		goto quit;
@@ -107,6 +109,10 @@ int main(int argc, char *argv[]) {
 	if(!texture) {
 		std::cerr << "SDL: SDL_CreateTexture error: " << SDL_GetError() << std::endl;
 		goto quit;
+	}
+
+	while(!gb.introEnded()) {
+		gb.tick();
 	}
 
 	while(running) {
