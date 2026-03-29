@@ -136,6 +136,7 @@ class Channel1 {
 
 	void trigger(void) {
 		turnOn();
+		m_envelopeAcc = 0;
 		m_volume = getInitialVolume();
 		m_periodSweepAcc = 0;
 		m_enabledFlag = getSweepPace() != 0 || getIndividualStep() != 0;

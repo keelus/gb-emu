@@ -106,8 +106,8 @@ class Channel2 {
 
 	void trigger(void) {
 		turnOn();
+		m_envelopeAcc = 0;
 		m_volume = getInitialVolume();
-		m_periodSweepAcc = 0;
 
 		if(m_lengthTimer == 0) { m_lengthTimer = 63 - (m_nr21 & 0x3F); }
 	}
@@ -153,6 +153,5 @@ class Channel2 {
 	uint16_t m_periodDivider = 0;
 
 	int m_envelopeAcc = 0;
-	int m_periodSweepAcc = 0;
 	uint8_t m_volume = 15;
 };
