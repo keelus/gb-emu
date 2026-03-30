@@ -133,7 +133,7 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF20:
 	case 0xFF21:
 	case 0xFF22:
-	case 0xFF23:
+	case 0xFF23: return m_apu->read8(address);
 	case 0xFF24:
 	case 0xFF25: return 0xFF;
 	case 0xFF26: return m_apu->read8(address);
@@ -327,10 +327,10 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF20:
 	case 0xFF21:
 	case 0xFF22:
-	case 0xFF23:
+	case 0xFF23: m_apu->write8(address, value); break;
 	case 0xFF24:
 	case 0xFF25: break;
-	case 0xFF26: m_apu->write8(address, value);
+	case 0xFF26: m_apu->write8(address, value); break;
 
 	/* Unused I/O */
 	case 0xFF27:

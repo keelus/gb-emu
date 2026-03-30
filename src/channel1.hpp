@@ -121,9 +121,9 @@ class Channel1 {
 		double phaseThreshold = (2 * M_PI) * (dutyPercent / 100.0f);
 		for(int i = 0; i < samples; i++) {
 			if(m_phase < phaseThreshold) {
-				buffer[i] = amplitude * static_cast<float>(m_volume) / 15.0f;
+				buffer[i] += amplitude * static_cast<float>(m_volume) / 15.0f;
 			} else {
-				buffer[i] = -amplitude * static_cast<float>(m_volume) / 15.0f;
+				buffer[i] -= amplitude * static_cast<float>(m_volume) / 15.0f;
 			}
 
 			double freq = getFrequency();
@@ -147,15 +147,9 @@ class Channel1 {
 	bool isDacOn() const { return (m_nr12 & 0xF8) != 0; }
 
   private:
-	void turnOff() {
-		m_isOn = false;
-		SDL_PauseAudio(1);
-	}
+	void turnOff() { m_isOn = false; }
 
-	void turnOn() {
-		m_isOn = true;
-		SDL_PauseAudio(0);
-	}
+	void turnOn() { m_isOn = true; }
 
 	uint16_t getPeriod() const { return (static_cast<uint16_t>(m_nr14 & 0x7) << 8) | static_cast<uint16_t>(m_nr13); }
 	void setPeriod(const uint16_t value) {
