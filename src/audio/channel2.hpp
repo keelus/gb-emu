@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SDL_audio.h"
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>

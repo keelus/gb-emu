@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SDL_keycode.h"
-#include "apu.hpp"
+#include "audio/apu.hpp"
 #include "bus.hpp"
 #include "cartridge/cartridge.hpp"
 #include "cpu.hpp"

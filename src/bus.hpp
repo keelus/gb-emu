@@ -1,6 +1,6 @@
 #pragma once
 
-#include "apu.hpp"
+#include "audio/apu.hpp"
 #include "cartridge/cartridge.hpp"
 #include "memory.hpp"
 #include "timer.hpp"
