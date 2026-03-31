@@ -1,7 +1,7 @@
 #include "bus.hpp"
 #include "cartridge/cartridge.hpp"
 #include "config.hpp"
-#include "cpu.hpp"
+#include "cpu/cpu.hpp"
 #include "common.hpp"
 #include "ppu.hpp"
 #include <cstdint>

@@ -1,5 +1,5 @@
 #include "gameboy.hpp"
-#include "cpu.hpp"
+#include "cpu/cpu.hpp"
 #include <cstdint>
 #include <stdexcept>
 

@@ -4,7 +4,7 @@
 #include "audio/apu.hpp"
 #include "bus.hpp"
 #include "cartridge/cartridge.hpp"
-#include "cpu.hpp"
+#include "cpu/cpu.hpp"
 #include "joypad.hpp"
 #include "memory.hpp"
 #include "ppu.hpp"
