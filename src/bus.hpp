@@ -1,7 +1,7 @@
 #pragma once
 
 #include "apu.hpp"
-#include "cartridge.hpp"
+#include "cartridge/cartridge.hpp"
 #include "memory.hpp"
 #include "timer.hpp"
 #include "joypad.hpp"

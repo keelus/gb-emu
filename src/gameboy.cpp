@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 void GameBoy::start(void) {
-	if(m_cartridge.type() != 0) { throw std::runtime_error("\"ROM only\" cartridges are supported.\n"); }
+	if(m_cartridge->type() != 0) { throw std::runtime_error("\"ROM only\" cartridges are supported.\n"); }
 
 	for(;;) {
 		int cycles = m_cpu.executeInstruction();

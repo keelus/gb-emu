@@ -1,5 +1,5 @@
 #include "bus.hpp"
-#include "cartridge.hpp"
+#include "cartridge/cartridge.hpp"
 #include "config.hpp"
 #include "cpu.hpp"
 #include "common.hpp"
