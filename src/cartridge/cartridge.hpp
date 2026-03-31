@@ -7,6 +7,7 @@
 #include <ios>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -30,6 +31,32 @@
 
 #define CARTRIDGE_TYPE_OFFSET 0x147
 
+enum class RomType {
+	Banks2 = 0x00,
+	Banks4,
+	Banks8,
+	Banks16,
+	Banks32,
+	Banks64,
+	Banks128,
+	Banks256,
+	Banks512,
+
+	/* Unused */
+	Banks72 = 0x52,
+	Banks80,
+	Banks96,
+};
+
+enum class RamType {
+	NoRam = 0x00,
+	Unused,
+	Banks1,
+	Banks4,
+	Banks16,
+	Banks8,
+};
+
 const std::unordered_map<uint8_t, std::string_view> CARTRIDGE_TYPES = {
 	{0x00,					   "ROM ONLY"},
 	{0x01,						   "MBC1"},
@@ -37,16 +64,16 @@ const std::unordered_map<uint8_t, std::string_view> CARTRIDGE_TYPES = {
 	{0x03,			   "MBC1+RAM+BATTERY"},
 	{0x05,						   "MBC2"},
 	{0x06,				   "MBC2+BATTERY"},
-	{0x08,					 "ROM+RAM 11"},
-	{0x09,			 "ROM+RAM+BATTERY 11"},
+	{0x08,						"ROM+RAM"},
+	{0x09,				"ROM+RAM+BATTERY"},
 	{0x0B,						  "MMM01"},
 	{0x0C,					  "MMM01+RAM"},
 	{0x0D,			  "MMM01+RAM+BATTERY"},
 	{0x0F,			 "MBC3+TIMER+BATTERY"},
-	{0x10,	   "MBC3+TIMER+RAM+BATTERY 12"},
+	{0x10,		   "MBC3+TIMER+RAM+BATTERY"},
 	{0x11,						   "MBC3"},
-	{0x12,					"MBC3+RAM 12"},
-	{0x13,			"MBC3+RAM+BATTERY 12"},
+	{0x12,					   "MBC3+RAM"},
+	{0x13,			   "MBC3+RAM+BATTERY"},
 	{0x19,						   "MBC5"},
 	{0x1A,					   "MBC5+RAM"},
 	{0x1B,			   "MBC5+RAM+BATTERY"},
@@ -63,30 +90,30 @@ const std::unordered_map<uint8_t, std::string_view> CARTRIDGE_TYPES = {
 
 #define CARTRIDGE_ROM_TYPE_OFFSET 0x148
 
-const std::unordered_map<uint8_t, std::string_view> ROM_SIZES = {
-	{0x00, "32 KiB [2 ROM banks (no-baking)]"},
-	{0x01,			 "64 KiB [4 ROM banks]"},
-	{0x02,			"128 KiB [8 ROM banks]"},
-	{0x03,		   "256 KiB [16 ROM banks]"},
-	{0x04,		   "512 KiB [32 ROM banks]"},
-	{0x05,			 "1 MiB [64 ROM banks]"},
-	{0x06,			"2 MiB [128 ROM banks]"},
-	{0x07,			"4 MiB [256 ROM banks]"},
-	{0x08,			"8 MiB [512 ROM banks]"},
-	{0x52,			   "1.1 MiB [72 banks]"},
-	{0x53,			   "1.2 MiB [80 banks]"},
-	{0x54,			   "1.5 MiB [96 banks]"}
+const std::unordered_map<RomType, std::string_view> ROM_TYPES = {
+	{	 RomType::Banks2, "32 KiB [2 ROM banks (no-baking)]"},
+	{	 RomType::Banks4,			  "64 KiB [4 ROM banks]"},
+	{	 RomType::Banks8,			  "128 KiB [8 ROM banks]"},
+	{ RomType::Banks16,		   "256 KiB [16 ROM banks]"},
+	{ RomType::Banks32,		   "512 KiB [32 ROM banks]"},
+	{ RomType::Banks64,			   "1 MiB [64 ROM banks]"},
+	{RomType::Banks128,			"2 MiB [128 ROM banks]"},
+	{RomType::Banks256,			"4 MiB [256 ROM banks]"},
+	{RomType::Banks512,			"8 MiB [512 ROM banks]"},
+	{ RomType::Banks72,			   "1.1 MiB [72 banks]"},
+	{ RomType::Banks80,			   "1.2 MiB [80 banks]"},
+	{ RomType::Banks96,			   "1.5 MiB [96 banks]"}
 };
 
 #define CARTRIDGE_RAM_TYPE_OFFSET 0x149
 
-const std::unordered_map<uint8_t, std::string_view> RAM_SIZES = {
-	{0x00,		   "0 [No RAM]"},
-	{0x01,		   "– Unused"},
-	  {0x02,	 "8 KiB [1 bank]"},
-	{0x03,   "32 KiB [4 banks]"},
-	{0x04, "128 KiB [16 banks]"},
-	  {0x05,	 "64 KiB [8 banks]"}
+const std::unordered_map<RamType, std::string_view> RAM_TYPES = {
+	{	 RamType::NoRam,		 "0 [No RAM]"},
+	  { RamType::Unused,			"– Unused"},
+	{ RamType::Banks1,	  "8 KiB [1 bank]"},
+	  { RamType::Banks4,	"32 KiB [4 banks]"},
+	{RamType::Banks16, "128 KiB [16 banks]"},
+	  { RamType::Banks8,	"64 KiB [8 banks]"}
 };
 
 #define CARTRIDGE_DESTINATION_CODE_OFFSET 0x14A
@@ -126,8 +153,24 @@ class Cartridge {
 		m_romVersionNumber = fileData[CARTRIDGE_ROM_VERSION_OFFSET];
 
 		m_type = fileData[CARTRIDGE_TYPE_OFFSET];
-		m_romType = fileData[CARTRIDGE_ROM_TYPE_OFFSET];
-		m_ramType = fileData[CARTRIDGE_RAM_TYPE_OFFSET];
+
+		const uint8_t romType = fileData[CARTRIDGE_ROM_TYPE_OFFSET];
+		if(!((romType <= 0x08) || (romType >= 0x52 && romType <= 0x54))) {
+			std::stringstream stream;
+			stream << "Cartridge: Invalid RomType with value 0x" << std::hex << std::setw(2) << std::setfill('0')
+				   << romType << std::endl;
+			throw std::invalid_argument(stream.str());
+		}
+		m_romType = static_cast<RomType>(romType);
+
+		const uint8_t ramType = fileData[CARTRIDGE_RAM_TYPE_OFFSET];
+		if(ramType > 0x05) {
+			std::stringstream stream;
+			stream << "Cartridge: Invalid RamType with value 0x" << std::hex << std::setw(2) << std::setfill('0')
+				   << ramType << std::endl;
+			throw std::invalid_argument(stream.str());
+		}
+		m_ramType = static_cast<RamType>(ramType);
 
 		m_destinationCode = fileData[CARTRIDGE_DESTINATION_CODE_OFFSET];
 		m_manufacturerCode = std::vector<uint8_t>(fileData.data() + CARTRIDGE_MANUFRACTURER_CODE_OFFSET,
@@ -157,11 +200,11 @@ class Cartridge {
 				  << (CARTRIDGE_TYPES.find(m_type) != CARTRIDGE_TYPES.end() ? CARTRIDGE_TYPES.at(m_type) : "Unknown")
 				  << " (0x" << std::hex << std::setw(2) << std::setfill('0') << m_type << ")" << std::endl;
 		std::cout << "- ROM size: "
-				  << (ROM_SIZES.find(m_romType) != ROM_SIZES.end() ? ROM_SIZES.at(m_romType) : "Unknown") << " (0x"
-				  << std::hex << std::setw(2) << std::setfill('0') << m_romType << ")" << std::endl;
+				  << (ROM_TYPES.find(m_romType) != ROM_TYPES.end() ? ROM_TYPES.at(m_romType) : "Unknown") << " (0x"
+				  << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint>(m_romType) << ")" << std::endl;
 		std::cout << "- RAM size: "
-				  << (RAM_SIZES.find(m_ramType) != RAM_SIZES.end() ? RAM_SIZES.at(m_ramType) : "Unknown") << " (0x"
-				  << std::hex << std::setw(2) << std::setfill('0') << m_ramType << ")" << std::endl;
+				  << (RAM_TYPES.find(m_ramType) != RAM_TYPES.end() ? RAM_TYPES.at(m_ramType) : "Unknown") << " (0x"
+				  << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint>(m_ramType) << ")" << std::endl;
 		std::cout << "- ROM version: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(m_romVersionNumber)
 				  << std::endl;
 		std::cout << "- Destination code: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(m_destinationCode)
@@ -173,8 +216,8 @@ class Cartridge {
 
 	uint8_t type() const { return m_type; }
 
-	uint8_t romType() const { return m_romType; }
-	uint8_t ramType() const { return m_ramType; }
+	RomType romType() const { return m_romType; }
+	RamType ramType() const { return m_ramType; }
 
 	std::vector<uint8_t> manufracturerCode() const { return m_manufacturerCode; }
 
@@ -188,6 +231,7 @@ class Cartridge {
 	bool isBootRomMapped() const { return m_bootRomMapped; }
 
 	virtual const char *data() const = 0;
+
 
   private:
 	static uint8_t calculateHeaderChecksum(const std::vector<uint8_t> cartridgeData) {
@@ -203,8 +247,8 @@ class Cartridge {
 	uint8_t m_romVersionNumber;
 
 	uint8_t m_type;
-	uint8_t m_romType;
-	uint8_t m_ramType;
+	RomType m_romType;
+	RamType m_ramType;
 
 	uint8_t m_destinationCode;
 	std::vector<uint8_t> m_manufacturerCode;
