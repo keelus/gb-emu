@@ -18,10 +18,9 @@
 
 class NoMBC : public Cartridge {
   public:
-	NoMBC(const std::vector<char> romData) : Cartridge(romData) {
+	NoMBC(const std::vector<uint8_t> romData) : Cartridge(romData) {
 		assert(type() == 0x00);
 		std::memcpy(m_rom, romData.data(), sizeof(uint8_t) * romData.size());
-		assert(calculateHeaderChecksum() == headerChecksum());
 	}
 
 	uint8_t read8(const uint16_t address) const override {
@@ -63,15 +62,6 @@ class NoMBC : public Cartridge {
 	}
 
 	const char *data() const override { return m_rom; }
-
-	uint8_t calculateHeaderChecksum(void) const override {
-		uint8_t checksum = 0;
-		for(uint16_t address = 0x0134; address <= 0x014C; address++) {
-			checksum = checksum - m_rom[address] - 1;
-		}
-
-		return checksum;
-	}
 
   private:
 	char m_rom[CARTRIDGE_ROM_SIZE];

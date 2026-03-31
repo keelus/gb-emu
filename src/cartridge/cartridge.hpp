@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <iomanip>
 #include <ios>
@@ -119,102 +120,100 @@ const std::array<uint8_t, 256> BOOT_ROM = {
 
 class Cartridge {
   public:
-	Cartridge(const std::vector<char> fileData) {
-		m_title = std::string(fileData.data() + CARTRIDGE_TITLE_OFFSET, CARTRIDGE_TITLE_LEN);
+	Cartridge(const std::vector<uint8_t> fileData) {
+		m_title =
+			std::string(reinterpret_cast<const char *>(fileData.data()) + CARTRIDGE_TITLE_OFFSET, CARTRIDGE_TITLE_LEN);
+		m_romVersionNumber = fileData[CARTRIDGE_ROM_VERSION_OFFSET];
 
+		m_type = fileData[CARTRIDGE_TYPE_OFFSET];
+		m_romType = fileData[CARTRIDGE_ROM_TYPE_OFFSET];
+		m_ramType = fileData[CARTRIDGE_RAM_TYPE_OFFSET];
+
+		m_destinationCode = fileData[CARTRIDGE_DESTINATION_CODE_OFFSET];
 		m_manufacturerCode = std::vector<uint8_t>(fileData.data() + CARTRIDGE_MANUFRACTURER_CODE_OFFSET,
 												  fileData.data() + CARTRIDGE_MANUFRACTURER_CODE_OFFSET +
 													  CARTRIDGE_MANUFRACTURER_CODE_LEN);
 
-		m_cgbFlag = fileData[CARTRIDGE_CGB_FLAG_OFFSET];
-
+		m_oldLicenseeCode = fileData[CARTRIDGE_OLD_LICENSEE_CODE_OFFSET];
 		m_newLicenseeCode =
 			(static_cast<uint16_t>(static_cast<uint8_t>(fileData[CARTRIDGE_NEW_LICENSEE_CODE_OFFSET])) << 8) |
 			static_cast<uint16_t>(static_cast<uint8_t>(fileData[CARTRIDGE_NEW_LICENSEE_CODE_OFFSET + 1]));
 
+		m_cgbFlag = fileData[CARTRIDGE_CGB_FLAG_OFFSET];
 		m_sgbFlag = fileData[CARTRIDGE_SGB_FLAG_OFFSET];
-		m_type = fileData[CARTRIDGE_TYPE_OFFSET];
-		m_romType = fileData[CARTRIDGE_ROM_TYPE_OFFSET];
-		m_ramType = fileData[CARTRIDGE_RAM_TYPE_OFFSET];
-		m_destinationCode = fileData[CARTRIDGE_DESTINATION_CODE_OFFSET];
-		m_oldLicenseeCode = fileData[CARTRIDGE_OLD_LICENSEE_CODE_OFFSET];
-		m_romVersionNumber = fileData[CARTRIDGE_ROM_VERSION_OFFSET];
-		m_headerChecksum = fileData[CARTRIDGE_HEADER_CHECKSUM_OFFSET];
 
 		m_bootRomMapped = true;
+
+		assert(Cartridge::calculateHeaderChecksum(fileData) == fileData[CARTRIDGE_HEADER_CHECKSUM_OFFSET] &&
+			   "Cartridge: Header checksum is not valid.");
 	}
 
 	static std::unique_ptr<Cartridge> createCartridge(const std::string &path);
 
 	void debug(void) const {
 		std::cout << "== ROM DEBUG ==" << std::endl;
-		std::cout << "- Title: \"" << title() << "\"" << std::endl;
+		std::cout << "- Title: \"" << m_title << "\"" << std::endl;
 		std::cout << "- Type: "
-				  << (CARTRIDGE_TYPES.find(type()) != CARTRIDGE_TYPES.end() ? CARTRIDGE_TYPES.at(type()) : "Unknown")
-				  << " (0x" << std::hex << std::setw(2) << std::setfill('0') << type() << ")" << std::endl;
+				  << (CARTRIDGE_TYPES.find(m_type) != CARTRIDGE_TYPES.end() ? CARTRIDGE_TYPES.at(m_type) : "Unknown")
+				  << " (0x" << std::hex << std::setw(2) << std::setfill('0') << m_type << ")" << std::endl;
 		std::cout << "- ROM size: "
-				  << (ROM_SIZES.find(romType()) != ROM_SIZES.end() ? ROM_SIZES.at(romType()) : "Unknown") << " (0x"
-				  << std::hex << std::setw(2) << std::setfill('0') << romType() << ")" << std::endl;
+				  << (ROM_SIZES.find(m_romType) != ROM_SIZES.end() ? ROM_SIZES.at(m_romType) : "Unknown") << " (0x"
+				  << std::hex << std::setw(2) << std::setfill('0') << m_romType << ")" << std::endl;
 		std::cout << "- RAM size: "
-				  << (RAM_SIZES.find(ramType()) != RAM_SIZES.end() ? RAM_SIZES.at(ramType()) : "Unknown") << " (0x"
-				  << std::hex << std::setw(2) << std::setfill('0') << ramType() << ")" << std::endl;
-		std::cout << "- ROM version: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(romVersion())
+				  << (RAM_SIZES.find(m_ramType) != RAM_SIZES.end() ? RAM_SIZES.at(m_ramType) : "Unknown") << " (0x"
+				  << std::hex << std::setw(2) << std::setfill('0') << m_ramType << ")" << std::endl;
+		std::cout << "- ROM version: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(m_romVersionNumber)
 				  << std::endl;
-		std::cout << "- Destination code: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(destinationCode())
+		std::cout << "- Destination code: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(m_destinationCode)
 				  << std::endl;
-		std::cout << "- Licensee code (" << (oldLicenseeCode() == 0x33 ? "new" : "old") << "): 0x" << std::hex
-				  << std::setw(2) << std::setfill('0') << int(licenseeCode()) << std::endl;
-		std::cout << "- Header checksum (" << (calculateHeaderChecksum() == headerChecksum() ? "correct" : "incorrect")
-				  << "): 0x" << std::hex << std::setw(2) << std::setfill('0') << int(headerChecksum()) << std::endl;
+		std::cout << "- Licensee code (" << (m_oldLicenseeCode == 0x33 ? "new" : "old") << "): 0x" << std::hex
+				  << std::setw(2) << std::setfill('0')
+				  << int(m_oldLicenseeCode == 0x33 ? m_newLicenseeCode : m_oldLicenseeCode) << std::endl;
 	}
 
-	std::string title() const { return m_title; }
 	uint8_t type() const { return m_type; }
-
-	uint16_t licenseeCode(void) const {
-		uint8_t old = oldLicenseeCode();
-		if(old == 0x33) { return old; }
-		return newLicenseeCode();
-	}
-	uint16_t newLicenseeCode() const { return m_newLicenseeCode; }
-	uint8_t oldLicenseeCode() const { return m_oldLicenseeCode; }
-
-	uint8_t flagSGB() const { return m_sgbFlag; }
-	uint8_t flagCGB() const { return m_cgbFlag; }
 
 	uint8_t romType() const { return m_romType; }
 	uint8_t ramType() const { return m_ramType; }
 
 	std::vector<uint8_t> manufracturerCode() const { return m_manufacturerCode; }
 
-	uint8_t romVersion() const { return m_romVersionNumber; }
-	uint8_t destinationCode() const { return m_destinationCode; }
-
-	uint8_t headerChecksum() const { return m_headerChecksum; }
-
-	virtual uint8_t calculateHeaderChecksum(void) const = 0;
-
 	virtual uint8_t read8(const uint16_t address) const = 0;
 	virtual void write8(const uint16_t address, const uint8_t value) = 0;
 
-	void unmapBootRom() { m_bootRomMapped = false; }
+	void unmapBootRom() {
+		assert(m_bootRomMapped && "Catridge: Boot ROM is already unmapped.");
+		m_bootRomMapped = false;
+	}
 	bool isBootRomMapped() const { return m_bootRomMapped; }
 
 	virtual const char *data() const = 0;
 
   private:
+	static uint8_t calculateHeaderChecksum(const std::vector<uint8_t> cartridgeData) {
+		uint8_t checksum = 0;
+		for(uint16_t index = 0x134; index <= 0x14C; index++) {
+			checksum = checksum - cartridgeData[index] - 1;
+		}
+
+		return checksum;
+	}
+
 	std::string m_title;
-	std::vector<uint8_t> m_manufacturerCode;
-	bool m_cgbFlag;
-	uint16_t m_newLicenseeCode;
-	bool m_sgbFlag;
+	uint8_t m_romVersionNumber;
+
 	uint8_t m_type;
 	uint8_t m_romType;
 	uint8_t m_ramType;
+
 	uint8_t m_destinationCode;
+	std::vector<uint8_t> m_manufacturerCode;
+
 	uint8_t m_oldLicenseeCode;
-	uint8_t m_romVersionNumber;
-	uint8_t m_headerChecksum;
+	uint16_t m_newLicenseeCode;
+
+	bool m_cgbFlag;
+	bool m_sgbFlag;
 
 	bool m_bootRomMapped;
 };
