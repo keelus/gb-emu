@@ -82,6 +82,9 @@ class Ppu {
 	}
 
   private:
+	void drawObjectTile(const uint16_t tileAddress, const uint8_t palette, const uint8_t attributes, const uint8_t x,
+						const uint8_t y) const;
+	void drawObject(const uint16_t objectAddress) const;
 	void drawObjects(void) const;
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1) const;
 	void drawHLine() const;

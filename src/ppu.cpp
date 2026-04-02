@@ -1,5 +1,6 @@
 #include "ppu.hpp"
 #include "common.hpp"
+#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -140,18 +141,19 @@ void Ppu::tick(const uint8_t cycles) {
 }
 
 void Ppu::drawHLine() const {
-	size_t y = m_ly + m_scy;
+	size_t y = (m_ly + m_scy) % 256;
 	size_t tileI = y / 8;
 
 	for(size_t x = m_scx; x < 160 + m_scx; x++) {
-		size_t tileJ = x / 8;
+		uint8_t xWarped = x % 256;
+		size_t tileJ = xWarped / 8;
 		size_t tileIndex = tileI * 32 + tileJ;
 
 		uint8_t byte0, byte1;
-		int localX = abs(int(x - tileJ * 8));
+		int localX = abs(int(xWarped - tileJ * 8));
 		int localY = abs(int(y - tileI * 8));
 		getTileHLine(tileIndex, localY, byte0, byte1);
-		drawTileHLine(localX, x - m_scx, y - m_scy, byte0, byte1);
+		drawTileHLine(localX, xWarped - m_scx, y - m_scy, byte0, byte1);
 	}
 }
 
@@ -175,6 +177,7 @@ void Ppu::getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, 
 }
 
 void Ppu::drawPixel(uint8_t i, uint8_t j, uint32_t color) const {
+	if(i >= 144 || j >= 160) { return; }
 	buffer[SCREEN_WIDTH * i + j] = color;
 }
 
@@ -191,36 +194,63 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 	drawPixel(y, x, colorPalettes[activeColorPalette][shade]);
 }
 
-// TODO: Add priority, flipping, 8x16 mode, etc.
+void Ppu::drawObjectTile(const uint16_t tileIndex, const uint8_t palette, const uint8_t attributes, const uint8_t x,
+						 const uint8_t y) const {
+	uint16_t tileAddress = 0x8000 | (static_cast<uint16_t>(tileIndex) * 16);
+
+	bool flipX = (attributes & 0x20) == 0x20;
+	bool flipY = (attributes & 0x40) == 0x40;
+
+	for(uint8_t localY = 0; localY < 8; localY++) {
+		uint8_t srcY = flipY ? (7 - localY) : localY;
+
+		uint8_t byte0 = m_bus.read8(tileAddress + srcY * 2);
+		uint8_t byte1 = m_bus.read8(tileAddress + srcY * 2 + 1);
+
+		for(size_t localX = 0; localX < 8; localX++) {
+			uint8_t srcX = flipX ? localX : (7 - localX);
+
+			uint8_t lower = byte0 >> srcX & 1;
+			uint8_t upper = byte1 >> srcX & 1;
+
+			uint8_t colorId = (upper << 1) | lower;
+			if(colorId == 0) { continue; }
+
+			uint8_t shade = (palette >> (colorId * 2)) & 0b11;
+			drawPixel(y + localY, x + localX, colorPalettes[activeColorPalette][shade]);
+		}
+	}
+}
+
+void Ppu::drawObject(const uint16_t objectAddress) const {
+	uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
+
+	const uint8_t y = m_bus.read8(objectAddress + 0) - 16;
+	const uint8_t x = m_bus.read8(objectAddress + 1) - 8;
+	const uint8_t tileIndex = m_bus.read8(objectAddress + 2);
+	const uint8_t attributes = m_bus.read8(objectAddress + 3);
+
+	const uint8_t palette = (attributes & 0x10) ? m_objPalette1 : m_objPalette0;
+
+	const bool flipY = (attributes & 0x40) == 0x40;
+
+	if(objSize == 0) {
+		drawObjectTile(tileIndex, palette, attributes, x, y);
+	} else {
+		const std::array<uint8_t, 2> tileIndexes = {
+			static_cast<uint8_t>(tileIndex & 0xFE),
+			static_cast<uint8_t>(tileIndex & 0xFE | 0x01),
+		};
+
+		for(uint8_t i = 0; i < 2; i++) {
+			drawObjectTile(tileIndexes[flipY ? (1 - i) : i], palette, attributes, x, y + i * 8);
+		}
+	}
+}
+
+// TODO: Add priority
 void Ppu::drawObjects(void) const {
 	for(size_t i = 0; i < 40; i++) {
-		uint8_t yPos = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 0));
-		uint8_t xPos = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 1));
-
-		if(yPos == 0 || yPos >= 160 || xPos == 0 || xPos >= 168) { continue; }
-
-		yPos -= 16;
-		xPos -= 8;
-
-		uint8_t tileIndex = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 2));
-		uint16_t tileAddress = 0x8000 | (static_cast<uint16_t>(tileIndex) * 16);
-
-		uint8_t attributes = m_bus.read8(0xFE00 | static_cast<uint16_t>(i * 4 + 3));
-
-		for(size_t localY = 0; localY < 8; localY++) {
-			uint8_t byte0 = m_bus.read8(tileAddress + localY * 2);
-			uint8_t byte1 = m_bus.read8(tileAddress + localY * 2 + 1);
-			for(size_t localX = 0; localX < 8; localX++) {
-				uint8_t lower = byte0 >> (7 - localX) & 1;
-				uint8_t upper = byte1 >> (7 - localX) & 1;
-
-				uint8_t colorId = (upper << 1) | lower;
-				if(colorId == 0) { continue; }
-
-				uint8_t palette = (attributes & 0x10) ? m_objPalette1 : m_objPalette0;
-				uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-				drawPixel(yPos + localY, xPos + localX, colorPalettes[activeColorPalette][shade]);
-			}
-		}
+		drawObject(0xFE00 | static_cast<uint16_t>(i * 4));
 	}
 }

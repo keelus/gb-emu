@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -50,8 +51,7 @@ enum class RomType {
 
 enum class RamType {
 	NoRam = 0x00,
-	Unused,
-	Banks1,
+	Banks1 = 0x02,
 	Banks4,
 	Banks16,
 	Banks8,
@@ -109,11 +109,10 @@ const std::unordered_map<RomType, std::string_view> ROM_TYPES = {
 
 const std::unordered_map<RamType, std::string_view> RAM_TYPES = {
 	{	 RamType::NoRam,		 "0 [No RAM]"},
-	  { RamType::Unused,			"– Unused"},
 	{ RamType::Banks1,	  "8 KiB [1 bank]"},
-	  { RamType::Banks4,	"32 KiB [4 banks]"},
+	{ RamType::Banks4,	  "32 KiB [4 banks]"},
 	{RamType::Banks16, "128 KiB [16 banks]"},
-	  { RamType::Banks8,	"64 KiB [8 banks]"}
+	{ RamType::Banks8,	  "64 KiB [8 banks]"}
 };
 
 #define CARTRIDGE_DESTINATION_CODE_OFFSET 0x14A
@@ -164,6 +163,7 @@ class Cartridge {
 		m_romType = static_cast<RomType>(romType);
 
 		const uint8_t ramType = fileData[CARTRIDGE_RAM_TYPE_OFFSET];
+		assert(ramType != 0x01 && "Cartridge: Invalid ram type 0x01.\n");
 		if(ramType > 0x05) {
 			std::stringstream stream;
 			stream << "Cartridge: Invalid RamType with value 0x" << std::hex << std::setw(2) << std::setfill('0')
@@ -198,17 +198,17 @@ class Cartridge {
 		std::cout << "- Title: \"" << m_title << "\"" << std::endl;
 		std::cout << "- Type: "
 				  << (CARTRIDGE_TYPES.find(m_type) != CARTRIDGE_TYPES.end() ? CARTRIDGE_TYPES.at(m_type) : "Unknown")
-				  << " (0x" << std::hex << std::setw(2) << std::setfill('0') << m_type << ")" << std::endl;
+				  << " (0x" << std::hex << std::setw(2) << std::setfill('0') << uint(m_type) << ")" << std::endl;
 		std::cout << "- ROM size: "
 				  << (ROM_TYPES.find(m_romType) != ROM_TYPES.end() ? ROM_TYPES.at(m_romType) : "Unknown") << " (0x"
 				  << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint>(m_romType) << ")" << std::endl;
 		std::cout << "- RAM size: "
 				  << (RAM_TYPES.find(m_ramType) != RAM_TYPES.end() ? RAM_TYPES.at(m_ramType) : "Unknown") << " (0x"
 				  << std::hex << std::setw(2) << std::setfill('0') << static_cast<uint>(m_ramType) << ")" << std::endl;
-		std::cout << "- ROM version: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(m_romVersionNumber)
+		std::cout << "- ROM version: 0x" << std::hex << std::setw(2) << std::setfill('0') << uint(m_romVersionNumber)
 				  << std::endl;
-		std::cout << "- Destination code: 0x" << std::hex << std::setw(2) << std::setfill('0') << int(m_destinationCode)
-				  << std::endl;
+		std::cout << "- Destination code: 0x" << std::hex << std::setw(2) << std::setfill('0')
+				  << uint(m_destinationCode) << std::endl;
 		std::cout << "- Licensee code (" << (m_oldLicenseeCode == 0x33 ? "new" : "old") << "): 0x" << std::hex
 				  << std::setw(2) << std::setfill('0')
 				  << int(m_oldLicenseeCode == 0x33 ? m_newLicenseeCode : m_oldLicenseeCode) << std::endl;
@@ -225,7 +225,7 @@ class Cartridge {
 	virtual void write8(const uint16_t address, const uint8_t value) = 0;
 
 	void unmapBootRom() {
-		assert(m_bootRomMapped && "Catridge: Boot ROM is already unmapped.");
+		if(!m_bootRomMapped) { std::cout << "Cartridge: Warning, boot ROM already unmapped." << std::endl; }
 		m_bootRomMapped = false;
 	}
 	bool isBootRomMapped() const { return m_bootRomMapped; }

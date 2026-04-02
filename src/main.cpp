@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
 			printUsage(argv[0], true);
 			return EXIT_SUCCESS;
-		} else if(!strcmp(arg, "-s") || !strcmp(arg, "--skip-intro")) {
+		} else if(!strcmp(arg, "-i") || !strcmp(arg, "--skip-intro")) {
 			Config::skipIntro = true;
 		} else {
 			romPath = arg;
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 		goto quit;
 	}
 
-	while(!gb.introEnded()) {
+	while(Config::skipIntro && !gb.introEnded()) {
 		gb.tick();
 	}
 

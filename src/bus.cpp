@@ -47,8 +47,7 @@ uint16_t Bus::read16(const uint16_t address) const {
 
 void Bus::write8(const uint16_t address, const uint8_t value) {
 	if(IS_CARTRIDGE(address)) {
-		std::cout << "Bus: Ignoring write to Cartridge's ROM at address 0x" << std::hex << std::setw(4)
-				  << std::setfill('0') << address << " with value 0x" << std::setw(2) << value << std::endl;
+		m_cartridge->write8(address, value);
 	} else if(IS_PPU(address)) {
 		return m_ppu->write8(address, value);
 	} else if(IS_MEMORY(address)) {
