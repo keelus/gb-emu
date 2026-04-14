@@ -473,7 +473,6 @@ class Cpu {
 	void doBit(uint16_t address, uint8_t bit) {
 		uint8_t value = m_bus.read8(address);
 		doBit(value, bit);
-		m_bus.write8(address, value);
 	}
 
 	void doRes(uint8_t &reg, uint8_t bit) { reg &= ~(1 << bit); }
