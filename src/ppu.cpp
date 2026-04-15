@@ -51,7 +51,6 @@ void Ppu::tick(const uint8_t cycles) {
 
 	switch(m_mode) {
 	case PpuMode::OAM_SCAN: {
-		m_requestedVblankInterrupt = false;
 		m_requestedMode0Interrupt = false;
 		m_requestedMode1Interrupt = false;
 
@@ -67,7 +66,6 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::DRAWING: {
-		m_requestedVblankInterrupt = false;
 		m_requestedMode0Interrupt = false;
 		m_requestedMode1Interrupt = false;
 		m_requestedMode2Interrupt = false;
@@ -78,7 +76,6 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::HBLANK: {
-		m_requestedVblankInterrupt = false;
 		m_requestedMode1Interrupt = false;
 		m_requestedMode2Interrupt = false;
 		if((m_lcdStatus & 0b1000) != 0 && !m_requestedMode0Interrupt) {
@@ -89,13 +86,14 @@ void Ppu::tick(const uint8_t cycles) {
 			m_cycles -= 204;
 
 			drawHLine();
-			/* TODO: Draw Window */
+			drawHLineWindow();
 			if((m_lcdStatus & 0b100) != 0 && m_ly == m_lyc) { m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd); }
 
 			m_ly++;
 
 			if(m_ly == 144) {
 				m_mode = PpuMode::VBLANK;
+				m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);
 			} else {
 				m_mode = PpuMode::OAM_SCAN;
 			}
@@ -103,18 +101,12 @@ void Ppu::tick(const uint8_t cycles) {
 		break;
 	}
 	case PpuMode::VBLANK: {
-		m_requestedVblankInterrupt = false;
 		m_requestedMode0Interrupt = false;
 		m_requestedMode2Interrupt = false;
 
 		if((m_lcdStatus & 0b10000) != 0 && !m_requestedMode1Interrupt) {
 			m_requestedMode1Interrupt = true;
 			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
-		}
-
-		if(!m_requestedVblankInterrupt) {
-			m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);
-			m_requestedVblankInterrupt = true;
 		}
 
 		if(m_cycles >= 456) {
@@ -152,21 +144,43 @@ void Ppu::drawHLine() const {
 		uint8_t byte0, byte1;
 		int localX = abs(int(xWarped - tileJ * 8));
 		int localY = abs(int(y - tileI * 8));
-		getTileHLine(tileIndex, localY, byte0, byte1);
+		getTileHLine(tileIndex, localY, byte0, byte1, ((m_bus.read8(0xFF40) >> 3) & 1) != 0);
 		drawTileHLine(localX, xWarped - m_scx, y - m_scy, byte0, byte1);
 	}
 }
 
-void Ppu::getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1) const {
-	bool lcdc4 = ((m_bus.read8(0xFF40) >> 4) & 1) != 0;
-	bool lcdc3 = ((m_bus.read8(0xFF40) >> 3) & 1) != 0;
+void Ppu::drawHLineWindow() const {
+	bool lcdc5 = ((m_bus.read8(0xFF40) >> 5) & 1) != 0;
+	if(!lcdc5) { return; }
 
-	uint16_t tileAddress = lcdc3 ? 0x9C00 : 0x9800;
+	if(m_ly >= 144) { return; }
+	if(m_ly < m_wy) { return; }
+
+	size_t y = m_ly - m_wy;
+	size_t tileI = y / 8;
+
+	for(size_t x = m_wx + 7; x < 160 + m_wx; x++) {
+		if(x >= 160) { continue; }
+		size_t tileJ = x / 8;
+		size_t tileIndex = tileI * 32 + tileJ;
+
+		uint8_t byte0, byte1;
+		int localX = abs(int(x - tileJ * 8));
+		int localY = abs(int(y - tileI * 8));
+		getTileHLine(tileIndex, localY, byte0, byte1, ((m_bus.read8(0xFF40) >> 6) & 1) != 0);
+		drawTileHLine(localX, x, m_ly, byte0, byte1);
+	}
+}
+
+void Ppu::getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
+					   uint8_t tileAddressBit) const {
+	uint16_t tileAddress = tileAddressBit ? 0x9C00 : 0x9800;
 	uint8_t index = m_bus.read8(tileAddress + tileMapIndex);
 
 	uint16_t finalTileAddress;
 
-	if(lcdc4) {
+	uint8_t tileBit = ((m_bus.read8(0xFF40) >> 4) & 1) != 0;
+	if(tileBit) {
 		finalTileAddress = 0x8000 + index * 16;
 	} else {
 		finalTileAddress = 0x9000 + (int8_t)index * 16;

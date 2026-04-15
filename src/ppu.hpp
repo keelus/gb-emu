@@ -30,8 +30,6 @@ class Ppu {
 		m_ly = 0;
 		m_lyc = 0;
 
-		m_requestedVblankInterrupt = false;
-
 		memset(m_vram, 0, sizeof(m_vram));
 		memset(m_oam, 0, sizeof(m_oam));
 
@@ -86,8 +84,10 @@ class Ppu {
 						const uint8_t y) const;
 	void drawObject(const uint16_t objectAddress) const;
 	void drawObjects(void) const;
-	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1) const;
+	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
+					  uint8_t tileAddressBit) const;
 	void drawHLine() const;
+	void drawHLineWindow() const;
 	void drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uint8_t byte1) const;
 	void drawPixel(uint8_t i, uint8_t j, uint32_t color) const;
 
@@ -109,8 +109,6 @@ class Ppu {
 	PpuMode m_mode;
 
 	uint8_t m_lcdStatus;
-
-	bool m_requestedVblankInterrupt;
 
 	bool m_requestedMode0Interrupt;
 	bool m_requestedMode1Interrupt;
