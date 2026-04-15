@@ -1,5 +1,6 @@
 #include "cartridge.hpp"
 #include "cartridge/no_mbc.hpp"
+#include "cartridge/mbc1.hpp"
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -22,6 +23,9 @@ std::unique_ptr<Cartridge> Cartridge::createCartridge(const std::string &path) {
 
 	switch(type) {
 	case 0x00: return std::make_unique<NoMBC>(fileData); break;
+	case 0x01:
+	case 0x02:
+	case 0x03: return std::make_unique<MBC1>(fileData); break;
 	default:
 		std::stringstream stream;
 		stream << "Cartridge: Unimplemented cartridge of type \""

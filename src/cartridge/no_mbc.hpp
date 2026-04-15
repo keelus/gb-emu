@@ -55,8 +55,6 @@ class NoMBC : public Cartridge {
 		}
 	}
 
-	const char *data() const override { return m_rom; }
-
   private:
 	char m_rom[CARTRIDGE_ROM_SIZE];
 	char m_ram[CARTRIDGE_RAM_SIZE];

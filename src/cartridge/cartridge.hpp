@@ -57,63 +57,65 @@ enum class RamType {
 	Banks8,
 };
 
+// clang-format off
 const std::unordered_map<uint8_t, std::string_view> CARTRIDGE_TYPES = {
-	{0x00,					   "ROM ONLY"},
-	{0x01,						   "MBC1"},
-	{0x02,					   "MBC1+RAM"},
-	{0x03,			   "MBC1+RAM+BATTERY"},
-	{0x05,						   "MBC2"},
-	{0x06,				   "MBC2+BATTERY"},
-	{0x08,						"ROM+RAM"},
-	{0x09,				"ROM+RAM+BATTERY"},
-	{0x0B,						  "MMM01"},
-	{0x0C,					  "MMM01+RAM"},
-	{0x0D,			  "MMM01+RAM+BATTERY"},
-	{0x0F,			 "MBC3+TIMER+BATTERY"},
-	{0x10,		   "MBC3+TIMER+RAM+BATTERY"},
-	{0x11,						   "MBC3"},
-	{0x12,					   "MBC3+RAM"},
-	{0x13,			   "MBC3+RAM+BATTERY"},
-	{0x19,						   "MBC5"},
-	{0x1A,					   "MBC5+RAM"},
-	{0x1B,			   "MBC5+RAM+BATTERY"},
-	{0x1C,					"MBC5+RUMBLE"},
-	{0x1D,				"MBC5+RUMBLE+RAM"},
-	{0x1E,		   "MBC5+RUMBLE+RAM+BATTERY"},
-	{0x20,						   "MBC6"},
+	{0x00,                       "ROM ONLY"},
+	{0x01,                           "MBC1"},
+	{0x02,                       "MBC1+RAM"},
+	{0x03,               "MBC1+RAM+BATTERY"},
+	{0x05,                           "MBC2"},
+	{0x06,                   "MBC2+BATTERY"},
+	{0x08,                        "ROM+RAM"},
+	{0x09,                "ROM+RAM+BATTERY"},
+	{0x0B,                          "MMM01"},
+	{0x0C,                      "MMM01+RAM"},
+	{0x0D,              "MMM01+RAM+BATTERY"},
+	{0x0F,             "MBC3+TIMER+BATTERY"},
+	{0x10,         "MBC3+TIMER+RAM+BATTERY"},
+	{0x11,                           "MBC3"},
+	{0x12,                       "MBC3+RAM"},
+	{0x13,               "MBC3+RAM+BATTERY"},
+	{0x19,                           "MBC5"},
+	{0x1A,                       "MBC5+RAM"},
+	{0x1B,               "MBC5+RAM+BATTERY"},
+	{0x1C,                    "MBC5+RUMBLE"},
+	{0x1D,                "MBC5+RUMBLE+RAM"},
+	{0x1E,        "MBC5+RUMBLE+RAM+BATTERY"},
+	{0x20,                           "MBC6"},
 	{0x22, "MBC7+SENSOR+RUMBLE+RAM+BATTERY"},
-	{0xFC,				  "POCKET CAMERA"},
-	{0xFD,				   "BANDAI TAMA5"},
-	{0xFE,						   "HuC3"},
-	{0xFF,			   "HuC1+RAM+BATTERY"}
+	{0xFC,                  "POCKET CAMERA"},
+	{0xFD,                   "BANDAI TAMA5"},
+	{0xFE,                           "HuC3"},
+	{0xFF,               "HuC1+RAM+BATTERY"}
 };
 
 #define CARTRIDGE_ROM_TYPE_OFFSET 0x148
 
 const std::unordered_map<RomType, std::string_view> ROM_TYPES = {
-	{	 RomType::Banks2, "32 KiB [2 ROM banks (no-baking)]"},
-	{	 RomType::Banks4,			  "64 KiB [4 ROM banks]"},
-	{	 RomType::Banks8,			  "128 KiB [8 ROM banks]"},
-	{ RomType::Banks16,		   "256 KiB [16 ROM banks]"},
-	{ RomType::Banks32,		   "512 KiB [32 ROM banks]"},
-	{ RomType::Banks64,			   "1 MiB [64 ROM banks]"},
-	{RomType::Banks128,			"2 MiB [128 ROM banks]"},
-	{RomType::Banks256,			"4 MiB [256 ROM banks]"},
-	{RomType::Banks512,			"8 MiB [512 ROM banks]"},
-	{ RomType::Banks72,			   "1.1 MiB [72 banks]"},
-	{ RomType::Banks80,			   "1.2 MiB [80 banks]"},
-	{ RomType::Banks96,			   "1.5 MiB [96 banks]"}
+	{RomType::Banks2,   "32 KiB [2 ROM banks (no-baking)]"},
+	{RomType::Banks4,               "64 KiB [4 ROM banks]"},
+	{RomType::Banks8,              "128 KiB [8 ROM banks]"},
+	{RomType::Banks16,            "256 KiB [16 ROM banks]"},
+	{RomType::Banks32,            "512 KiB [32 ROM banks]"},
+	{RomType::Banks64,              "1 MiB [64 ROM banks]"},
+	{RomType::Banks128,            "2 MiB [128 ROM banks]"},
+	{RomType::Banks256,            "4 MiB [256 ROM banks]"},
+	{RomType::Banks512,            "8 MiB [512 ROM banks]"},
+	{RomType::Banks72,                "1.1 MiB [72 banks]"},
+	{RomType::Banks80,                "1.2 MiB [80 banks]"},
+	{RomType::Banks96,                "1.5 MiB [96 banks]"}
 };
 
 #define CARTRIDGE_RAM_TYPE_OFFSET 0x149
 
 const std::unordered_map<RamType, std::string_view> RAM_TYPES = {
-	{	 RamType::NoRam,		 "0 [No RAM]"},
-	{ RamType::Banks1,	  "8 KiB [1 bank]"},
-	{ RamType::Banks4,	  "32 KiB [4 banks]"},
-	{RamType::Banks16, "128 KiB [16 banks]"},
-	{ RamType::Banks8,	  "64 KiB [8 banks]"}
+	{RamType::NoRam,            "0 [No RAM]"},
+	{RamType::Banks1,       "8 KiB [1 bank]"},
+	{RamType::Banks4,     "32 KiB [4 banks]"},
+	{RamType::Banks16,  "128 KiB [16 banks]"},
+	{RamType::Banks8,     "64 KiB [8 banks]"}
 };
+// clang-format on
 
 #define CARTRIDGE_DESTINATION_CODE_OFFSET 0x14A
 
@@ -226,9 +228,6 @@ class Cartridge {
 
 	void unmapBootRom() { m_bootRomMapped = false; }
 	bool isBootRomMapped() const { return m_bootRomMapped; }
-
-	virtual const char *data() const = 0;
-
 
   private:
 	static uint8_t calculateHeaderChecksum(const std::vector<uint8_t> cartridgeData) {
