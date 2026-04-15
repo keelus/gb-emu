@@ -389,9 +389,13 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 
 	/* Cartridge & boot ROM */
 	case 0xFF50:
-		m_introEnded = true;
-		m_cpu->initializeRegisters();
-		m_cartridge->unmapBootRom();
+		if(!m_cartridge->isBootRomMapped()) {
+			std::cout << "Cartridge: Warning, boot ROM already unmapped. Ignoring 0xFF50 write." << std::endl;
+		} else {
+			m_introEnded = true;
+			m_cpu->initializeRegisters();
+			m_cartridge->unmapBootRom();
+		}
 		break;
 
 	/* CGB only */

@@ -224,10 +224,7 @@ class Cartridge {
 	virtual uint8_t read8(const uint16_t address) const = 0;
 	virtual void write8(const uint16_t address, const uint8_t value) = 0;
 
-	void unmapBootRom() {
-		if(!m_bootRomMapped) { std::cout << "Cartridge: Warning, boot ROM already unmapped." << std::endl; }
-		m_bootRomMapped = false;
-	}
+	void unmapBootRom() { m_bootRomMapped = false; }
 	bool isBootRomMapped() const { return m_bootRomMapped; }
 
 	virtual const char *data() const = 0;
