@@ -1,5 +1,6 @@
 #pragma once
 
+#include "background_fifo.hpp"
 #include "bus.hpp"
 #include <cstdint>
 #include <cstring>
@@ -17,7 +18,7 @@ extern uint8_t activeColorPalette;
 class Ppu {
   public:
 	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };
-	Ppu(Bus &bus) : m_bus(bus) {
+	Ppu(Bus &bus) : m_bus(bus), m_backgroundFifo(bus) {
 		m_cycles = 0;
 		m_mode = PpuMode::OAM_SCAN;
 
@@ -86,7 +87,6 @@ class Ppu {
 	void drawObjects(void) const;
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
 					  uint8_t tileAddressBit) const;
-	void drawHLine() const;
 	void drawHLineWindow() const;
 	void drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uint8_t byte1) const;
 	void drawPixel(uint8_t i, uint8_t j, uint32_t color) const;
@@ -113,6 +113,8 @@ class Ppu {
 	bool m_requestedMode0Interrupt;
 	bool m_requestedMode1Interrupt;
 	bool m_requestedMode2Interrupt;
+
+	BackgroundFifo m_backgroundFifo;
 
 	Bus &m_bus;
 };

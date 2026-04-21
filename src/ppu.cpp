@@ -62,6 +62,7 @@ void Ppu::tick(const uint8_t cycles) {
 		if(m_cycles >= 80) {
 			m_cycles -= 80;
 			m_mode = PpuMode::DRAWING;
+			m_backgroundFifo.reset(m_scx);
 		}
 		break;
 	}
@@ -69,8 +70,13 @@ void Ppu::tick(const uint8_t cycles) {
 		m_requestedMode0Interrupt = false;
 		m_requestedMode1Interrupt = false;
 		m_requestedMode2Interrupt = false;
-		if(m_cycles >= 172) {
-			m_cycles -= 172;
+
+		for(size_t i = 0; i < cycles; i++) {
+			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx);
+		}
+
+		if(m_backgroundFifo.pixelsRendered() >= 160) {
+			m_cycles = 0;
 			m_mode = PpuMode::HBLANK;
 		}
 		break;
@@ -85,7 +91,6 @@ void Ppu::tick(const uint8_t cycles) {
 		if(m_cycles >= 204) {
 			m_cycles -= 204;
 
-			drawHLine();
 			drawHLineWindow();
 
 			m_ly++;
@@ -130,23 +135,6 @@ void Ppu::tick(const uint8_t cycles) {
 
 	m_lcdStatus =
 		(m_lcdStatus & 0xF8) | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
-}
-
-void Ppu::drawHLine() const {
-	size_t y = (m_ly + m_scy) % 256;
-	size_t tileI = y / 8;
-
-	for(size_t x = m_scx; x < 160 + m_scx; x++) {
-		uint8_t xWarped = x % 256;
-		size_t tileJ = xWarped / 8;
-		size_t tileIndex = tileI * 32 + tileJ;
-
-		uint8_t byte0, byte1;
-		int localX = abs(int(xWarped - tileJ * 8));
-		int localY = abs(int(y - tileI * 8));
-		getTileHLine(tileIndex, localY, byte0, byte1, ((m_bus.read8(0xFF40) >> 3) & 1) != 0);
-		drawTileHLine(localX, xWarped - m_scx, y - m_scy, byte0, byte1);
-	}
 }
 
 void Ppu::drawHLineWindow() const {
