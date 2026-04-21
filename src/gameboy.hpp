@@ -7,7 +7,7 @@
 #include "cpu/cpu.hpp"
 #include "joypad.hpp"
 #include "memory.hpp"
-#include "ppu.hpp"
+#include "graphics/ppu.hpp"
 #include "timer.hpp"
 #include <memory>
 

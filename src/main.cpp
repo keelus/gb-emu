@@ -9,7 +9,7 @@
 #include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_timer.h"
-#include "ppu.hpp"
+#include "graphics/ppu.hpp"
 #include "config.hpp"
 #include "gameboy.hpp"
 

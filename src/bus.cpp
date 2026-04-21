@@ -3,7 +3,7 @@
 #include "config.hpp"
 #include "cpu/cpu.hpp"
 #include "common.hpp"
-#include "ppu.hpp"
+#include "graphics/ppu.hpp"
 #include <cstdint>
 #include <immintrin.h>
 #include <iomanip>
