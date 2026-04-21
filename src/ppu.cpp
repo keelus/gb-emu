@@ -87,9 +87,9 @@ void Ppu::tick(const uint8_t cycles) {
 
 			drawHLine();
 			drawHLineWindow();
-			if((m_lcdStatus & 0b100) != 0 && m_ly == m_lyc) { m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd); }
 
 			m_ly++;
+			if((m_lcdStatus & 0b100) != 0 && m_ly == m_lyc) { m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd); }
 
 			if(m_ly == 144) {
 				m_mode = PpuMode::VBLANK;
