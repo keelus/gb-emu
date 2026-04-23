@@ -7,18 +7,11 @@
 #include <iomanip>
 #include <stdexcept>
 
-uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
-uint32_t sdl2Buffer[SCREEN_WIDTH * SCREEN_HEIGHT] = {0};
-
 uint32_t colorPalettes[3][4] = {
 	{0x00FFFFFF, 0x00AAAAAA, 0x00555555,		 0x0}, // Gray
 	{0x009BBC0F, 0x008BAC0F, 0x00306230, 0x000F380F}, // CRT green
 	{0x00E0C77F, 0x009D8B59, 0x005A5033, 0x0016140D}  // Yellow-ish
 };
-
-void updateSdl2Buffer() {
-	memcpy(sdl2Buffer, buffer, sizeof(uint32_t) * (SCREEN_WIDTH * SCREEN_HEIGHT));
-}
 
 void Ppu::write8(const uint16_t address, const uint8_t value) {
 	if(IN_RANGE(address, 0x8000, 0x9FFF)) {
@@ -123,7 +116,7 @@ void Ppu::tick(const uint8_t cycles) {
 
 			if(m_ly == 154) {
 				drawObjects();
-				updateSdl2Buffer();
+				m_lcd.showBuffer();
 
 				m_ly = 0;
 				m_mode = PpuMode::OAM_SCAN;
@@ -178,11 +171,6 @@ void Ppu::getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, 
 	byte1 = m_bus.read8(finalTileAddress + desiredI * 2 + 1);
 }
 
-void Ppu::drawPixel(uint8_t i, uint8_t j, uint32_t color) const {
-	if(i >= 144 || j >= 160) { return; }
-	buffer[SCREEN_WIDTH * i + j] = color;
-}
-
 void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uint8_t byte1) const {
 	if(x >= 160) { return; }
 	if(y >= 144) { return; }
@@ -193,7 +181,7 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 
 	uint8_t palette = m_bus.read8(0xFF47);
 	uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-	drawPixel(y, x, colorPalettes[activeColorPalette][shade]);
+	m_lcd.drawPixel(y, x, colorPalettes[activeColorPalette][shade]);
 }
 
 void Ppu::drawObjectTile(const uint16_t tileIndex, const uint8_t palette, const uint8_t attributes, const uint8_t x,
@@ -219,7 +207,7 @@ void Ppu::drawObjectTile(const uint16_t tileIndex, const uint8_t palette, const 
 			if(colorId == 0) { continue; }
 
 			uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-			drawPixel(y + localY, x + localX, colorPalettes[activeColorPalette][shade]);
+			m_lcd.drawPixel(y + localY, x + localX, colorPalettes[activeColorPalette][shade]);
 		}
 	}
 }

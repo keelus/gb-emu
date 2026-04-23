@@ -2,23 +2,19 @@
 
 #include "background_fifo.hpp"
 #include "bus.hpp"
+#include "graphics/lcd.hpp"
 #include <cstdint>
 #include <cstring>
 
 #define PPU_VRAM_SIZE 8192
 #define PPU_OAM_SIZE 160
 
-#define SCREEN_WIDTH 160
-#define SCREEN_HEIGHT 144
-extern uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-extern uint32_t sdl2Buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-
 extern uint8_t activeColorPalette;
 
 class Ppu {
   public:
 	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };
-	Ppu(Bus &bus) : m_bus(bus), m_backgroundFifo(bus) {
+	Ppu(Bus &bus, Lcd &lcd) : m_bus(bus), m_backgroundFifo(bus, lcd), m_lcd(lcd) {
 		m_cycles = 0;
 		m_mode = PpuMode::OAM_SCAN;
 
@@ -89,7 +85,6 @@ class Ppu {
 					  uint8_t tileAddressBit) const;
 	void drawHLineWindow() const;
 	void drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uint8_t byte1) const;
-	void drawPixel(uint8_t i, uint8_t j, uint32_t color) const;
 
 	uint16_t m_cycles;
 
@@ -117,4 +112,5 @@ class Ppu {
 	BackgroundFifo m_backgroundFifo;
 
 	Bus &m_bus;
+	Lcd &m_lcd;
 };

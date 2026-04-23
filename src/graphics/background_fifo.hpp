@@ -1,18 +1,16 @@
 #pragma once
 
 #include "bus.hpp"
+#include "graphics/lcd.hpp"
 #include <cstdint>
 #include <deque>
 
-#define SCREEN_WIDTH 160
-#define SCREEN_HEIGHT 144
-extern uint32_t buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 extern uint8_t activeColorPalette;
 extern uint32_t colorPalettes[3][4];
 
 class BackgroundFifo {
   public:
-	BackgroundFifo(Bus &bus) : m_bus(bus) { reset(0); }
+	BackgroundFifo(Bus &bus, Lcd &lcd) : m_bus(bus), m_lcd(lcd) { reset(0); }
 
 	void reset(const uint8_t scx) {
 		std::cout << "Last scanline took " << std::dec << int(m_dotsDone) << " dots" << std::endl;
@@ -109,7 +107,7 @@ class BackgroundFifo {
 
 		if(m_firstCopyPixelsRemaining == 0) {
 			if(m_pixelsOddDiscardRemaining == 0) {
-				drawPixel(y, m_xScreen, colorPalettes[activeColorPalette][shade]);
+				m_lcd.drawPixel(m_xScreen, y, colorPalettes[activeColorPalette][shade]);
 				m_pixelsRendered++;
 				m_xScreen++;
 			} else {
@@ -119,11 +117,6 @@ class BackgroundFifo {
 			m_firstCopyPixelsRemaining--;
 			m_xFetch = 0;
 		}
-	}
-
-	void drawPixel(uint8_t i, uint8_t j, uint32_t color) const {
-		if(i >= 144 || j >= 160) { return; }
-		buffer[SCREEN_WIDTH * i + j] = color;
 	}
 
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
@@ -174,6 +167,7 @@ class BackgroundFifo {
 	std::deque<Pixel> m_pixels;
 
 	Bus &m_bus;
+	Lcd &m_lcd;
 
 	uint8_t m_firstCopyPixelsRemaining = 8;
 	uint8_t m_pixelsOddDiscardRemaining = 0;

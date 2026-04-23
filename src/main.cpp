@@ -9,6 +9,7 @@
 #include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_timer.h"
+#include "graphics/lcd.hpp"
 #include "graphics/ppu.hpp"
 #include "config.hpp"
 #include "gameboy.hpp"
@@ -141,7 +142,7 @@ int main(int argc, char *argv[]) {
 			cycles += gb.tick();
 		}
 
-		SDL_UpdateTexture(texture, NULL, sdl2Buffer, SCREEN_WIDTH * sizeof(uint32_t));
+		SDL_UpdateTexture(texture, NULL, gb.getLcdBuffer(), SCREEN_WIDTH * sizeof(uint32_t));
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 
