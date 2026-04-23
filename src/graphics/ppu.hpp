@@ -3,6 +3,7 @@
 #include "background_fifo.hpp"
 #include "bus.hpp"
 #include "graphics/lcd.hpp"
+#include "graphics/sprite_fifo.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -14,7 +15,7 @@ extern uint8_t activeColorPalette;
 class Ppu {
   public:
 	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };
-	Ppu(Bus &bus, Lcd &lcd) : m_bus(bus), m_backgroundFifo(bus, lcd), m_lcd(lcd) {
+	Ppu(Bus &bus, Lcd &lcd) : m_bus(bus), m_backgroundFifo(bus, lcd), m_spriteFifo(bus, lcd), m_lcd(lcd) {
 		m_cycles = 0;
 		m_mode = PpuMode::OAM_SCAN;
 
@@ -77,10 +78,11 @@ class Ppu {
 	}
 
   private:
-	void drawObjectTile(const uint16_t tileAddress, const uint8_t palette, const uint8_t attributes, const uint8_t x,
-						const uint8_t y) const;
-	void drawObject(const uint16_t objectAddress) const;
-	void drawObjects(void) const;
+	struct Sprite {
+		uint8_t index;
+		uint8_t x;
+	};
+
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
 					  uint8_t tileAddressBit) const;
 	void drawHLineWindow() const;
@@ -110,7 +112,16 @@ class Ppu {
 	bool m_requestedMode2Interrupt;
 
 	BackgroundFifo m_backgroundFifo;
+	SpriteFifo m_spriteFifo;
 
 	Bus &m_bus;
 	Lcd &m_lcd;
+
+	std::vector<Sprite> m_spritesToDraw;
+
+	bool m_fetchingSprites = false;
+	uint8_t m_fetchingSpriteIndex;
+	bool checkSpritesToDraw();
+
+	bool m_scanned = false;
 };

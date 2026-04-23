@@ -1,0 +1,183 @@
+#pragma once
+
+#include "bus.hpp"
+#include "graphics/lcd.hpp"
+#include <cassert>
+#include <cstdint>
+#include <optional>
+#include <deque>
+
+extern uint8_t activeColorPalette;
+extern uint32_t colorPalettes[3][4];
+
+class SpriteFifo {
+  public:
+	SpriteFifo(Bus &bus, Lcd &lcd) : m_bus(bus), m_lcd(lcd) { reset(0); }
+
+	void reset(uint8_t fetchingSpriteIndex) {
+		m_spriteIndex = fetchingSpriteIndex;
+		m_state = State::FetchTileNumber;
+		m_dotsCurrentState = 0;
+
+		m_drawingBottom = false;
+	}
+
+	bool tickDot(const uint8_t ly) {
+		m_dotsCurrentState++;
+
+		uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
+
+		switch(m_state) {
+		case State::FetchTileNumber: {
+			if(m_dotsCurrentState == 2) {
+				m_spriteY = m_bus.read8(0xFE00 + m_spriteIndex * 4 + 0) - 16;
+				m_spriteX = m_bus.read8(0xFE00 + m_spriteIndex * 4 + 1);
+				m_tileIndex = m_bus.read8(0xFE00 + m_spriteIndex * 4 + 2);
+				m_spriteAttrs = m_bus.read8(0xFE00 + m_spriteIndex * 4 + 3);
+
+				m_localY = ly - m_spriteY;
+				if(m_localY > 7) {
+					m_drawingBottom = true;
+					m_localY -= 8;
+					m_tileIndex |= 0x01;
+					std::cout << "Rendering bottom of big at ly=" << std::dec << uint(ly) << std::endl;
+				} else {
+					m_tileIndex &= 0xFE;
+				}
+
+				bool flipY = (m_spriteAttrs & 0x40) == 0x40;
+				if(flipY) { m_localY = 7 - m_localY; }
+
+				if(objSize == 1 && flipY) {
+					if(m_drawingBottom) {
+						m_tileIndex &= 0xFE;
+					} else {
+						m_tileIndex |= 0x01;
+					}
+				}
+
+				m_state = State::FetchLow;
+				m_dotsCurrentState = 0;
+			}
+			break;
+		}
+		case State::FetchLow: {
+			if(m_dotsCurrentState == 2) {
+				uint8_t byte1;
+				getTileHLine(m_tileLow, byte1);
+
+				m_state = State::FetchHigh;
+				m_dotsCurrentState = 0;
+			}
+			break;
+		}
+		case State::FetchHigh: {
+			if(m_dotsCurrentState == 2) {
+				uint8_t byte0;
+				getTileHLine(byte0, m_tileHigh);
+
+				m_state = State::Push;
+				m_dotsCurrentState = 0;
+			}
+			break;
+		}
+		case State::Push: {
+			if(m_dotsCurrentState == 2) {
+				bool flipX = (m_spriteAttrs & 0x20) == 0x20;
+
+				for(uint8_t i = 0; i < 8; i++) {
+					uint8_t lower = (m_tileLow >> (flipX ? i : (7 - i))) & 1;
+					uint8_t upper = (m_tileHigh >> (flipX ? i : (7 - i))) & 1;
+					uint8_t colorId = (upper << 1) | lower;
+
+					if(m_spriteX + i >= 8) {
+						if(m_pixels.size() > i) {
+							if(m_pixels.at(i).color == 0) {
+								m_pixels.at(i) = {colorId, uint8_t(m_spriteX + i), ly, (m_spriteAttrs & 0x80) != 0};
+							}
+						} else {
+							Pixel p(colorId, m_spriteX + i, ly, (m_spriteAttrs & 0x80) != 0);
+							m_pixels.push_back(p);
+						}
+					}
+				}
+
+				m_state = State::FetchTileNumber;
+				m_dotsCurrentState = 0;
+				return true;
+			}
+			break;
+		}
+		}
+		return false;
+	}
+
+	struct SpritePixel {
+		uint32_t color;
+		bool behindBg;
+		bool isTransparent;
+	};
+
+	std::optional<SpritePixel> pop() {
+		if(m_pixels.empty()) { return std::nullopt; }
+
+		Pixel px = m_pixels.front();
+		m_pixels.pop_front();
+
+		const uint8_t palette = (m_spriteAttrs & 0x10) ? m_bus.read8(0xFF49) : m_bus.read8(0xFF48);
+		uint8_t shade = (palette >> (px.color * 2)) & 0b11;
+
+		return (SpritePixel){
+			.color = colorPalettes[activeColorPalette][shade], .behindBg = px.behindBg, .isTransparent = px.color == 0};
+	}
+
+	void getTileHLine(uint8_t &byte0, uint8_t &byte1) const {
+		uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
+
+		uint16_t tileAddress = 0x8000 | (static_cast<uint16_t>(m_tileIndex) * 16);
+
+		byte0 = m_bus.read8(tileAddress + m_localY * 2);
+		byte1 = m_bus.read8(tileAddress + m_localY * 2 + 1);
+	}
+
+	enum class State {
+		FetchTileNumber = 0,
+		FetchLow = 1,
+		FetchHigh = 2,
+		Push = 3,
+	};
+
+  private:
+	class Pixel {
+	  public:
+		Pixel(uint8_t _color, uint8_t _x, uint8_t _y, bool _behindBg) {
+			color = _color;
+			x = _x;
+			y = _y;
+			behindBg = _behindBg;
+		}
+
+		uint8_t color;
+		uint8_t x;
+		uint8_t y;
+		bool behindBg;
+	};
+
+	State m_state;
+
+	uint16_t m_tileIndex;
+	uint8_t m_localY;
+	uint8_t m_tileLow, m_tileHigh;
+
+	std::deque<Pixel> m_pixels;
+
+	Bus &m_bus;
+	Lcd &m_lcd;
+
+	uint8_t m_dotsCurrentState = 0;
+
+	uint8_t m_spriteX, m_spriteY, m_spriteAttrs;
+
+	uint8_t m_spriteIndex;
+	bool m_drawingBottom = false;
+};

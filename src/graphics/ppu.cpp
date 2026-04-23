@@ -1,5 +1,8 @@
 #include "ppu.hpp"
 #include "common.hpp"
+#include "graphics/lcd.hpp"
+#include "graphics/sprite_fifo.hpp"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstdio>
@@ -47,6 +50,27 @@ void Ppu::tick(const uint8_t cycles) {
 		m_requestedMode0Interrupt = false;
 		m_requestedMode1Interrupt = false;
 
+		if(!m_scanned) {
+			m_spritesToDraw.clear();
+			for(size_t i = 0; i < 40; i++) {
+				uint8_t y = m_bus.read8(0xFE00 + i * 4);
+				if(y == 0) { continue; }
+				if(y >= SCREEN_HEIGHT) { continue; }
+
+				uint8_t x = m_bus.read8(0xFE00 + i * 4 + 1);
+				if(x == 0) { continue; }
+				if(x >= SCREEN_WIDTH) { continue; }
+
+				uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
+				uint8_t spriteHeight = objSize == 1 ? 16 : 8;
+				if(m_ly + 16 >= y && m_ly + 16 < y + spriteHeight) { m_spritesToDraw.push_back({uint8_t(i), x}); }
+
+				if(m_spritesToDraw.size() == 10) { break; }
+			}
+
+			m_scanned = true;
+		}
+
 		if((m_lcdStatus & 0b100000) != 0 && !m_requestedMode2Interrupt) {
 			m_requestedMode2Interrupt = true;
 			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
@@ -56,6 +80,9 @@ void Ppu::tick(const uint8_t cycles) {
 			m_cycles -= 80;
 			m_mode = PpuMode::DRAWING;
 			m_backgroundFifo.reset(m_scx);
+			m_spriteFifo.reset(0);
+			m_fetchingSprites = false;
+			m_lcd.resetScreenX();
 		}
 		break;
 	}
@@ -65,10 +92,32 @@ void Ppu::tick(const uint8_t cycles) {
 		m_requestedMode2Interrupt = false;
 
 		for(size_t i = 0; i < cycles; i++) {
-			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx);
+			if(checkSpritesToDraw()) { m_spriteFifo.reset(m_fetchingSpriteIndex); }
+
+			if(m_fetchingSprites) {
+				bool finished = m_spriteFifo.tickDot(m_ly);
+				if(finished) {
+					m_fetchingSprites = false;
+				} else {
+					return;
+				}
+			} else {
+				m_backgroundFifo.tickDot(m_ly, m_scy, m_scx);
+			}
+
+			std::optional<uint32_t> bgPx = m_backgroundFifo.pop();
+			if(bgPx.has_value()) {
+				std::optional<SpriteFifo::SpritePixel> spritePx = m_spriteFifo.pop();
+
+				if(!spritePx.has_value() || spritePx->behindBg || spritePx->isTransparent) {
+					m_lcd.drawPixel(m_ly, bgPx.value());
+				} else {
+					m_lcd.drawPixel(m_ly, spritePx->color);
+				}
+			}
 		}
 
-		if(m_backgroundFifo.pixelsRendered() >= 160) {
+		if(m_lcd.screenX() >= 160) {
 			m_cycles = 0;
 			m_mode = PpuMode::HBLANK;
 		}
@@ -94,6 +143,7 @@ void Ppu::tick(const uint8_t cycles) {
 				m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);
 			} else {
 				m_mode = PpuMode::OAM_SCAN;
+				m_scanned = false;
 			}
 		}
 		break;
@@ -115,11 +165,10 @@ void Ppu::tick(const uint8_t cycles) {
 			m_cycles -= 456;
 
 			if(m_ly == 154) {
-				drawObjects();
 				m_lcd.showBuffer();
-
 				m_ly = 0;
 				m_mode = PpuMode::OAM_SCAN;
+				m_scanned = false;
 			}
 		}
 		break;
@@ -128,6 +177,20 @@ void Ppu::tick(const uint8_t cycles) {
 
 	m_lcdStatus =
 		(m_lcdStatus & 0xF8) | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
+}
+
+bool Ppu::checkSpritesToDraw() {
+	if(m_fetchingSprites) { return false; }
+	for(size_t i = 0; i < m_spritesToDraw.size(); i++) {
+		if(m_spritesToDraw.at(i).x <= m_lcd.screenX() + 8) {
+			m_fetchingSprites = true;
+			m_fetchingSpriteIndex = m_spritesToDraw.at(i).index;
+			m_spritesToDraw.erase(m_spritesToDraw.begin() + i);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void Ppu::drawHLineWindow() const {
@@ -181,66 +244,5 @@ void Ppu::drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uin
 
 	uint8_t palette = m_bus.read8(0xFF47);
 	uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-	m_lcd.drawPixel(y, x, colorPalettes[activeColorPalette][shade]);
-}
-
-void Ppu::drawObjectTile(const uint16_t tileIndex, const uint8_t palette, const uint8_t attributes, const uint8_t x,
-						 const uint8_t y) const {
-	uint16_t tileAddress = 0x8000 | (static_cast<uint16_t>(tileIndex) * 16);
-
-	bool flipX = (attributes & 0x20) == 0x20;
-	bool flipY = (attributes & 0x40) == 0x40;
-
-	for(uint8_t localY = 0; localY < 8; localY++) {
-		uint8_t srcY = flipY ? (7 - localY) : localY;
-
-		uint8_t byte0 = m_bus.read8(tileAddress + srcY * 2);
-		uint8_t byte1 = m_bus.read8(tileAddress + srcY * 2 + 1);
-
-		for(size_t localX = 0; localX < 8; localX++) {
-			uint8_t srcX = flipX ? localX : (7 - localX);
-
-			uint8_t lower = byte0 >> srcX & 1;
-			uint8_t upper = byte1 >> srcX & 1;
-
-			uint8_t colorId = (upper << 1) | lower;
-			if(colorId == 0) { continue; }
-
-			uint8_t shade = (palette >> (colorId * 2)) & 0b11;
-			m_lcd.drawPixel(y + localY, x + localX, colorPalettes[activeColorPalette][shade]);
-		}
-	}
-}
-
-void Ppu::drawObject(const uint16_t objectAddress) const {
-	uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
-
-	const uint8_t y = m_bus.read8(objectAddress + 0) - 16;
-	const uint8_t x = m_bus.read8(objectAddress + 1) - 8;
-	const uint8_t tileIndex = m_bus.read8(objectAddress + 2);
-	const uint8_t attributes = m_bus.read8(objectAddress + 3);
-
-	const uint8_t palette = (attributes & 0x10) ? m_objPalette1 : m_objPalette0;
-
-	const bool flipY = (attributes & 0x40) == 0x40;
-
-	if(objSize == 0) {
-		drawObjectTile(tileIndex, palette, attributes, x, y);
-	} else {
-		const std::array<uint8_t, 2> tileIndexes = {
-			static_cast<uint8_t>(tileIndex & 0xFE),
-			static_cast<uint8_t>(tileIndex & 0xFE | 0x01),
-		};
-
-		for(uint8_t i = 0; i < 2; i++) {
-			drawObjectTile(tileIndexes[flipY ? (1 - i) : i], palette, attributes, x, y + i * 8);
-		}
-	}
-}
-
-// TODO: Add priority
-void Ppu::drawObjects(void) const {
-	for(size_t i = 0; i < 40; i++) {
-		drawObject(0xFE00 | static_cast<uint16_t>(i * 4));
-	}
+	// m_lcd.drawPixel(y, x, colorPalettes[activeColorPalette][shade]);
 }

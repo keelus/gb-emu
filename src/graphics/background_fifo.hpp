@@ -3,6 +3,7 @@
 #include "bus.hpp"
 #include "graphics/lcd.hpp"
 #include <cstdint>
+#include <optional>
 #include <deque>
 
 extern uint8_t activeColorPalette;
@@ -21,7 +22,6 @@ class BackgroundFifo {
 		m_pixels.clear();
 
 		m_xFetch = 0;
-		m_xScreen = 0;
 
 		m_pixelsRendered = 0;
 
@@ -31,7 +31,7 @@ class BackgroundFifo {
 	}
 
 	void tickDot(const uint8_t ly, const uint8_t scy, const uint8_t scx) {
-		if(m_xScreen >= 160) { return; }
+		if(m_lcd.screenX() >= 160) { return; }
 
 		m_dotsCurrentState++;
 		m_dotsDone++;
@@ -76,28 +76,30 @@ class BackgroundFifo {
 			break;
 		}
 		case State::Push: {
-			if(m_pixels.empty()) {
-				for(int i = 0; i < 8; i++) {
-					uint8_t lower = (m_tileLow >> (7 - i)) & 1;
-					uint8_t upper = (m_tileHigh >> (7 - i)) & 1;
-					uint8_t colorId = (upper << 1) | lower;
+			if(m_dotsCurrentState == 2) {
+				if(m_pixels.empty()) {
+					for(int i = 0; i < 8; i++) {
+						uint8_t lower = (m_tileLow >> (7 - i)) & 1;
+						uint8_t upper = (m_tileHigh >> (7 - i)) & 1;
+						uint8_t colorId = (upper << 1) | lower;
 
-					m_pixels.push_back({colorId});
+						m_pixels.push_back({colorId});
+					}
+
+					m_xFetch += 8;
+					m_state = State::FetchTileNumber;
+					m_dotsCurrentState = 0;
+				} else {
+					m_dotsCurrentState--;
 				}
-
-				m_xFetch += 8;
-				m_state = State::FetchTileNumber;
-				m_dotsCurrentState = 0;
 			}
 			break;
 		}
 		}
-
-		popIfPossible(ly);
 	}
 
-	void popIfPossible(const uint8_t y) {
-		if(m_pixels.empty() || m_xScreen >= 160) { return; }
+	std::optional<uint32_t> pop() {
+		if(m_pixels.empty() || m_lcd.screenX() >= 160) { return std::nullopt; }
 
 		Pixel px = m_pixels.front();
 		m_pixels.pop_front();
@@ -107,9 +109,8 @@ class BackgroundFifo {
 
 		if(m_firstCopyPixelsRemaining == 0) {
 			if(m_pixelsOddDiscardRemaining == 0) {
-				m_lcd.drawPixel(m_xScreen, y, colorPalettes[activeColorPalette][shade]);
 				m_pixelsRendered++;
-				m_xScreen++;
+				return colorPalettes[activeColorPalette][shade];
 			} else {
 				m_pixelsOddDiscardRemaining--;
 			}
@@ -117,6 +118,8 @@ class BackgroundFifo {
 			m_firstCopyPixelsRemaining--;
 			m_xFetch = 0;
 		}
+
+		return std::nullopt;
 	}
 
 	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
@@ -154,7 +157,6 @@ class BackgroundFifo {
 	State m_state;
 	uint16_t m_dotsDone = 0;
 
-	uint8_t m_xScreen;
 	uint8_t m_xFetch;
 
 	uint16_t m_tileIndex;
