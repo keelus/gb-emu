@@ -78,6 +78,8 @@ class Ppu {
 	}
 
   private:
+	void tickDot();
+
 	struct Sprite {
 		uint8_t index;
 		uint8_t x;
@@ -122,6 +124,4 @@ class Ppu {
 	bool m_fetchingSprites = false;
 	uint8_t m_fetchingSpriteIndex;
 	bool checkSpritesToDraw();
-
-	bool m_scanned = false;
 };

@@ -43,14 +43,32 @@ uint8_t Ppu::read8(const uint16_t address) const {
 }
 
 void Ppu::tick(const uint8_t cycles) {
-	m_cycles += cycles;
+	for(size_t i = 0; i < cycles; i++) {
+		tickDot();
+	}
+}
 
+void Ppu::tickDot() {
+	m_cycles++;
 	switch(m_mode) {
 	case PpuMode::OAM_SCAN: {
 		m_requestedMode0Interrupt = false;
 		m_requestedMode1Interrupt = false;
 
-		if(!m_scanned) {
+
+		if((m_lcdStatus & 0b100000) != 0 && !m_requestedMode2Interrupt) {
+			m_requestedMode2Interrupt = true;
+			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		}
+
+		if(m_cycles >= 80) {
+			m_cycles -= 80;
+			m_mode = PpuMode::DRAWING;
+			m_backgroundFifo.reset(m_scx);
+			m_spriteFifo.reset(0);
+			m_fetchingSprites = false;
+			m_lcd.resetScreenX();
+
 			m_spritesToDraw.clear();
 			for(size_t i = 0; i < 40; i++) {
 				uint8_t y = m_bus.read8(0xFE00 + i * 4);
@@ -67,22 +85,6 @@ void Ppu::tick(const uint8_t cycles) {
 
 				if(m_spritesToDraw.size() == 10) { break; }
 			}
-
-			m_scanned = true;
-		}
-
-		if((m_lcdStatus & 0b100000) != 0 && !m_requestedMode2Interrupt) {
-			m_requestedMode2Interrupt = true;
-			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
-		}
-
-		if(m_cycles >= 80) {
-			m_cycles -= 80;
-			m_mode = PpuMode::DRAWING;
-			m_backgroundFifo.reset(m_scx);
-			m_spriteFifo.reset(0);
-			m_fetchingSprites = false;
-			m_lcd.resetScreenX();
 		}
 		break;
 	}
@@ -91,29 +93,27 @@ void Ppu::tick(const uint8_t cycles) {
 		m_requestedMode1Interrupt = false;
 		m_requestedMode2Interrupt = false;
 
-		for(size_t i = 0; i < cycles; i++) {
-			if(checkSpritesToDraw()) { m_spriteFifo.reset(m_fetchingSpriteIndex); }
+		if(checkSpritesToDraw()) { m_spriteFifo.reset(m_fetchingSpriteIndex); }
 
-			if(m_fetchingSprites) {
-				bool finished = m_spriteFifo.tickDot(m_ly);
-				if(finished) {
-					m_fetchingSprites = false;
-				} else {
-					return;
-				}
+		if(m_fetchingSprites) {
+			bool finished = m_spriteFifo.tickDot(m_ly);
+			if(finished) {
+				m_fetchingSprites = false;
 			} else {
-				m_backgroundFifo.tickDot(m_ly, m_scy, m_scx);
+				return;
 			}
+		} else {
+			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx);
+		}
 
-			std::optional<uint32_t> bgPx = m_backgroundFifo.pop();
-			if(bgPx.has_value()) {
-				std::optional<SpriteFifo::SpritePixel> spritePx = m_spriteFifo.pop();
+		std::optional<uint32_t> bgPx = m_backgroundFifo.pop();
+		if(bgPx.has_value()) {
+			std::optional<SpriteFifo::SpritePixel> spritePx = m_spriteFifo.pop();
 
-				if(!spritePx.has_value() || spritePx->behindBg || spritePx->isTransparent) {
-					m_lcd.drawPixel(m_ly, bgPx.value());
-				} else {
-					m_lcd.drawPixel(m_ly, spritePx->color);
-				}
+			if(!spritePx.has_value() || spritePx->behindBg || spritePx->isTransparent) {
+				m_lcd.drawPixel(m_ly, bgPx.value());
+			} else {
+				m_lcd.drawPixel(m_ly, spritePx->color);
 			}
 		}
 
@@ -143,7 +143,6 @@ void Ppu::tick(const uint8_t cycles) {
 				m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);
 			} else {
 				m_mode = PpuMode::OAM_SCAN;
-				m_scanned = false;
 			}
 		}
 		break;
@@ -168,15 +167,11 @@ void Ppu::tick(const uint8_t cycles) {
 				m_lcd.showBuffer();
 				m_ly = 0;
 				m_mode = PpuMode::OAM_SCAN;
-				m_scanned = false;
 			}
 		}
 		break;
 	}
 	}
-
-	m_lcdStatus =
-		(m_lcdStatus & 0xF8) | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
 }
 
 bool Ppu::checkSpritesToDraw() {
