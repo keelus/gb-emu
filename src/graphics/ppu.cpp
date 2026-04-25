@@ -52,15 +52,6 @@ void Ppu::tickDot() {
 	m_cycles++;
 	switch(m_mode) {
 	case PpuMode::OAM_SCAN: {
-		m_requestedMode0Interrupt = false;
-		m_requestedMode1Interrupt = false;
-
-
-		if((m_lcdStatus & 0b100000) != 0 && !m_requestedMode2Interrupt) {
-			m_requestedMode2Interrupt = true;
-			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
-		}
-
 		if(m_cycles >= 80) {
 			m_cycles -= 80;
 			m_mode = PpuMode::DRAWING;
@@ -73,11 +64,11 @@ void Ppu::tickDot() {
 			for(size_t i = 0; i < 40; i++) {
 				uint8_t y = m_bus.read8(0xFE00 + i * 4);
 				if(y == 0) { continue; }
-				if(y >= SCREEN_HEIGHT) { continue; }
+				if(y >= SCREEN_HEIGHT + 16) { continue; }
 
 				uint8_t x = m_bus.read8(0xFE00 + i * 4 + 1);
 				if(x == 0) { continue; }
-				if(x >= SCREEN_WIDTH) { continue; }
+				if(x >= SCREEN_WIDTH + 8) { continue; }
 
 				uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
 				uint8_t spriteHeight = objSize == 1 ? 16 : 8;
@@ -89,10 +80,6 @@ void Ppu::tickDot() {
 		break;
 	}
 	case PpuMode::DRAWING: {
-		m_requestedMode0Interrupt = false;
-		m_requestedMode1Interrupt = false;
-		m_requestedMode2Interrupt = false;
-
 		if(checkSpritesToDraw()) { m_spriteFifo.reset(m_fetchingSpriteIndex); }
 
 		if(m_fetchingSprites) {
@@ -124,19 +111,13 @@ void Ppu::tickDot() {
 		break;
 	}
 	case PpuMode::HBLANK: {
-		m_requestedMode1Interrupt = false;
-		m_requestedMode2Interrupt = false;
-		if((m_lcdStatus & 0b1000) != 0 && !m_requestedMode0Interrupt) {
-			m_requestedMode0Interrupt = true;
-			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
-		}
 		if(m_cycles >= 204) {
 			m_cycles -= 204;
 
 			drawHLineWindow();
 
 			m_ly++;
-			if((m_lcdStatus & 0b100) != 0 && m_ly == m_lyc) { m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd); }
+			m_lycStatRequested = false;
 
 			if(m_ly == 144) {
 				m_mode = PpuMode::VBLANK;
@@ -148,19 +129,9 @@ void Ppu::tickDot() {
 		break;
 	}
 	case PpuMode::VBLANK: {
-		m_requestedMode0Interrupt = false;
-		m_requestedMode2Interrupt = false;
-
-		if((m_lcdStatus & 0b10000) != 0 && !m_requestedMode1Interrupt) {
-			m_requestedMode1Interrupt = true;
-			m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
-		}
-
 		if(m_cycles >= 456) {
-			if((m_lcdStatus & 0x0b100) != 0 && m_ly == m_lyc) {
-				m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
-			}
 			m_ly++;
+			m_lycStatRequested = false;
 			m_cycles -= 456;
 
 			if(m_ly == 154) {
@@ -171,6 +142,23 @@ void Ppu::tickDot() {
 		}
 		break;
 	}
+	}
+
+	if(!m_lycStatRequested && (m_lcdStatus & 0b1000000) != 0 && m_ly == m_lyc) {
+		m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		m_lycStatRequested = true;
+	}
+	if(!m_m2StatRequested && (m_lcdStatus & 0b100000) && m_mode == PpuMode::OAM_SCAN && m_mode != m_prevMode) {
+		m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		m_m2StatRequested = true;
+	}
+	if(!m_m1StatRequested && (m_lcdStatus & 0b10000) && m_mode == PpuMode::VBLANK && m_mode != m_prevMode) {
+		m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		m_m1StatRequested = true;
+	}
+	if(!m_m0StatRequested && (m_lcdStatus & 0b1000) && m_mode == PpuMode::HBLANK && m_mode != m_prevMode) {
+		m_bus.requestInterrupt(Bus::InterruptRequestType::Lcd);
+		m_m0StatRequested = true;
 	}
 }
 

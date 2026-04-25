@@ -35,26 +35,15 @@ class SpriteFifo {
 				m_tileIndex = m_bus.read8(0xFE00 + m_spriteIndex * 4 + 2);
 				m_spriteAttrs = m_bus.read8(0xFE00 + m_spriteIndex * 4 + 3);
 
-				m_localY = ly - m_spriteY;
-				if(m_localY > 7) {
-					m_drawingBottom = true;
-					m_localY -= 8;
-					m_tileIndex |= 0x01;
-					std::cout << "Rendering bottom of big at ly=" << std::dec << uint(ly) << std::endl;
-				} else {
-					m_tileIndex &= 0xFE;
-				}
-
 				bool flipY = (m_spriteAttrs & 0x40) == 0x40;
-				if(flipY) { m_localY = 7 - m_localY; }
-
-				if(objSize == 1 && flipY) {
-					if(m_drawingBottom) {
-						m_tileIndex &= 0xFE;
-					} else {
-						m_tileIndex |= 0x01;
-					}
+				m_localY = ly - m_spriteY;
+				if(objSize) {
+					m_drawingBottom = m_localY > 7;
+					if(m_drawingBottom) { m_localY -= 8; }
+					m_tileIndex = (m_tileIndex &= 0xFE) | ((m_drawingBottom != flipY) ? 0x01 : 0);
 				}
+
+				if(flipY) { m_localY = 7 - m_localY; }
 
 				m_state = State::FetchLow;
 				m_dotsCurrentState = 0;
@@ -90,7 +79,7 @@ class SpriteFifo {
 					uint8_t upper = (m_tileHigh >> (flipX ? i : (7 - i))) & 1;
 					uint8_t colorId = (upper << 1) | lower;
 
-					if(m_spriteX + i >= 8) {
+					if(m_spriteX + i >= 8 && m_spriteX + i < SCREEN_WIDTH + 8) {
 						if(m_pixels.size() > i) {
 							if(m_pixels.at(i).color == 0) {
 								m_pixels.at(i) = {colorId, uint8_t(m_spriteX + i), ly, (m_spriteAttrs & 0x80) != 0};

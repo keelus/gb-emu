@@ -68,7 +68,9 @@ class Ppu {
 	void write8(const uint16_t address, const uint8_t value);
 	uint8_t read8(const uint16_t address) const;
 
-	uint8_t getLcdStatus() const { return m_lcdStatus; }
+	uint8_t getLcdStatus() const {
+		return m_lcdStatus | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
+	}
 	void setLcdStatus(const uint8_t newLcdStatus) {
 		if(newLcdStatus != 0) {
 			std::cout << "LCD_STATUS = 0x" << std::hex << std::setw(2) << std::setfill('0') << uint(newLcdStatus)
@@ -78,6 +80,11 @@ class Ppu {
 	}
 
   private:
+	bool m_lycStatRequested = false;
+	bool m_m0StatRequested = false;
+	bool m_m1StatRequested = false;
+	bool m_m2StatRequested = false;
+
 	void tickDot();
 
 	struct Sprite {
@@ -106,12 +113,9 @@ class Ppu {
 	uint8_t m_ly, m_lyc;
 
 	PpuMode m_mode;
+	PpuMode m_prevMode;
 
 	uint8_t m_lcdStatus;
-
-	bool m_requestedMode0Interrupt;
-	bool m_requestedMode1Interrupt;
-	bool m_requestedMode2Interrupt;
 
 	BackgroundFifo m_backgroundFifo;
 	SpriteFifo m_spriteFifo;
