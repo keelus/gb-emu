@@ -26,10 +26,11 @@ uint8_t activeColorPalette = 2;
 void printUsage(const char *argv0, const bool isHelpMessage) {
 	std::cout << "Usage:" << argv0 << " [options] <ROM path>" << std::endl;
 	std::cout << "Options:" << std::endl;
-	std::cout << "\t -s, --serial\tEnable serial output" << std::endl;
-	std::cout << "\t -f, --no-fps\tDisable 59.70fps limit" << std::endl;
-	std::cout << "\t -d, --debug\tEnable debug output" << std::endl;
-	std::cout << "\t -h, --help\tShow " << (isHelpMessage ? "this" : "the") << " help message and exit" << std::endl;
+	std::cout << "\t -s, --serial\t\tEnable serial output" << std::endl;
+	std::cout << "\t -f, --no-fps\t\tDisable 59.70fps limit" << std::endl;
+	std::cout << "\t -d, --debug\t\tEnable debug output" << std::endl;
+	std::cout << "\t -i, --skip-intro\tSkip boot intro" << std::endl;
+	std::cout << "\t -h, --help\t\tShow " << (isHelpMessage ? "this" : "the") << " help message and exit" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
