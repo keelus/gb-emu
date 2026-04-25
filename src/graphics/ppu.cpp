@@ -43,6 +43,8 @@ uint8_t Ppu::read8(const uint16_t address) const {
 }
 
 void Ppu::tick(const uint8_t cycles) {
+	if((m_control & 0b10000000) == 0) { return; }
+
 	for(size_t i = 0; i < cycles; i++) {
 		tickDot();
 	}
