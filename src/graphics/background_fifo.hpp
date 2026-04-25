@@ -83,7 +83,12 @@ class BackgroundFifo {
 						uint8_t upper = (m_tileHigh >> (7 - i)) & 1;
 						uint8_t colorId = (upper << 1) | lower;
 
-						m_pixels.push_back({colorId});
+						bool bgEnabled = (m_bus.read8(0xFF40)) & 0x1;
+						if(bgEnabled) {
+							m_pixels.push_back({colorId});
+						} else {
+							m_pixels.push_back({0});
+						}
 					}
 
 					m_xFetch += 8;
