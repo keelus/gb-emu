@@ -102,9 +102,8 @@ class SpriteFifo {
 	}
 
 	struct SpritePixel {
-		uint32_t color;
+		uint32_t shade;
 		bool behindBg;
-		bool isTransparent;
 	};
 
 	std::optional<SpritePixel> pop() {
@@ -116,8 +115,7 @@ class SpriteFifo {
 		const uint8_t palette = (m_spriteAttrs & 0x10) ? m_bus.read8(0xFF49) : m_bus.read8(0xFF48);
 		uint8_t shade = (palette >> (px.color * 2)) & 0b11;
 
-		return (SpritePixel){
-			.color = colorPalettes[activeColorPalette][shade], .behindBg = px.behindBg, .isTransparent = px.color == 0};
+		return (SpritePixel){.shade = shade, .behindBg = px.behindBg};
 	}
 
 	void getTileHLine(uint8_t &byte0, uint8_t &byte1) const {

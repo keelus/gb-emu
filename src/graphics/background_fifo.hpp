@@ -110,7 +110,7 @@ class BackgroundFifo {
 		if(m_firstCopyPixelsRemaining == 0) {
 			if(m_pixelsOddDiscardRemaining == 0) {
 				m_pixelsRendered++;
-				return colorPalettes[activeColorPalette][shade];
+				return shade;
 			} else {
 				m_pixelsOddDiscardRemaining--;
 			}

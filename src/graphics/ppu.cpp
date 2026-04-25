@@ -1,5 +1,6 @@
 #include "ppu.hpp"
 #include "common.hpp"
+#include "graphics/background_fifo.hpp"
 #include "graphics/lcd.hpp"
 #include "graphics/sprite_fifo.hpp"
 #include <algorithm>
@@ -95,14 +96,14 @@ void Ppu::tickDot() {
 			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx);
 		}
 
-		std::optional<uint32_t> bgPx = m_backgroundFifo.pop();
-		if(bgPx.has_value()) {
+		std::optional<uint32_t> bgShade = m_backgroundFifo.pop();
+		if(bgShade.has_value()) {
 			std::optional<SpriteFifo::SpritePixel> spritePx = m_spriteFifo.pop();
 
-			if(!spritePx.has_value() || spritePx->behindBg || spritePx->isTransparent) {
-				m_lcd.drawPixel(m_ly, bgPx.value());
+			if(spritePx.has_value() && spritePx->shade != 0 && !(spritePx->behindBg && *bgShade != 0)) {
+				m_lcd.drawPixel(m_ly, colorPalettes[activeColorPalette][spritePx->shade]);
 			} else {
-				m_lcd.drawPixel(m_ly, spritePx->color);
+				m_lcd.drawPixel(m_ly, colorPalettes[activeColorPalette][*bgShade]);
 			}
 		}
 
