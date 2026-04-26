@@ -80,6 +80,7 @@ class Ppu {
 	}
 
   private:
+	bool m_yCondition = false;
 	bool m_lycStatRequested = false;
 	bool m_m0StatRequested = false;
 	bool m_m1StatRequested = false;
@@ -92,11 +93,6 @@ class Ppu {
 		uint8_t x;
 	};
 
-	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
-					  uint8_t tileAddressBit) const;
-	void drawHLineWindow() const;
-	void drawTileHLine(uint8_t localX, uint8_t x, uint8_t y, uint8_t byte0, uint8_t byte1) const;
-
 	uint16_t m_cycles;
 
 	uint8_t m_vram[PPU_VRAM_SIZE];
@@ -108,7 +104,7 @@ class Ppu {
 	uint8_t m_objPalette0, m_objPalette1;
 
 	uint8_t m_scx, m_scy;
-	uint8_t m_wx, m_wy;
+	uint8_t m_wx, m_wy, m_wly;
 
 	uint8_t m_ly, m_lyc;
 
@@ -126,6 +122,7 @@ class Ppu {
 	std::vector<Sprite> m_spritesToDraw;
 
 	bool m_fetchingSprites = false;
+	bool m_drawingWindow = false;
 	uint8_t m_fetchingSpriteIndex;
 	bool checkSpritesToDraw();
 };

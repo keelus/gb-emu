@@ -11,10 +11,9 @@ extern uint32_t colorPalettes[3][4];
 
 class BackgroundFifo {
   public:
-	BackgroundFifo(Bus &bus, Lcd &lcd) : m_bus(bus), m_lcd(lcd) { reset(0); }
+	BackgroundFifo(Bus &bus, Lcd &lcd) : m_bus(bus), m_lcd(lcd) { reset(0, false); }
 
-	void reset(const uint8_t scx) {
-		std::cout << "Last scanline took " << std::dec << int(m_dotsDone) << " dots" << std::endl;
+	void reset(const uint8_t scx, bool isWindow) {
 		m_state = State::FetchTileNumber;
 		m_dotsCurrentState = 0;
 		m_dotsDone = 0;
@@ -28,9 +27,12 @@ class BackgroundFifo {
 		m_firstCopyPixelsRemaining = 8;
 
 		m_pixelsOddDiscardRemaining = scx % 8;
+
+		m_isWindow = isWindow;
 	}
 
-	void tickDot(const uint8_t ly, const uint8_t scy, const uint8_t scx) {
+	void tickDot(const uint8_t ly, const uint8_t scy, const uint8_t scx, const uint8_t wy, const uint8_t wx,
+				 const uint8_t wly) {
 		if(m_lcd.screenX() >= 160) { return; }
 
 		m_dotsCurrentState++;
@@ -38,17 +40,17 @@ class BackgroundFifo {
 
 		switch(m_state) {
 		case State::FetchTileNumber: {
-			if(m_dotsCurrentState == 2) {
-				size_t y = (ly + scy) % 256;
-				size_t x = (m_xFetch + scx) % 256;
+			if(m_dotsCurrentState == 2 && !m_isWindow) {
+				m_tileOffset = ((scx) / 8 + m_xFetch) & 0x1F;
+				m_tileOffset += 32 * (((ly + scy) & 0xFF) / 8);
+				m_tileOffset &= 0x3FF;
 
-				size_t tileI = y / 8;
-				size_t tileJ = x / 8;
-
-				m_localY = abs(int(y - tileI * 8));
-				m_localX = abs(int(x - tileJ * 8));
-
-				m_tileIndex = tileI * 32 + tileJ;
+				m_state = State::FetchLow;
+				m_dotsCurrentState = 0;
+			} else if(m_dotsCurrentState == 2 && m_isWindow) {
+				m_tileOffset = m_xFetch;
+				m_tileOffset += 32 * (wly / 8);
+				m_tileOffset &= 0x3FF;
 
 				m_state = State::FetchLow;
 				m_dotsCurrentState = 0;
@@ -58,7 +60,10 @@ class BackgroundFifo {
 		case State::FetchLow: {
 			if(m_dotsCurrentState == 2) {
 				uint8_t byte1;
-				getTileHLine(m_tileIndex, m_localY, m_tileLow, byte1, ((m_bus.read8(0xFF40) >> 3) & 1) != 0);
+				size_t offset = 2 * ((ly + scy) % 8);
+				if(m_isWindow) { offset = 2 * (wly % 8); }
+				getTileHLine(m_tileOffset, offset, m_tileLow, byte1,
+							 ((m_bus.read8(0xFF40) >> (m_isWindow ? 6 : 3)) & 1) != 0);
 
 				m_state = State::FetchHigh;
 				m_dotsCurrentState = 0;
@@ -68,7 +73,10 @@ class BackgroundFifo {
 		case State::FetchHigh: {
 			if(m_dotsCurrentState == 2) {
 				uint8_t byte0;
-				getTileHLine(m_tileIndex, m_localY, byte0, m_tileHigh, ((m_bus.read8(0xFF40) >> 3) & 1) != 0);
+				size_t offset = 2 * ((ly + scy) % 8);
+				if(m_isWindow) { offset = 2 * (wly % 8); }
+				getTileHLine(m_tileOffset, offset, byte0, m_tileHigh,
+							 ((m_bus.read8(0xFF40) >> (m_isWindow ? 6 : 3)) & 1) != 0);
 
 				m_state = State::Push;
 				m_dotsCurrentState = 0;
@@ -91,7 +99,7 @@ class BackgroundFifo {
 						}
 					}
 
-					m_xFetch += 8;
+					m_xFetch++;
 					m_state = State::FetchTileNumber;
 					m_dotsCurrentState = 0;
 				} else {
@@ -103,7 +111,12 @@ class BackgroundFifo {
 		}
 	}
 
-	std::optional<uint32_t> pop() {
+	struct BgPixel {
+		uint32_t color;
+		bool isTransparent;
+	};
+
+	std::optional<BgPixel> pop() {
 		if(m_pixels.empty() || m_lcd.screenX() >= 160) { return std::nullopt; }
 
 		Pixel px = m_pixels.front();
@@ -115,7 +128,10 @@ class BackgroundFifo {
 		if(m_firstCopyPixelsRemaining == 0) {
 			if(m_pixelsOddDiscardRemaining == 0) {
 				m_pixelsRendered++;
-				return shade;
+				return (BgPixel){
+					.color = colorPalettes[activeColorPalette][shade],
+					.isTransparent = px.color == 0,
+				};
 			} else {
 				m_pixelsOddDiscardRemaining--;
 			}
@@ -127,7 +143,7 @@ class BackgroundFifo {
 		return std::nullopt;
 	}
 
-	void getTileHLine(uint16_t tileMapIndex, uint8_t desiredI, uint8_t &byte0, uint8_t &byte1,
+	void getTileHLine(uint16_t tileMapIndex, uint8_t offset, uint8_t &byte0, uint8_t &byte1,
 					  uint8_t tileAddressBit) const {
 		uint16_t tileAddress = tileAddressBit ? 0x9C00 : 0x9800;
 		uint8_t index = m_bus.read8(tileAddress + tileMapIndex);
@@ -141,8 +157,8 @@ class BackgroundFifo {
 			finalTileAddress = 0x9000 + (int8_t)index * 16;
 		}
 
-		byte0 = m_bus.read8(finalTileAddress + desiredI * 2);
-		byte1 = m_bus.read8(finalTileAddress + desiredI * 2 + 1);
+		byte0 = m_bus.read8(finalTileAddress + offset);
+		byte1 = m_bus.read8(finalTileAddress + offset + 1);
 	}
 
 	struct Pixel {
@@ -164,8 +180,7 @@ class BackgroundFifo {
 
 	uint8_t m_xFetch;
 
-	uint16_t m_tileIndex;
-	uint8_t m_localY, m_localX;
+	uint16_t m_tileOffset = 0;
 
 	uint8_t m_tileLow;
 
@@ -184,4 +199,6 @@ class BackgroundFifo {
 	uint8_t m_pixelsRendered = 0;
 
 	uint8_t m_dotsCurrentState = 0;
+
+	bool m_isWindow = false;
 };

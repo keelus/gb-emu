@@ -79,6 +79,9 @@ class SpriteFifo {
 					uint8_t upper = (m_tileHigh >> (flipX ? i : (7 - i))) & 1;
 					uint8_t colorId = (upper << 1) | lower;
 
+					uint8_t objEnable = (m_bus.read8(0xFF40) >> 1) & 0x1;
+					if(!objEnable) { colorId = 0; }
+
 					if(m_spriteX + i >= 8 && m_spriteX + i < SCREEN_WIDTH + 8) {
 						if(m_pixels.size() > i) {
 							if(m_pixels.at(i).color == 0) {
@@ -102,8 +105,9 @@ class SpriteFifo {
 	}
 
 	struct SpritePixel {
-		uint32_t shade;
+		uint32_t color;
 		bool behindBg;
+		bool isTransparent;
 	};
 
 	std::optional<SpritePixel> pop() {
@@ -115,7 +119,8 @@ class SpriteFifo {
 		const uint8_t palette = (m_spriteAttrs & 0x10) ? m_bus.read8(0xFF49) : m_bus.read8(0xFF48);
 		uint8_t shade = (palette >> (px.color * 2)) & 0b11;
 
-		return (SpritePixel){.shade = shade, .behindBg = px.behindBg};
+		return (SpritePixel){
+			.color = colorPalettes[activeColorPalette][shade], .behindBg = px.behindBg, .isTransparent = px.color == 0};
 	}
 
 	void getTileHLine(uint8_t &byte0, uint8_t &byte1) const {
