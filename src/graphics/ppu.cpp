@@ -144,17 +144,16 @@ void Ppu::tickDot() {
 		break;
 	}
 	case PpuMode::VBLANK: {
-		m_drawingWindow = false;
+		if(m_ly == 153 && m_cycles >= 4) { m_ly = 0; }
 		if(m_cycles >= 456) {
 			m_ly++;
-			if(!m_yCondition) { m_yCondition = m_wy == m_ly; }
 			m_lycStatRequested = false;
 			m_cycles -= 456;
 
-			if(m_ly == 154) {
+			if(m_ly == 1) {
 				m_lcd.showBuffer();
 				m_ly = 0;
-				m_yCondition = false;
+				m_yCondition = m_wy == m_ly;
 				m_mode = PpuMode::OAM_SCAN;
 				m_m2StatRequested = false;
 			}
