@@ -69,7 +69,8 @@ class Ppu {
 	uint8_t read8(const uint16_t address) const;
 
 	uint8_t getLcdStatus() const {
-		return m_lcdStatus | (static_cast<uint8_t>(m_lyc == m_ly) << 2) | (static_cast<uint8_t>(m_mode) & 0x3);
+		return m_lcdStatus | (static_cast<uint8_t>(m_lyc == m_ly) << 2) |
+			   (((m_control & 0b10000000) == 0) ? 0 : (static_cast<uint8_t>(m_mode) & 0x3));
 	}
 	void setLcdStatus(const uint8_t newLcdStatus) {
 		if(newLcdStatus != 0) {
