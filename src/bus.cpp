@@ -117,13 +117,13 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF16:
 	case 0xFF17:
 	case 0xFF18:
-	case 0xFF19: m_apu->read8(address);
+	case 0xFF19: return m_apu->read8(address);
 
 	case 0xFF1A:
 	case 0xFF1B:
 	case 0xFF1C:
 	case 0xFF1D:
-	case 0xFF1E: return 0xFF;
+	case 0xFF1E: return m_apu->read8(address);
 
 	/* Unused I/O */
 	case 0xFF1F: return 0xFF;
@@ -164,7 +164,7 @@ uint8_t Bus::ioRead8(const uint16_t address) const {
 	case 0xFF3C:
 	case 0xFF3D:
 	case 0xFF3E:
-	case 0xFF3F: return 0xFF;
+	case 0xFF3F: return m_apu->read8(address);
 
 	/* PPU & LCD */
 	case 0xFF40: return m_ppu->getControl();
@@ -317,7 +317,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF1B:
 	case 0xFF1C:
 	case 0xFF1D:
-	case 0xFF1E: break;
+	case 0xFF1E: m_apu->write8(address, value); break;
 
 	/* Unused I/O */
 	case 0xFF1F: break;
@@ -358,7 +358,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 	case 0xFF3C:
 	case 0xFF3D:
 	case 0xFF3E:
-	case 0xFF3F: break;
+	case 0xFF3F: m_apu->write8(address, value); break;
 
 	/* PPU & LCD */
 	case 0xFF40: m_ppu->setControl(value); break;
