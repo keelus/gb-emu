@@ -58,35 +58,33 @@ class Channel3 {
 
 	bool isOn() const { return m_isOn; }
 
-	void fillBuffer(float *buffer, int samples, int sampleRate, double amplitude) {
-		if(!m_isOn) return;
-
+	void tick(float sampleRate) {
 		double freq = getFrequency();
 		if(freq > sampleRate / 2.0) freq = sampleRate / 2.0;
 
 		double step = (freq * 32.0) / sampleRate;
 
-		for(int i = 0; i < samples; i++) {
-			float volume;
-			switch((m_nr32 >> 5) & 0x03) {
-			case 0: volume = 0.0f; break;
-			case 1: volume = 1.0f; break;
-			case 2: volume = 0.5f; break;
-			case 3: volume = 0.25f; break;
-			}
-
-			uint8_t value = m_wave[m_waveIndex / 2];
-			value = ((m_waveIndex % 2 == 0) ? (value >> 4) : value) & 0xF;
-
-			float normalizedValue = ((static_cast<float>(value) * volume) / 15.0f) * 2.0f - 1.0f;
-			buffer[i] += normalizedValue * amplitude;
-
-			m_phase += step;
-			while(m_phase >= 1.0) {
-				m_phase -= 1.0;
-				m_waveIndex = (m_waveIndex + 1) & 31;
-			}
+		m_phase += step;
+		while(m_phase >= 1.0) {
+			m_phase -= 1.0;
+			m_waveIndex = (m_waveIndex + 1) & 31;
 		}
+	}
+
+	float getSample(float amplitude) {
+		float volume;
+		switch((m_nr32 >> 5) & 0x03) {
+		case 0: volume = 0.0f; break;
+		case 1: volume = 1.0f; break;
+		case 2: volume = 0.5f; break;
+		case 3: volume = 0.25f; break;
+		}
+
+		uint8_t value = m_wave[m_waveIndex / 2];
+		value = ((m_waveIndex % 2 == 0) ? (value >> 4) : value) & 0xF;
+
+		float normalizedValue = ((static_cast<float>(value) * volume) / 15.0f) * 2.0f - 1.0f;
+		return normalizedValue * amplitude;
 	}
 
 	void trigger(void) {

@@ -65,19 +65,20 @@ class Channel2 {
 		}
 	}
 
-	void tick(const int tStates) {
-		assert(tStates % 4 == 0);
-		for(size_t i = 0; i < tStates; i += 4) {
-			m_periodDivider++;
-			if(m_periodDivider == 0x800) { m_periodDivider = getPeriod(); }
-		}
+	void tick(const float sampleRate) {
+		m_periodDivider++;
+		if(m_periodDivider == 0x800) { m_periodDivider = getPeriod(); }
+
+		double freq = getFrequency();
+		if(freq > sampleRate / 2.0) { freq = sampleRate / 2.0; }
+
+		m_phase += 2.0 * M_PI * freq / sampleRate;
+		if(m_phase >= 2.0 * M_PI) { m_phase -= 2.0 * M_PI; }
 	}
 
 	bool isOn() const { return m_isOn; }
 
-	void fillBuffer(float *buffer, int samples, int sampleRate, double amplitude) {
-		if(!m_isOn) { return; }
-
+	float getSample(const float amplitude) {
 		uint8_t duty = (m_nr21 >> 6) & 0x3;
 		double dutyPercent = 0;
 		switch(duty) {
@@ -89,19 +90,8 @@ class Channel2 {
 		assert(dutyPercent != 0);
 
 		double phaseThreshold = (2 * M_PI) * (dutyPercent / 100.0f);
-		for(int i = 0; i < samples; i++) {
-			if(m_phase < phaseThreshold) {
-				buffer[i] += amplitude * static_cast<float>(m_volume) / 15.0f;
-			} else {
-				buffer[i] -= amplitude * static_cast<float>(m_volume) / 15.0f;
-			}
-
-			double freq = getFrequency();
-			if(freq > sampleRate / 2.0) { freq = sampleRate / 2.0; }
-
-			m_phase += 2.0 * M_PI * freq / sampleRate;
-			if(m_phase >= 2.0 * M_PI) { m_phase -= 2.0 * M_PI; }
-		}
+		float value = amplitude * static_cast<float>(m_volume) / 15.0f;
+		return (m_phase < phaseThreshold ? 1 : 0) * value;
 	}
 
 	void trigger(void) {

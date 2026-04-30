@@ -1,18 +1,20 @@
 #pragma once
 
-#include "audio/channel3.hpp"
 #include "channel1.hpp"
 #include "channel2.hpp"
+#include "channel3.hpp"
 #include "channel4.hpp"
+#include "ringbuffer.hpp"
 #include "common.hpp"
 #include <SDL_audio.h>
 #include <cassert>
 #include <cstdint>
-#include <iomanip>
 #include <iostream>
 
-#define SAMPLE_RATE 44100
-#define AMPLITUDE 0.2f
+#define APU_RATE (1 << 20)
+#define OUTPUT_RATE 44100.0
+#define SAMPLE_RATIO (APU_RATE / OUTPUT_RATE)
+#define AMPLITUDE 1
 #define SAMPLES 1024
 
 #include "SDL_audio.h"
@@ -22,7 +24,7 @@ class Apu {
 		std::cout << "Audio initialized." << std::endl;
 
 		SDL_AudioSpec spec = {0};
-		spec.freq = SAMPLE_RATE;
+		spec.freq = OUTPUT_RATE;
 		spec.format = AUDIO_F32SYS;
 		spec.channels = 1;
 		spec.samples = SAMPLES;
@@ -91,16 +93,38 @@ class Apu {
 
 	void tick(const int tStates) {
 		assert(tStates % 4 == 0);
-		m_channel1.tick(tStates);
-		m_channel2.tick(tStates);
+
+		for(size_t i = 0; i < tStates; i += 4) {
+			m_channel1.tick(APU_RATE);
+			m_channel2.tick(APU_RATE);
+			m_channel3.tick(APU_RATE);
+			m_channel4.tick(APU_RATE);
+
+			float sample1 = m_channel1.getSample(AMPLITUDE);
+			float sample2 = m_channel2.getSample(AMPLITUDE);
+			float sample3 = m_channel3.getSample(AMPLITUDE);
+			float sample4 = m_channel4.getSample(AMPLITUDE);
+
+			float sample = (sample1 + sample2 + sample3 + sample4) / 4.0f;
+
+			pushSample(sample);
+		}
 
 		static bool prevAllChannelsOff = false;
-		bool allChannelsOff = !(m_channel1.isOn() | m_channel2.isOn() | m_channel3.isOn() | m_channel4.isOn());
+		bool allChannelsOff = !(m_channel1.isOn() | m_channel2.isOn());
 		if(allChannelsOff != prevAllChannelsOff) { SDL_PauseAudio(allChannelsOff); }
 		prevAllChannelsOff = allChannelsOff;
 	}
 
   private:
+	void pushSample(float sample) {
+		m_sampleAccumulator += 1.0;
+		if(m_sampleAccumulator >= SAMPLE_RATIO) {
+			m_sampleAccumulator -= SAMPLE_RATIO;
+			m_sampleBuffer.push(sample);
+		}
+	}
+
 	static void audio_callback(void *userData, Uint8 *stream, int len) {
 		Apu *audio = static_cast<Apu *>(userData);
 
@@ -109,13 +133,8 @@ class Apu {
 
 		memset(buffer, 0, len);
 
-		audio->m_channel1.fillBuffer(buffer, samples, SAMPLE_RATE, AMPLITUDE);
-		audio->m_channel2.fillBuffer(buffer, samples, SAMPLE_RATE, AMPLITUDE);
-		audio->m_channel3.fillBuffer(buffer, samples, SAMPLE_RATE, AMPLITUDE);
-		audio->m_channel4.fillBuffer(buffer, samples, SAMPLE_RATE, AMPLITUDE);
-
-		for(int i = 0; i < samples; i++) {
-			buffer[i] /= 4;
+		for(size_t i = 0; i < samples; i++) {
+			if(!audio->m_sampleBuffer.pop(buffer[i])) { buffer[i] = 0.0f; }
 		}
 	}
 
@@ -126,4 +145,7 @@ class Apu {
 	Channel2 m_channel2;
 	Channel3 m_channel3;
 	Channel4 m_channel4;
+
+	double m_sampleAccumulator = 0;
+	RingBuffer<float, 4096> m_sampleBuffer;
 };

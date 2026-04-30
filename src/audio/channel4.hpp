@@ -74,22 +74,17 @@ class Channel4 {
 
 	bool isOn() const { return m_isOn; }
 
-	void fillBuffer(float *buffer, int samples, int sampleRate, double amplitude) {
-		if(!m_isOn) { return; }
-
+	void tick(const float sampleRate) {
 		double ticksPerSample = static_cast<double>(getTickFrequency()) / sampleRate;
-		double acc = 0.0;
 
-		for(int i = 0; i < samples; i++) {
-			acc += ticksPerSample;
-			while(acc >= 1.0) {
-				acc -= 1.0;
-				m_lfsr.tick();
-			}
-
-			buffer[i] += (m_lfsr.getBit() ? -1.0f : 1.0f) * amplitude * m_volume / 15.0f;
+		m_tickSampleAcc += ticksPerSample;
+		while(m_tickSampleAcc >= 1.0) {
+			m_tickSampleAcc -= 1.0;
+			m_lfsr.tick();
 		}
 	}
+
+	float getSample(const float amplitude) { return (m_lfsr.getBit() ? -1.0f : 1.0f) * amplitude * m_volume / 15.0f; }
 
 	bool isDacOn() const { return (m_nr42 & 0xF8) != 0; }
 
@@ -99,6 +94,7 @@ class Channel4 {
 		m_envelopeAcc = 0;
 		m_volume = getInitialVolume();
 		m_lfsr.reset();
+		m_tickSampleAcc = 0;
 
 		if(m_lengthTimer == 0) { m_lengthTimer = 63 - (m_nr41 & 0x3F); }
 	}
@@ -132,4 +128,6 @@ class Channel4 {
 	uint8_t m_volume = 15;
 
 	Lfsr m_lfsr;
+
+	double m_tickSampleAcc = 0.0;
 };
