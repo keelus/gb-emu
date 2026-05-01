@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SDL_keycode.h"
 #include <bitset>
 #include <cstdint>
 
@@ -31,24 +30,20 @@ class Joypad {
 		}
 	}
 
-	void handleKeyDown(SDL_Keycode keyCode) { handleKey(keyCode, false); }
-	void handleKeyUp(SDL_Keycode keyCode) { handleKey(keyCode, true); }
+	enum class Key { A, B, Select, Start, Right, Left, Up, Down };
+
+	void handleKeyDown(Key key) { handleKey(key, false); }
+	void handleKeyUp(Key key) { handleKey(key, true); }
 
   private:
 	enum SelectedOutput { None = 0, Buttons, DPad };
 
-	void handleKey(SDL_Keycode keyCode, bool isKeyUp) {
-		switch(keyCode) {
-		case SDLK_DOWN: m_dPad.set(3, isKeyUp); break;
-		case SDLK_UP: m_dPad.set(2, isKeyUp); break;
-		case SDLK_LEFT: m_dPad.set(1, isKeyUp); break;
-		case SDLK_RIGHT: m_dPad.set(0, isKeyUp); break;
-
-		case SDLK_RETURN: m_buttons.set(3, isKeyUp); break;
-		case SDLK_BACKSPACE: m_buttons.set(2, isKeyUp); break;
-		case SDLK_b: m_buttons.set(1, isKeyUp); break;
-		case SDLK_a: m_buttons.set(0, isKeyUp); break;
-		default: break;
+	void handleKey(Key key, bool isKeyUp) {
+		uint8_t keyValue = static_cast<uint8_t>(key);
+		if(keyValue & 0b100) {
+			m_dPad.set(keyValue & 0b11, isKeyUp);
+		} else {
+			m_buttons.set(keyValue & 0b11, isKeyUp);
 		}
 	}
 

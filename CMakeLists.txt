@@ -6,7 +6,6 @@ set(CMAKE_BUILD_TYPE Debug)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SDL2 REQUIRED sdl2)
-pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
 
 file(GLOB_RECURSE sources src/*.cpp)
 list(FILTER sources EXCLUDE REGEX "src/main.cpp$")
@@ -23,5 +22,5 @@ target_include_directories(gb-emu-lib PUBLIC
     ${SDL2_TTF_INCLUDE_DIRS}
 )
 
-add_executable(gb-emu src/main.cpp)
-target_link_libraries(gb-emu PRIVATE gb-emu-lib)
+add_executable(gb-emu-sdl2 platform/sdl2/sdl2.cpp)
+target_link_libraries(gb-emu-sdl2 PRIVATE gb-emu-lib)

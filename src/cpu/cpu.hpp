@@ -127,6 +127,8 @@ class Cpu {
 
 	bool getIme() const { return m_IME; }
 
+	static constexpr size_t CLOCK_SPEED = 4194304;
+
   private:
 	void incHL(void) {
 		uint16_t hl = HL() + 1;

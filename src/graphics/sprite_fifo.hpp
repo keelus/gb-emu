@@ -8,7 +8,7 @@
 #include <deque>
 
 extern uint8_t activeColorPalette;
-extern uint32_t colorPalettes[3][4];
+extern Color colorPalettes[3][4];
 
 class SpriteFifo {
   public:
@@ -82,7 +82,7 @@ class SpriteFifo {
 					uint8_t objEnable = (m_bus.read8(0xFF40) >> 1) & 0x1;
 					if(!objEnable) { colorId = 0; }
 
-					if(m_spriteX + i >= 8 && m_spriteX + i < SCREEN_WIDTH + 8) {
+					if(m_spriteX + i >= 8 && m_spriteX + i < Lcd::WIDTH + 8) {
 						if(m_pixels.size() > i) {
 							if(m_pixels.at(i).color == 0) {
 								m_pixels.at(i) = {colorId, uint8_t(m_spriteX + i), ly, (m_spriteAttrs & 0x80) != 0};
@@ -105,7 +105,7 @@ class SpriteFifo {
 	}
 
 	struct SpritePixel {
-		uint32_t color;
+		Color color;
 		bool behindBg;
 		bool isTransparent;
 	};

@@ -7,7 +7,7 @@
 #include <deque>
 
 extern uint8_t activeColorPalette;
-extern uint32_t colorPalettes[3][4];
+extern Color colorPalettes[3][4];
 
 class BackgroundFifo {
   public:
@@ -33,7 +33,7 @@ class BackgroundFifo {
 
 	void tickDot(const uint8_t ly, const uint8_t scy, const uint8_t scx, const uint8_t wy, const uint8_t wx,
 				 const uint8_t wly) {
-		if(m_lcd.screenX() >= 160) { return; }
+		if(m_lcd.screenX() >= Lcd::WIDTH) { return; }
 
 		m_dotsCurrentState++;
 		m_dotsDone++;
@@ -112,12 +112,12 @@ class BackgroundFifo {
 	}
 
 	struct BgPixel {
-		uint32_t color;
+		Color color;
 		bool isTransparent;
 	};
 
 	std::optional<BgPixel> pop() {
-		if(m_pixels.empty() || m_lcd.screenX() >= 160) { return std::nullopt; }
+		if(m_pixels.empty() || m_lcd.screenX() >= Lcd::WIDTH) { return std::nullopt; }
 
 		Pixel px = m_pixels.front();
 		m_pixels.pop_front();

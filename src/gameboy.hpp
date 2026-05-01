@@ -15,7 +15,8 @@
 
 class GameBoy {
   public:
-	GameBoy(const std::string &cartridgePath) : m_cpu(m_bus), m_ppu(m_bus, m_lcd), m_timer(m_bus) {
+	GameBoy(const std::string &cartridgePath, Platform &platform)
+		: m_apu(platform), m_cpu(m_bus), m_ppu(m_bus, m_lcd), m_lcd(platform), m_timer(m_bus) {
 		m_cartridge = Cartridge::createCartridge(cartridgePath);
 
 		m_bus.addApu(&m_apu);
@@ -33,12 +34,14 @@ class GameBoy {
 	int tick();
 	void dump(void) { m_cpu.dump(); }
 
-	void handleKeydown(SDL_Keycode keyCode) { m_joypad.handleKeyDown(keyCode); }
-	void handleKeyup(SDL_Keycode keyCode) { m_joypad.handleKeyUp(keyCode); }
+	void handleKeydown(Joypad::Key key) { m_joypad.handleKeyDown(key); }
+	void handleKeyup(Joypad::Key key) { m_joypad.handleKeyUp(key); }
 
 	bool introEnded() const { return m_bus.introEnded(); }
 
-	const uint32_t *getLcdBuffer() const { return m_lcd.getBuffer(); }
+	static constexpr float FRAMES_PER_SECOND = 59.7f;
+	static constexpr float CYCLES_PER_FRAME = (Cpu::CLOCK_SPEED / FRAMES_PER_SECOND);
+	static constexpr float MS_PER_FRAME = 1 / FRAMES_PER_SECOND * 1000;
 
   private:
 	Apu m_apu;

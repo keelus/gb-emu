@@ -1,20 +1,37 @@
-#include "ppu.hpp"
-#include "common.hpp"
-#include "graphics/background_fifo.hpp"
-#include "graphics/lcd.hpp"
-#include "graphics/sprite_fifo.hpp"
-#include <algorithm>
-#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <iomanip>
 #include <stdexcept>
 
-uint32_t colorPalettes[3][4] = {
-	{0x00FFFFFF, 0x00AAAAAA, 0x00555555,		 0x0}, // Gray
-	{0x009BBC0F, 0x008BAC0F, 0x00306230, 0x000F380F}, // CRT green
-	{0x00E0C77F, 0x009D8B59, 0x005A5033, 0x0016140D}  // Yellow-ish
+#include "common.hpp"
+#include "graphics/background_fifo.hpp"
+#include "graphics/lcd.hpp"
+#include "graphics/sprite_fifo.hpp"
+#include "ppu.hpp"
+
+Color colorPalettes[3][4] = {
+	{
+		// Gray
+		Color(0xFF, 0xFF, 0xFF),
+		Color(0xAA, 0xAA, 0xAA),
+		Color(0x55, 0x55, 0x55),
+		Color(),
+	 },
+	{
+		// CRT green
+		Color(0x9B, 0xBC, 0x0F),
+		Color(0x8B, 0xAC, 0x0F),
+		Color(0x30, 0x62, 0x30),
+		Color(0x0F, 0x38, 0x0F),
+	 },
+	{
+		// Yellow-ish
+		Color(0xE0, 0xC7, 0x7F),
+		Color(0x9D, 0x8B, 0x59),
+		Color(0x5A, 0x50, 0x33),
+		Color(0x16, 0x14, 0x0D),
+	 }
 };
 
 void Ppu::write8(const uint16_t address, const uint8_t value) {
@@ -68,11 +85,11 @@ void Ppu::tickDot() {
 			for(size_t i = 0; i < 40; i++) {
 				uint8_t y = m_bus.read8(0xFE00 + i * 4);
 				if(y == 0) { continue; }
-				if(y >= SCREEN_HEIGHT + 16) { continue; }
+				if(y >= Lcd::HEIGHT + 16) { continue; }
 
 				uint8_t x = m_bus.read8(0xFE00 + i * 4 + 1);
 				if(x == 0) { continue; }
-				if(x >= SCREEN_WIDTH + 8) { continue; }
+				if(x >= Lcd::WIDTH + 8) { continue; }
 
 				uint8_t objSize = (m_bus.read8(0xFF40) >> 2) & 0x1;
 				uint8_t spriteHeight = objSize == 1 ? 16 : 8;
@@ -114,7 +131,7 @@ void Ppu::tickDot() {
 			}
 		}
 
-		if(m_lcd.screenX() >= 160) {
+		if(m_lcd.screenX() >= Lcd::WIDTH) {
 			m_cycles = 0;
 			m_mode = PpuMode::HBLANK;
 			m_m0StatRequested = false;
@@ -131,7 +148,7 @@ void Ppu::tickDot() {
 			if(!m_yCondition) { m_yCondition = m_wy == m_ly; }
 			m_lycStatRequested = false;
 
-			if(m_ly == 144) {
+			if(m_ly == Lcd::HEIGHT) {
 				m_mode = PpuMode::VBLANK;
 				m_wly = 0;
 				m_bus.requestInterrupt(Bus::InterruptRequestType::VBlank);

@@ -4,35 +4,18 @@
 #include "channel2.hpp"
 #include "channel3.hpp"
 #include "channel4.hpp"
-#include "ringbuffer.hpp"
+#include "platform.hpp"
 #include "common.hpp"
-#include <SDL_audio.h>
 #include <cassert>
 #include <cstdint>
 #include <iostream>
 
 #define APU_RATE (1 << 20)
-#define OUTPUT_RATE 44100.0
-#define SAMPLE_RATIO (APU_RATE / OUTPUT_RATE)
-#define AMPLITUDE 1
-#define SAMPLES 1024
 
 #include "SDL_audio.h"
 class Apu {
   public:
-	Apu() {
-		std::cout << "Audio initialized." << std::endl;
-
-		SDL_AudioSpec spec = {0};
-		spec.freq = OUTPUT_RATE;
-		spec.format = AUDIO_F32SYS;
-		spec.channels = 1;
-		spec.samples = SAMPLES;
-		spec.callback = audio_callback;
-		spec.userdata = this;
-
-		SDL_OpenAudio(&spec, NULL);
-	}
+	Apu(Platform &platform) : m_platform(platform) {}
 
 	void write8(const uint16_t address, const uint8_t value) {
 		if(IN_RANGE(address, 0xFF10, 0xFF14)) { return m_channel1.write8(address, value); }
@@ -100,10 +83,10 @@ class Apu {
 			m_channel3.tick(APU_RATE);
 			m_channel4.tick(APU_RATE);
 
-			float sample1 = m_channel1.getSample(AMPLITUDE);
-			float sample2 = m_channel2.getSample(AMPLITUDE);
-			float sample3 = m_channel3.getSample(AMPLITUDE);
-			float sample4 = m_channel4.getSample(AMPLITUDE);
+			float sample1 = m_channel1.getSample(m_platform.getAudioAmplitude());
+			float sample2 = m_channel2.getSample(m_platform.getAudioAmplitude());
+			float sample3 = m_channel3.getSample(m_platform.getAudioAmplitude());
+			float sample4 = m_channel4.getSample(m_platform.getAudioAmplitude());
 
 			float sample = (sample1 + sample2 + sample3 + sample4) / 4.0f;
 
@@ -119,24 +102,13 @@ class Apu {
   private:
 	void pushSample(float sample) {
 		m_sampleAccumulator += 1.0;
-		if(m_sampleAccumulator >= SAMPLE_RATIO) {
-			m_sampleAccumulator -= SAMPLE_RATIO;
-			m_sampleBuffer.push(sample);
+		if(m_sampleAccumulator >= getSampleRatio()) {
+			m_sampleAccumulator -= getSampleRatio();
+			m_platform.pushAudioSample(sample);
 		}
 	}
 
-	static void audio_callback(void *userData, Uint8 *stream, int len) {
-		Apu *audio = static_cast<Apu *>(userData);
-
-		int samples = len / sizeof(float);
-		float *buffer = (float *)stream;
-
-		memset(buffer, 0, len);
-
-		for(size_t i = 0; i < samples; i++) {
-			if(!audio->m_sampleBuffer.pop(buffer[i])) { buffer[i] = 0.0f; }
-		}
-	}
+	float getSampleRatio() const { return APU_RATE / m_platform.getAudioSampleRate(); }
 
 	bool m_audioEnabled;
 	uint8_t m_divApu = 0;
@@ -147,5 +119,6 @@ class Apu {
 	Channel4 m_channel4;
 
 	double m_sampleAccumulator = 0;
-	RingBuffer<float, 4096> m_sampleBuffer;
+
+	Platform &m_platform;
 };
