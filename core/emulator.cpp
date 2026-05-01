@@ -55,8 +55,6 @@ int Emulator::run(int argc, char *argv[]) {
 
 	GameBoy gb(romPath, m_platform);
 	gb.debugCartridge();
-	std::cout << "Press any key to start the Game Boy..." << std::endl;
-	std::cin.get();
 
 	m_platform.addGameBoy(&gb);
 

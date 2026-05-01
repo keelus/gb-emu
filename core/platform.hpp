@@ -22,6 +22,8 @@ class Platform {
 	virtual float getAudioAmplitude() const = 0;
 	virtual float getAudioSampleRate() const = 0;
 	virtual void pushAudioSample(float sample) = 0;
+	virtual void muteAudio() = 0;
+	virtual void unmuteAudio() = 0;
 
   protected:
 	GameBoy *m_gameBoy = nullptr;

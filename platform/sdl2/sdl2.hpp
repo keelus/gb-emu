@@ -99,6 +99,9 @@ class PlatformSdl2 : public Platform {
 
 	void pushAudioSample(float sample) override { m_audioSampleBuffer.pushSample(sample); }
 
+	void muteAudio() override { SDL_PauseAudio(true); }
+	void unmuteAudio() override { SDL_PauseAudio(false); }
+
   private:
 	static void audioCallback(void *userData, Uint8 *stream, int len) {
 		PlatformSdl2 *platform = static_cast<PlatformSdl2 *>(userData);

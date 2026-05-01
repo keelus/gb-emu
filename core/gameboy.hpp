@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SDL_keycode.h"
 #include "audio/apu.hpp"
 #include "bus.hpp"
 #include "cartridge/cartridge.hpp"
@@ -10,7 +9,6 @@
 #include "memory.hpp"
 #include "graphics/ppu.hpp"
 #include "timer.hpp"
-#include <cstdint>
 #include <memory>
 
 class GameBoy {

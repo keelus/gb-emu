@@ -12,7 +12,6 @@
 
 #define APU_RATE (1 << 20)
 
-#include "SDL_audio.h"
 class Apu {
   public:
 	Apu(Platform &platform) : m_platform(platform) {}
@@ -95,7 +94,13 @@ class Apu {
 
 		static bool prevAllChannelsOff = false;
 		bool allChannelsOff = !(m_channel1.isOn() | m_channel2.isOn());
-		if(allChannelsOff != prevAllChannelsOff) { SDL_PauseAudio(allChannelsOff); }
+		if(allChannelsOff != prevAllChannelsOff) {
+			if(allChannelsOff) {
+				m_platform.muteAudio();
+			} else {
+				m_platform.unmuteAudio();
+			}
+		}
 		prevAllChannelsOff = allChannelsOff;
 	}
 

@@ -9,7 +9,7 @@ PlatformSdl2::PlatformSdl2() {
 		exit(1);
 	}
 
-	m_window = SDL_CreateWindow("Black Window", 100, 100, Lcd::WIDTH * SCALE, Lcd::HEIGHT * SCALE, SDL_WINDOW_SHOWN);
+	m_window = SDL_CreateWindow("Gb-emu", 100, 100, Lcd::WIDTH * SCALE, Lcd::HEIGHT * SCALE, SDL_WINDOW_SHOWN);
 	if(!m_window) {
 		std::cerr << "Platform[SDL2]: SDL_CreateWindow error: " << SDL_GetError() << std::endl;
 		exit(1);

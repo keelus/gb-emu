@@ -22,6 +22,7 @@
 					SDL2
 					SDL2_ttf
 					harfbuzz
+					gtkmm4
 				];
 			};
 	};
