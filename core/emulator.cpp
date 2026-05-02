@@ -11,7 +11,7 @@
 uint8_t activeColorPalette = 0;
 
 void Emulator::printUsage(const char *argv0, const bool isHelpMessage) {
-	std::cout << "Usage:" << argv0 << " [options] <ROM path>" << std::endl;
+	std::cout << "Usage: " << argv0 << " [options] <ROM path>" << std::endl;
 	std::cout << "Options:" << std::endl;
 	std::cout << "\t -s, --serial\t\tEnable serial output" << std::endl;
 	std::cout << "\t -f, --no-fps\t\tDisable 59.70fps limit" << std::endl;

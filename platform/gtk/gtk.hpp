@@ -70,6 +70,7 @@ class PlatformGtk : public Platform {
 		cr->paint();
 	}
 
+	void stop() { m_running = false; }
 	bool running() const override { return m_running; }
 
 	std::chrono::time_point<std::chrono::steady_clock> m_frameStart;

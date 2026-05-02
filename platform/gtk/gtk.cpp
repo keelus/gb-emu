@@ -32,9 +32,18 @@ class MyWindow : public Gtk::Window {
 		});
 	}
 
+	~MyWindow() {
+		if(m_emulatorThread.joinable()) {
+			m_platform.stop();
+			m_emulatorThread.join();
+		}
+	}
+
   private:
 	PlatformGtk m_platform;
+
 	std::thread m_emulatorThread;
+	Emulator *m_emulator;
 };
 
 int main(int argc, char *argv[]) {
