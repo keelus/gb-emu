@@ -1,4 +1,4 @@
-# gb-emu
+# zirc
 To compile:
 ```
 mkdir build && cd build

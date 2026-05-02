@@ -7,7 +7,7 @@
 class MyWindow : public Gtk::Window {
   public:
 	MyWindow(int argc, char *argv[]) {
-		set_title("Gb-emu");
+		set_title("Zirc Emulator");
 		set_default_size(512, 512);
 
 		m_platform.initializeBackBuffer();

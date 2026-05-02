@@ -1,5 +1,5 @@
 {
-	description = "gb-emu development flake";
+	description = "Zirc emulator development flake";
 	inputs = {
 		nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 	};

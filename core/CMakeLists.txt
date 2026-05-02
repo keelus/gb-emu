@@ -1,5 +1,5 @@
 file(GLOB_RECURSE sources *.cpp)
-add_library(gb-emu-lib ${sources})
+add_library(zirc-lib ${sources})
 
-target_link_libraries(gb-emu-lib PRIVATE)
-target_include_directories(gb-emu-lib PUBLIC .)
+target_link_libraries(zirc-lib PRIVATE)
+target_include_directories(zirc-lib PUBLIC .)
