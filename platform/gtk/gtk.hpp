@@ -3,9 +3,11 @@
 #include <chrono>
 #include <cstring>
 #include <gtkmm.h>
+#include <portaudio.h>
 #include <ratio>
 #include <thread>
 
+#include "audio/ringbuffer.hpp"
 #include "gameboy.hpp"
 #include "joypad.hpp"
 #include "platform.hpp"
@@ -19,6 +21,29 @@ class PlatformGtk : public Platform {
 
 		m_surface = Cairo::ImageSurface::create(Cairo::Surface::Format::RGB24, Lcd::WIDTH, Lcd::HEIGHT);
 		m_drawingArea.set_draw_func(sigc::mem_fun(*this, &PlatformGtk::frameDrawCallback));
+
+		PaError err = Pa_Initialize();
+		if(err != paNoError) {
+			std::cerr << "Pa_Initialize() error: " << Pa_GetErrorText(err) << std::endl;
+			return;
+		}
+
+		err = Pa_OpenDefaultStream(&m_stream, 0, 1, paFloat32, AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_AMOUNT, audioCallback,
+								   this);
+		if(err != paNoError) {
+			std::cerr << "Pa_OpenDefaultStream() error: " << Pa_GetErrorText(err) << std::endl;
+			return;
+		}
+
+		err = Pa_StartStream(m_stream);
+		if(err != paNoError) {
+			std::cerr << "Pa_StartStream() error: " << Pa_GetErrorText(err) << std::endl;
+			return;
+		}
+	}
+	~PlatformGtk() {
+		if(m_stream) { Pa_CloseStream(m_stream); }
+		Pa_Terminate();
 	}
 
 	void frameDrawCallback(const Cairo::RefPtr<Cairo::Context> &cr, int w, int h) {
@@ -71,11 +96,25 @@ class PlatformGtk : public Platform {
 		std::memset(m_backBuffer, 0, sizeof(unsigned char) * m_surface->get_stride() * Lcd::HEIGHT);
 	}
 
-	float getAudioAmplitude() const override { return 1; }
-	float getAudioSampleRate() const override { return 44100; }
-	void pushAudioSample(float sample) override {}
-	void muteAudio() override {}
-	void unmuteAudio() override {}
+
+	static int audioCallback(const void *input, void *output, unsigned long framesPerBuffer,
+							 const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags,
+							 void *userData) {
+		PlatformGtk *platform = static_cast<PlatformGtk *>(userData);
+		float *buffer = (float *)output;
+
+		for(size_t i = 0; i < framesPerBuffer; i++) {
+			if(!platform->m_audioSampleBuffer.popSample(buffer[i]) || platform->m_audioPaused) { buffer[i] = 0.0f; }
+		}
+
+		return paContinue;
+	}
+
+	float getAudioAmplitude() const override { return 1.0; }
+	float getAudioSampleRate() const override { return AUDIO_SAMPLE_RATE; }
+	void pushAudioSample(float sample) override { m_audioSampleBuffer.pushSample(sample); }
+	void muteAudio() override { m_audioPaused = true; }
+	void unmuteAudio() override { m_audioPaused = false; }
 
 	Gtk::DrawingArea &getDrawingArea() { return m_drawingArea; }
 
@@ -115,4 +154,10 @@ class PlatformGtk : public Platform {
 	Gtk::DrawingArea m_drawingArea;
 	Cairo::RefPtr<Cairo::ImageSurface> m_surface;
 	char m_backBuffer[Lcd::WIDTH * Lcd::HEIGHT * 4];
+
+	PaStream *m_stream = nullptr;
+	bool m_audioPaused = true;
+	AudioRingBuffer<4096> m_audioSampleBuffer;
+	static constexpr float AUDIO_SAMPLE_RATE = 44100.0;
+	static constexpr size_t AUDIO_SAMPLE_AMOUNT = 1024;
 };

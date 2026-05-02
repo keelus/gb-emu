@@ -23,6 +23,8 @@
 					SDL2_ttf
 					harfbuzz
 					gtkmm4
+					portaudio
+					fontconfig
 				];
 			};
 	};
