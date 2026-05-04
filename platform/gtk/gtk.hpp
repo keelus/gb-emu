@@ -105,7 +105,7 @@ class PlatformGtk : public Platform {
 		float *buffer = (float *)output;
 
 		for(size_t i = 0; i < framesPerBuffer; i++) {
-			if(!platform->m_audioSampleBuffer.popSample(buffer[i]) || platform->m_audioPaused) { buffer[i] = 0.0f; }
+			if(platform->m_audioPaused || !platform->m_audioSampleBuffer.popSample(buffer[i])) { buffer[i] = 0.0f; }
 		}
 
 		return paContinue;
@@ -116,6 +116,7 @@ class PlatformGtk : public Platform {
 	void pushAudioSample(float sample) override { m_audioSampleBuffer.pushSample(sample); }
 	void muteAudio() override { m_audioPaused = true; }
 	void unmuteAudio() override { m_audioPaused = false; }
+	void resetAudio() { m_audioSampleBuffer.reset(); }
 
 	Gtk::DrawingArea &getDrawingArea() { return m_drawingArea; }
 
@@ -127,6 +128,7 @@ class PlatformGtk : public Platform {
   private:
 	void handleKey(guint keyVal, bool pressed) {
 		if(!m_gameBoy) { return; }
+
 		Joypad::Key key;
 		switch(keyVal) {
 		case GDK_KEY_0: activeColorPalette = 0; return;
