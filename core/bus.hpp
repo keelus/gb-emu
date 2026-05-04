@@ -22,17 +22,7 @@ class Bus {
 		Lcd,
 		VBlank,
 	};
-	Bus() {
-		m_apu = NULL;
-		m_cartridge = NULL;
-		m_cpu = NULL;
-		m_joypad = NULL;
-		m_memory = NULL;
-		m_ppu = NULL;
-		m_timer = NULL;
-
-		m_oamSourceAndStart = 0;
-	}
+	Bus() { reset(); }
 
 	void addApu(Apu *apu) { m_apu = apu; }
 	void addCartridge(Cartridge *cartridge) { m_cartridge = cartridge; }
@@ -54,19 +44,24 @@ class Bus {
 
 	bool introEnded() const { return m_introEnded; }
 
+	void reset() {
+		m_introEnded = false;
+		m_oamSourceAndStart = 0;
+	}
+
   private:
 	uint8_t ioRead8(const uint16_t address) const;
 	void ioWrite8(const uint16_t address, const uint8_t value);
 
-	bool m_introEnded = false;
+	bool m_introEnded;
 
-	Apu *m_apu;
-	Cartridge *m_cartridge;
-	Cpu *m_cpu;
-	Joypad *m_joypad;
-	Memory *m_memory;
-	Ppu *m_ppu;
-	Timer *m_timer;
+	Apu *m_apu = nullptr;
+	Cartridge *m_cartridge = nullptr;
+	Cpu *m_cpu = nullptr;
+	Joypad *m_joypad = nullptr;
+	Memory *m_memory = nullptr;
+	Ppu *m_ppu = nullptr;
+	Timer *m_timer = nullptr;
 
 	uint8_t m_oamSourceAndStart;
 };

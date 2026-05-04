@@ -2,12 +2,15 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 
 class Channel3 {
   public:
+	Channel3() { reset(); }
+
 	void write8(const uint16_t address, const uint8_t value) {
 		switch(address) {
 		case 0xFF1A: m_nr30 = value & 0x80; break;
@@ -96,6 +99,25 @@ class Channel3 {
 
 	bool isDacOn() const { return (m_nr30 & 0x80) != 0; }
 
+	void reset() {
+		m_phase = 0.0;
+
+		m_isOn = false;
+
+		m_nr30 = 0;
+		m_nr31 = 0;
+		m_nr32 = 0;
+
+		m_lengthEnabled = false;
+
+		m_periodDivider = 0;
+
+		std::memset(m_wave, 0, sizeof(m_wave));
+		m_waveIndex = 0;
+
+		m_lengthTimer = 0;
+	}
+
   private:
 	void turnOff() { m_isOn = false; }
 
@@ -103,20 +125,18 @@ class Channel3 {
 
 	double getFrequency() const { return 65536.0 / (2048 - m_periodDivider); }
 
-	double m_phase = 0;
+	double m_phase;
 
-	bool m_isOn = false;
+	bool m_isOn;
 
-	uint8_t m_nr30 = 0;
-	uint8_t m_nr31 = 0;
-	uint8_t m_nr32 = 0;
+	uint8_t m_nr30, m_nr31, m_nr32;
 
-	bool m_lengthEnabled = false;
+	bool m_lengthEnabled;
 
-	uint16_t m_periodDivider = 0;
+	uint16_t m_periodDivider;
 
-	uint8_t m_wave[32] = {0};
-	uint8_t m_waveIndex = 0;
+	uint8_t m_wave[32];
+	uint8_t m_waveIndex;
 
-	uint16_t m_lengthTimer = 0;
+	uint16_t m_lengthTimer;
 };

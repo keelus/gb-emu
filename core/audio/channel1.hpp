@@ -9,6 +9,8 @@
 
 class Channel1 {
   public:
+	Channel1() { reset(); }
+
 	void write8(const uint16_t address, const uint8_t value) {
 		switch(address) {
 		case 0xFF10: m_nr10 = value & 0x7F; break;
@@ -138,6 +140,27 @@ class Channel1 {
 
 	bool isDacOn() const { return (m_nr12 & 0xF8) != 0; }
 
+	void reset() {
+		m_phase = 0.0;
+
+		m_isOn = false;
+
+		m_nr10 = 0;
+		m_nr11 = 0;
+		m_nr12 = 0;
+		m_nr13 = 0;
+		m_nr14 = 0;
+
+		m_lengthTimer = 0;
+
+		m_periodDivider = 0;
+
+		m_envelopeAcc = 0;
+		m_periodSweepAcc = 0;
+		m_volume = 15;
+		m_enabledFlag = false;
+	}
+
   private:
 	void turnOff() { m_isOn = false; }
 
@@ -162,20 +185,16 @@ class Channel1 {
 
 	double m_phase;
 
-	bool m_isOn = false;
+	bool m_isOn;
 
-	uint8_t m_nr10 = 0;
-	uint8_t m_nr11 = 0;
-	uint8_t m_nr12 = 0;
-	uint8_t m_nr13 = 0;
-	uint8_t m_nr14 = 0;
+	uint8_t m_nr10, m_nr11, m_nr12, m_nr13, m_nr14;
 
-	uint8_t m_lengthTimer = 0;
+	uint8_t m_lengthTimer;
 
-	uint16_t m_periodDivider = 0;
+	uint16_t m_periodDivider;
 
-	int m_envelopeAcc = 0;
-	int m_periodSweepAcc = 0;
-	uint8_t m_volume = 15;
-	bool m_enabledFlag = false;
+	int m_envelopeAcc;
+	int m_periodSweepAcc;
+	uint8_t m_volume;
+	bool m_enabledFlag;
 };

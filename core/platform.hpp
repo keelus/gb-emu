@@ -9,6 +9,7 @@ class GameBoy;
 class Platform {
   public:
 	void addGameBoy(GameBoy *gameBoy) { m_gameBoy = gameBoy; }
+	void removeGameBoy() { m_gameBoy = nullptr; }
 
 	virtual bool running() const = 0;
 

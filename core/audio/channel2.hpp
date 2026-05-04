@@ -9,6 +9,8 @@
 
 class Channel2 {
   public:
+	Channel2() { reset(); }
+
 	void write8(const uint16_t address, const uint8_t value) {
 		switch(address) {
 		case 0xFF16: m_nr21 = value; break;
@@ -104,6 +106,24 @@ class Channel2 {
 
 	bool isDacOn() const { return (m_nr22 & 0xF8) != 0; }
 
+	void reset() {
+		m_phase = 0.0;
+
+		m_isOn = false;
+
+		m_nr21 = 0;
+		m_nr22 = 0;
+		m_nr23 = 0;
+		m_nr24 = 0;
+
+		m_lengthTimer = 0;
+
+		m_periodDivider = 0;
+
+		m_envelopeAcc = 0;
+		m_volume = 15;
+	}
+
   private:
 	void turnOff() { m_isOn = false; }
 
@@ -125,17 +145,14 @@ class Channel2 {
 
 	double m_phase;
 
-	bool m_isOn = false;
+	bool m_isOn;
 
-	uint8_t m_nr21 = 0;
-	uint8_t m_nr22 = 0;
-	uint8_t m_nr23 = 0;
-	uint8_t m_nr24 = 0;
+	uint8_t m_nr21, m_nr22, m_nr23, m_nr24;
 
-	uint8_t m_lengthTimer = 0;
+	uint8_t m_lengthTimer;
 
-	uint16_t m_periodDivider = 0;
+	uint16_t m_periodDivider;
 
-	int m_envelopeAcc = 0;
-	uint8_t m_volume = 15;
+	int m_envelopeAcc;
+	uint8_t m_volume;
 };

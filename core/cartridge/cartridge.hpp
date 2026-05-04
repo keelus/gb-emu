@@ -229,6 +229,8 @@ class Cartridge {
 	void unmapBootRom() { m_bootRomMapped = false; }
 	bool isBootRomMapped() const { return m_bootRomMapped; }
 
+	virtual void reset() { m_bootRomMapped = true; }
+
   private:
 	static uint8_t calculateHeaderChecksum(const std::vector<uint8_t> cartridgeData) {
 		uint8_t checksum = 0;

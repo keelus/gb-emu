@@ -152,11 +152,28 @@ class MBC1 : public Cartridge {
 		throw std::runtime_error(stream.str());
 	}
 
+	void reset() override {
+		Cartridge::reset();
+
+		m_bankingMode = false;
+		m_bankNumber = 0x1;
+		m_romExtraBankNumber = 0;
+
+		m_ramBankNumber = 0;
+		m_ramEnabled = false;
+
+		if(m_hasRam) {
+			for(size_t i = 0; i < m_ramBanks.size(); i++) {
+				memset(m_ramBanks[i].data(), 0, sizeof(uint8_t) * RAM_BANK_SIZE);
+			}
+		}
+	}
+
   private:
 	std::vector<std::array<uint8_t, ROM_BANK_SIZE>> m_romBanks;
 	std::vector<std::array<uint8_t, RAM_BANK_SIZE>> m_ramBanks;
 
-	bool m_bankingMode = 0;
+	bool m_bankingMode = false;
 
 	uint8_t m_bankNumber = 0x1;
 	uint8_t m_romExtraBankNumber = 0;

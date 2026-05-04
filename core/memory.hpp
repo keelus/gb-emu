@@ -14,16 +14,18 @@
  */
 class Memory {
   public:
-	Memory() {
-		memset(m_wram, 0, WORK_RAM_SIZE);
-		memset(m_hram, 0, HIGH_RAM_SIZE);
-	}
+	Memory() { reset(); }
 
 	uint8_t read8(const uint16_t address) const;
 	uint16_t read16(const uint16_t address) const;
 
 	void write8(const uint16_t address, const uint8_t value);
 	void write16(const uint16_t address, const uint16_t value);
+
+	void reset() {
+		std::memset(m_wram, 0, sizeof(m_wram));
+		std::memset(m_hram, 0, sizeof(m_hram));
+	}
 
   private:
 	uint8_t m_wram[WORK_RAM_SIZE];

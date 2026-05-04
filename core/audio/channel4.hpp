@@ -10,6 +10,8 @@
 
 class Channel4 {
   public:
+	Channel4() { reset(); }
+
 	void write8(const uint16_t address, const uint8_t value) {
 		switch(address) {
 		case 0xFF20: m_nr41 = value; break;
@@ -88,6 +90,24 @@ class Channel4 {
 
 	bool isDacOn() const { return (m_nr42 & 0xF8) != 0; }
 
+	void reset() {
+		m_isOn = false;
+
+		m_nr41 = 0;
+		m_nr42 = 0;
+		m_nr43 = 0;
+		m_nr44 = 0;
+
+		m_lengthTimer = 0;
+
+		m_envelopeAcc = 0;
+		m_volume = 15;
+
+		m_lfsr.reset();
+
+		m_tickSampleAcc = 0.0;
+	}
+
   private:
 	void trigger(void) {
 		turnOn();
@@ -115,19 +135,16 @@ class Channel4 {
 	uint8_t getLfsrWidth() const { return (m_nr43 >> 3) & 0x1; }
 	uint8_t getClockDivider() const { return m_nr43 & 0x7; }
 
-	bool m_isOn = false;
+	bool m_isOn;
 
-	uint8_t m_nr41 = 0;
-	uint8_t m_nr42 = 0;
-	uint8_t m_nr43 = 0;
-	uint8_t m_nr44 = 0;
+	uint8_t m_nr41, m_nr42, m_nr43, m_nr44;
 
-	uint8_t m_lengthTimer = 0;
+	uint8_t m_lengthTimer;
 
-	int m_envelopeAcc = 0;
-	uint8_t m_volume = 15;
+	int m_envelopeAcc;
+	uint8_t m_volume;
 
 	Lfsr m_lfsr;
 
-	double m_tickSampleAcc = 0.0;
+	double m_tickSampleAcc;
 };

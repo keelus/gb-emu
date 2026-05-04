@@ -9,6 +9,7 @@
 #include "memory.hpp"
 #include "graphics/ppu.hpp"
 #include "timer.hpp"
+#include <cstdint>
 #include <memory>
 
 class GameBoy {
@@ -37,6 +38,20 @@ class GameBoy {
 
 	bool introEnded() const { return m_bus.introEnded(); }
 
+	void reset() {
+		m_apu.reset();
+		m_bus.reset();
+		m_cpu.reset();
+		m_joypad.reset();
+		m_lcd.resetScreenX();
+		m_memory.reset();
+		m_ppu.reset();
+		m_timer.reset();
+		m_cartridge->reset();
+
+		m_prevDiv = 0;
+	}
+
 	static constexpr float FRAMES_PER_SECOND = 59.7f;
 	static constexpr float CYCLES_PER_FRAME = (Cpu::CLOCK_SPEED / FRAMES_PER_SECOND);
 	static constexpr float MS_PER_FRAME = 1 / FRAMES_PER_SECOND * 1000;
@@ -51,4 +66,6 @@ class GameBoy {
 	Ppu m_ppu;
 	Timer m_timer;
 	std::unique_ptr<Cartridge> m_cartridge;
+
+	uint16_t m_prevDiv = 0;
 };

@@ -15,24 +15,7 @@ extern uint8_t activeColorPalette;
 class Ppu {
   public:
 	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };
-	Ppu(Bus &bus, Lcd &lcd) : m_bus(bus), m_backgroundFifo(bus, lcd), m_spriteFifo(bus, lcd), m_lcd(lcd) {
-		m_cycles = 0;
-		m_mode = PpuMode::OAM_SCAN;
-
-		m_control = 0;
-
-		m_palette = 0;
-		m_scx = 0;
-		m_scy = 0;
-
-		m_ly = 0;
-		m_lyc = 0;
-
-		memset(m_vram, 0, sizeof(m_vram));
-		memset(m_oam, 0, sizeof(m_oam));
-
-		m_lcdStatus = 0;
-	}
+	Ppu(Bus &bus, Lcd &lcd) : m_bus(bus), m_backgroundFifo(bus, lcd), m_spriteFifo(bus, lcd), m_lcd(lcd) { reset(); }
 
 	void tick(uint8_t cycles);
 
@@ -80,6 +63,44 @@ class Ppu {
 		m_lcdStatus = (newLcdStatus & 0xF8) | (m_lcdStatus & 0x7);
 	}
 
+	void reset() {
+		m_yCondition = false;
+		m_lycStatRequested = false;
+		m_m0StatRequested = false;
+		m_m1StatRequested = false;
+		m_m2StatRequested = false;
+
+		m_cycles = 0;
+
+		memset(m_vram, 0, sizeof(m_vram));
+		memset(m_oam, 0, sizeof(m_oam));
+
+		m_control = 0;
+		m_palette = 0;
+
+		m_objPalette0 = 0;
+		m_objPalette1 = 0;
+
+		m_scx = 0, m_scy = 0;
+		m_wx = 0, m_wy = 0, m_wly = 0;
+
+		m_ly = 0, m_lyc = 0;
+
+		m_mode = PpuMode::OAM_SCAN;
+		m_prevMode = PpuMode::OAM_SCAN;
+
+		m_lcdStatus = 0;
+
+		m_backgroundFifo.reset(0, false);
+		m_spriteFifo.reset(0);
+
+		m_spritesToDraw.clear();
+
+		m_fetchingSprites = false;
+		m_drawingWindow = false;
+		m_fetchingSpriteIndex = 0;
+	}
+
   private:
 	bool m_yCondition = false;
 	bool m_lycStatRequested = false;
@@ -122,8 +143,8 @@ class Ppu {
 
 	std::vector<Sprite> m_spritesToDraw;
 
-	bool m_fetchingSprites = false;
-	bool m_drawingWindow = false;
+	bool m_fetchingSprites;
+	bool m_drawingWindow;
 	uint8_t m_fetchingSpriteIndex;
 	bool checkSpritesToDraw();
 };

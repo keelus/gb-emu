@@ -5,11 +5,7 @@
 
 class Joypad {
   public:
-	Joypad() {
-		m_selectedOutput = SelectedOutput::None;
-		m_buttons = 0xF;
-		m_dPad = 0xF;
-	}
+	Joypad() { reset(); }
 
 	void write8(const uint8_t value) {
 		uint8_t outputBits = value & 0x30;
@@ -34,6 +30,13 @@ class Joypad {
 
 	void handleKeyDown(Key key) { handleKey(key, false); }
 	void handleKeyUp(Key key) { handleKey(key, true); }
+
+	void reset() {
+		m_buttons = 0xF;
+		m_dPad = 0xF;
+
+		m_selectedOutput = SelectedOutput::None;
+	}
 
   private:
 	enum SelectedOutput { None = 0, Buttons, DPad };

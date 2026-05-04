@@ -8,28 +8,7 @@
 
 class Cpu {
   public:
-	Cpu(Bus &bus) : m_bus(bus) {
-		m_A = 0;
-		m_F = 0;
-
-		m_B = 0;
-		m_C = 0;
-
-		m_D = 0;
-		m_E = 0;
-
-		m_H = 0;
-		m_L = 0;
-
-		m_SP = 0xFFFE;
-		// m_PC = 0x100;
-		m_PC = 0;
-
-		m_IME = false;
-		m_halted = false;
-
-		m_interruptEnable = 0;
-	}
+	Cpu(Bus &bus) : m_bus(bus) { reset(); }
 
 	void handleInterrupts(void);
 
@@ -126,6 +105,22 @@ class Cpu {
 	uint8_t getInterruptFlagRaw() const { return m_interruptFlag; }
 
 	bool getIme() const { return m_IME; }
+
+	void reset() {
+		m_A = 0, m_F = 0;
+		m_B = 0, m_C = 0;
+		m_D = 0, m_E = 0;
+		m_H = 0, m_L = 0;
+
+		m_SP = 0xFFFE;
+		m_PC = 0;
+
+		m_IME = false;
+		m_interruptEnable = 0;
+		m_interruptFlag = 0;
+
+		m_halted = false;
+	}
 
 	static constexpr size_t CLOCK_SPEED = 4194304;
 

@@ -7,14 +7,7 @@ class Bus;
 
 class Timer {
   public:
-	Timer(Bus &bus) : m_bus(bus) {
-		m_tac = 0;
-		m_tma = 0;
-		m_tima = 0;
-
-		m_clk = 0;
-		m_prevClk = 0;
-	}
+	Timer(Bus &bus) : m_bus(bus) { reset(); }
 
 	void tick(const uint8_t tStates) {
 		for(size_t i = 0; i < tStates; i++) {
@@ -33,6 +26,15 @@ class Timer {
 
 	uint8_t getTima() const { return m_tima; }
 	void setTima(const uint8_t newTima) { m_tima = newTima; }
+
+	void reset() {
+		m_tac = 0;
+		m_tma = 0;
+		m_tima = 0;
+
+		m_clk = 0;
+		m_prevClk = 0;
+	}
 
   private:
 	void tickOne();

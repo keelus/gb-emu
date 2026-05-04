@@ -21,10 +21,9 @@ int GameBoy::tick() {
 		m_timer.tick(4);
 		m_apu.tick(4);
 
-		static uint8_t prevDiv = 0;
 		uint8_t div = m_timer.getDiv();
-		if((prevDiv & 0x10) == 0x10 && (div & 0x10) == 0) { m_apu.increaseDiv(); }
-		prevDiv = div;
+		if((m_prevDiv & 0x10) == 0x10 && (div & 0x10) == 0) { m_apu.increaseDiv(); }
+		m_prevDiv = div;
 	}
 
 	return cycles;

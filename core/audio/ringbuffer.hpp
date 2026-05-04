@@ -5,6 +5,8 @@
 
 template <std::size_t Size> class AudioRingBuffer {
   public:
+	AudioRingBuffer() { reset(); }
+
 	bool pushSample(const float &sample) {
 		size_t currentHead = m_head.load(std::memory_order_relaxed);
 		size_t nextHead = (currentHead + 1) % Size;
@@ -24,6 +26,12 @@ template <std::size_t Size> class AudioRingBuffer {
 		m_tail.store((currentTail + 1) % Size, std::memory_order_release);
 
 		return true;
+	}
+
+	void reset() {
+		memset(m_buffer, 0, sizeof(m_buffer));
+		m_head = 0;
+		m_tail = 0;
 	}
 
   private:

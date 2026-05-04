@@ -55,6 +55,12 @@ class NoMBC : public Cartridge {
 		}
 	}
 
+	void reset() override {
+		Cartridge::reset();
+
+		std::memset(m_ram, 0, sizeof(m_ram));
+	}
+
   private:
 	char m_rom[CARTRIDGE_ROM_SIZE];
 	char m_ram[CARTRIDGE_RAM_SIZE];

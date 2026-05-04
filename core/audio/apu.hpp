@@ -14,7 +14,7 @@
 
 class Apu {
   public:
-	Apu(Platform &platform) : m_platform(platform) {}
+	Apu(Platform &platform) : m_platform(platform) { reset(); }
 
 	void write8(const uint16_t address, const uint8_t value) {
 		if(IN_RANGE(address, 0xFF10, 0xFF14)) { return m_channel1.write8(address, value); }
@@ -92,16 +92,28 @@ class Apu {
 			pushSample(sample);
 		}
 
-		static bool prevAllChannelsOff = false;
 		bool allChannelsOff = !(m_channel1.isOn() | m_channel2.isOn());
-		if(allChannelsOff != prevAllChannelsOff) {
+		if(allChannelsOff != m_prevAllChannelsOff) {
 			if(allChannelsOff) {
 				m_platform.muteAudio();
 			} else {
 				m_platform.unmuteAudio();
 			}
 		}
-		prevAllChannelsOff = allChannelsOff;
+		m_prevAllChannelsOff = allChannelsOff;
+	}
+
+	void reset() {
+		m_prevAllChannelsOff = false;
+		m_audioEnabled = false;
+		m_divApu = 0;
+
+		m_sampleAccumulator = 0.0;
+
+		m_channel1.reset();
+		m_channel2.reset();
+		m_channel3.reset();
+		m_channel4.reset();
 	}
 
   private:
@@ -115,15 +127,16 @@ class Apu {
 
 	float getSampleRatio() const { return APU_RATE / m_platform.getAudioSampleRate(); }
 
+	bool m_prevAllChannelsOff;
 	bool m_audioEnabled;
-	uint8_t m_divApu = 0;
+	uint8_t m_divApu;
 
 	Channel1 m_channel1;
 	Channel2 m_channel2;
 	Channel3 m_channel3;
 	Channel4 m_channel4;
 
-	double m_sampleAccumulator = 0;
+	double m_sampleAccumulator;
 
 	Platform &m_platform;
 };
