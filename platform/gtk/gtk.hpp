@@ -3,45 +3,33 @@
 #include <chrono>
 #include <cstring>
 #include <gtkmm.h>
+#include <gtkmm/window.h>
 #include <portaudio.h>
 #include <ratio>
 #include <thread>
 
 #include "audio/ringbuffer.hpp"
 #include "gameboy.hpp"
+#include "config.hpp"
 #include "joypad.hpp"
 #include "platform.hpp"
 
-class PlatformGtk : public Platform {
+class PlatformGtk : public Platform, public Gtk::Window {
   public:
-	PlatformGtk() {
-		m_drawingArea.set_vexpand(true);
-		m_drawingArea.set_hexpand(true);
-		m_drawingArea.set_size_request(Lcd::WIDTH, Lcd::HEIGHT);
-
-		m_surface = Cairo::ImageSurface::create(Cairo::Surface::Format::RGB24, Lcd::WIDTH, Lcd::HEIGHT);
-		m_drawingArea.set_draw_func(sigc::mem_fun(*this, &PlatformGtk::frameDrawCallback));
-
-		PaError err = Pa_Initialize();
-		if(err != paNoError) {
-			std::cerr << "Pa_Initialize() error: " << Pa_GetErrorText(err) << std::endl;
-			return;
+	PlatformGtk(int argc, char *argv[]) {
+		const char *audioErrorMsg = setupAudio();
+		if(audioErrorMsg) {
+			auto dialog = Gtk::AlertDialog::create();
+			dialog->set_message("PortAudio error");
+			dialog->set_detail("Audio couldn't be initialized: \"" + std::string(audioErrorMsg) + "\"");
+			dialog->set_modal(true);
+			dialog->show();
 		}
 
-		err = Pa_OpenDefaultStream(&m_stream, 0, 1, paFloat32, AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_AMOUNT, audioCallback,
-								   this);
-		if(err != paNoError) {
-			std::cerr << "Pa_OpenDefaultStream() error: " << Pa_GetErrorText(err) << std::endl;
-			return;
-		}
-
-		err = Pa_StartStream(m_stream);
-		if(err != paNoError) {
-			std::cerr << "Pa_StartStream() error: " << Pa_GetErrorText(err) << std::endl;
-			return;
-		}
+		setupWindow();
 	}
-	~PlatformGtk() {
+
+	PlatformGtk() {
 		if(m_stream) { Pa_CloseStream(m_stream); }
 		Pa_Terminate();
 	}
@@ -118,14 +106,32 @@ class PlatformGtk : public Platform {
 	void unmuteAudio() override { m_audioPaused = false; }
 	void resetAudio() { m_audioSampleBuffer.reset(); }
 
-	Gtk::DrawingArea &getDrawingArea() { return m_drawingArea; }
-
-	void initializeBackBuffer() { std::memset(m_backBuffer, 0, m_surface->get_stride() * Lcd::HEIGHT); }
-
 	void handleKeyPressed(guint keyVal) { handleKey(keyVal, true); }
 	void handleKeyReleased(guint keyVal) { handleKey(keyVal, false); }
 
   private:
+	bool tick() {
+		if(!m_gameBoy) { return true; }
+
+		while(Config::skipIntro && !m_gameBoy->introEnded()) {
+			m_gameBoy->tick();
+		}
+
+		int cycles = 0;
+		while(cycles < GameBoy::CYCLES_PER_FRAME) {
+			cycles += m_gameBoy->tick();
+		}
+
+		showFrame();
+		return true;
+	}
+
+	const char *setupAudio();
+	void setupWindow();
+	void setupDrawingArea();
+	void setupKeyController();
+
+
 	void handleKey(guint keyVal, bool pressed) {
 		if(!m_gameBoy) { return; }
 
@@ -163,4 +169,11 @@ class PlatformGtk : public Platform {
 	AudioRingBuffer<4096> m_audioSampleBuffer;
 	static constexpr float AUDIO_SAMPLE_RATE = 44100.0;
 	static constexpr size_t AUDIO_SAMPLE_AMOUNT = 1024;
+
+	Gtk::Label m_noRomLabel{"There is no ROM loaded"};
+
+	GameBoy *m_gameBoy = nullptr;
+
+	Glib::RefPtr<Gio::SimpleAction> m_resetAction = nullptr;
+	Glib::RefPtr<Gio::SimpleAction> m_romCloseAction = nullptr;
 };
