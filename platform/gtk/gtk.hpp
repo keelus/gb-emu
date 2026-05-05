@@ -9,14 +9,15 @@
 #include <thread>
 
 #include "audio/ringbuffer.hpp"
-#include "gameboy.hpp"
 #include "config.hpp"
+#include "gameboy.hpp"
 #include "joypad.hpp"
+#include "menu_bar/menu_bar.hpp"
 #include "platform.hpp"
 
 class PlatformGtk : public Platform, public Gtk::Window {
   public:
-	PlatformGtk(int argc, char *argv[]) {
+	PlatformGtk(int argc, char *argv[]) : m_menuBar(*this) {
 		const char *audioErrorMsg = setupAudio();
 		if(audioErrorMsg) {
 			auto dialog = Gtk::AlertDialog::create();
@@ -29,10 +30,17 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		setupWindow();
 	}
 
-	PlatformGtk() {
-		if(m_stream) { Pa_CloseStream(m_stream); }
+	~PlatformGtk() {
+		if(m_stream) {
+			Pa_StopStream(m_stream);
+			Pa_CloseStream(m_stream);
+		}
 		Pa_Terminate();
 	}
+
+	void addGameBoy(GameBoy *gameBoy, const std::string &romName);
+	void resetGameBoy();
+	void removeGameBoy();
 
 	void frameDrawCallback(const Cairo::RefPtr<Cairo::Context> &cr, int w, int h) {
 		m_surface->flush();
@@ -85,7 +93,6 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		std::memset(m_backBuffer, 0, sizeof(unsigned char) * m_surface->get_stride() * Lcd::HEIGHT);
 	}
 
-
 	static int audioCallback(const void *input, void *output, unsigned long framesPerBuffer,
 							 const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags,
 							 void *userData) {
@@ -98,7 +105,6 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 		return paContinue;
 	}
-
 	float getAudioAmplitude() const override { return 1.0; }
 	float getAudioSampleRate() const override { return AUDIO_SAMPLE_RATE; }
 	void pushAudioSample(float sample) override { m_audioSampleBuffer.pushSample(sample); }
@@ -110,6 +116,11 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	void handleKeyReleased(guint keyVal) { handleKey(keyVal, false); }
 
   private:
+	const char *setupAudio();
+	void setupWindow();
+	void setupDrawingArea();
+	void setupKeyController();
+
 	bool tick() {
 		if(!m_gameBoy) { return true; }
 
@@ -125,12 +136,6 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		showFrame();
 		return true;
 	}
-
-	const char *setupAudio();
-	void setupWindow();
-	void setupDrawingArea();
-	void setupKeyController();
-
 
 	void handleKey(guint keyVal, bool pressed) {
 		if(!m_gameBoy) { return; }
@@ -174,6 +179,5 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	GameBoy *m_gameBoy = nullptr;
 
-	Glib::RefPtr<Gio::SimpleAction> m_resetAction = nullptr;
-	Glib::RefPtr<Gio::SimpleAction> m_romCloseAction = nullptr;
+	GtkMenuBar::MenuBar m_menuBar;
 };
