@@ -159,8 +159,8 @@ class Cartridge {
 		if(!((romType <= 0x08) || (romType >= 0x52 && romType <= 0x54))) {
 			std::stringstream stream;
 			stream << "Cartridge: Invalid RomType with value 0x" << std::hex << std::setw(2) << std::setfill('0')
-				   << romType << std::endl;
-			throw std::invalid_argument(stream.str());
+				   << uint(romType) << std::endl;
+			throw std::runtime_error(stream.str());
 		}
 		m_romType = static_cast<RomType>(romType);
 
@@ -169,8 +169,8 @@ class Cartridge {
 		if(ramType > 0x05) {
 			std::stringstream stream;
 			stream << "Cartridge: Invalid RamType with value 0x" << std::hex << std::setw(2) << std::setfill('0')
-				   << ramType << std::endl;
-			throw std::invalid_argument(stream.str());
+				   << uint(ramType) << std::endl;
+			throw std::runtime_error(stream.str());
 		}
 		m_ramType = static_cast<RamType>(ramType);
 
