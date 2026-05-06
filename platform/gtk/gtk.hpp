@@ -11,9 +11,9 @@
 #include "graphics/background_fifo.hpp"
 #include "joypad.hpp"
 #include "menu_bar/menu_bar.hpp"
-#include "opengl.hpp"
 #include "platform.hpp"
-#include "portaudio_subsystem.hpp"
+#include "subsystems/opengl.hpp"
+#include "subsystems/portaudio.hpp"
 
 class PlatformGtk : public Platform, public Gtk::Window {
   public:

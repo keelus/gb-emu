@@ -1,9 +1,10 @@
 #pragma once
 
-#include "audio/ringbuffer.hpp"
-#include "portaudio.h"
-#include "utils.hpp"
 #include <iostream>
+#include <portaudio.h>
+
+#include "audio/ringbuffer.hpp"
+#include "utils.hpp"
 
 class PortAudioSubsystem {
   public:
