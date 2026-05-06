@@ -46,9 +46,9 @@ class PlatformSdl2 : public Platform {
 				m_running = false;
 			} else if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
 				switch(event.key.keysym.sym) {
-				case SDLK_1: activeColorPalette = 0; break;
-				case SDLK_2: activeColorPalette = 1; break;
-				case SDLK_3: activeColorPalette = 2; break;
+				case SDLK_1: m_nextActiveColorPalette = 0; break;
+				case SDLK_2: m_nextActiveColorPalette = 1; break;
+				case SDLK_3: m_nextActiveColorPalette = 2; break;
 				default: break;
 				}
 
@@ -86,6 +86,7 @@ class PlatformSdl2 : public Platform {
 	void swapBuffers() override {
 		m_backBufferIndex = !m_backBufferIndex;
 		std::memset(getBackBuffer(), 0, sizeof(uint32_t) * FRAME_BUFFER_SIZE);
+		activeColorPalette = m_nextActiveColorPalette;
 	}
 
 	void showFrame() override {
@@ -119,6 +120,8 @@ class PlatformSdl2 : public Platform {
 	const uint32_t *getFrontBuffer() const { return m_buffers[m_backBufferIndex ? 0 : 1]; }
 	uint32_t *getFrontBuffer() { return m_buffers[m_backBufferIndex ? 0 : 1]; }
 	uint32_t *getBackBuffer() { return m_buffers[m_backBufferIndex ? 1 : 0]; }
+
+	uint8_t m_nextActiveColorPalette = activeColorPalette;
 
 	bool m_running = true;
 
