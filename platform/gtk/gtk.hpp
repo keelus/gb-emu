@@ -13,6 +13,7 @@
 #include "audio/ringbuffer.hpp"
 #include "config.hpp"
 #include "gameboy.hpp"
+#include "graphics/background_fifo.hpp"
 #include "joypad.hpp"
 #include "menu_bar/menu_bar.hpp"
 #include "platform.hpp"
@@ -69,6 +70,7 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	void swapBuffers() override {
 		std::memcpy(m_frontBuffer, m_backBuffer, sizeof(m_backBuffer));
 		std::memset(m_backBuffer, 0, sizeof(m_backBuffer));
+		activeColorPalette = m_nextActiveColorPalette;
 	}
 
 	static int audioCallback(const void *input, void *output, unsigned long framesPerBuffer,
@@ -138,9 +140,9 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 		Joypad::Key key;
 		switch(keyVal) {
-		case GDK_KEY_0: activeColorPalette = 0; return;
-		case GDK_KEY_1: activeColorPalette = 1; return;
-		case GDK_KEY_2: activeColorPalette = 2; return;
+		case GDK_KEY_0: m_nextActiveColorPalette = 0; return;
+		case GDK_KEY_1: m_nextActiveColorPalette = 1; return;
+		case GDK_KEY_2: m_nextActiveColorPalette = 2; return;
 		case GDK_KEY_Up: key = Joypad::Key::Up; break;
 		case GDK_KEY_Down: key = Joypad::Key::Down; break;
 		case GDK_KEY_Left: key = Joypad::Key::Left; break;
@@ -158,6 +160,8 @@ class PlatformGtk : public Platform, public Gtk::Window {
 			m_gameBoy->handleKeyup(key);
 		}
 	}
+
+	uint8_t m_nextActiveColorPalette = activeColorPalette;
 
 	bool m_running = true;
 
