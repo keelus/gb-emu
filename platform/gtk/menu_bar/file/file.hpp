@@ -20,6 +20,9 @@ class File {
 
   private:
 	void appendRomSection();
+	void appendSaveGameSection();
+	void appendDebugSection();
+	void appendExitSection();
 
 	Glib::RefPtr<Gio::Menu> m_menu = nullptr;
 
