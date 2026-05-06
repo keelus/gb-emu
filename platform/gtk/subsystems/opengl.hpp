@@ -15,8 +15,9 @@ class OpenGlSubsystem {
 	OpenGlSubsystem() {
 		m_glArea.set_size_request(Lcd::WIDTH, Lcd::HEIGHT);
 		m_glArea.set_required_version(3, 3);
-		m_glArea.signal_render().connect(sigc::mem_fun(*this, &OpenGlSubsystem::draw), false);
+		m_glArea.signal_render().connect(sigc::mem_fun(*this, &OpenGlSubsystem::render), false);
 		m_glArea.signal_realize().connect(sigc::mem_fun(*this, &OpenGlSubsystem::realize));
+		m_glArea.signal_resize().connect(sigc::mem_fun(*this, &OpenGlSubsystem::resize));
 		m_glArea.set_hexpand();
 		m_glArea.set_vexpand();
 	}
@@ -78,17 +79,38 @@ class OpenGlSubsystem {
 		m_initialized = true;
 	}
 
-	bool draw(const Glib::RefPtr<Gdk::GLContext> &context) {
+	void resize(int width, int height) {
+		if(width < 0) { width = 1; }
+		if(height < 0) { height = 1; }
+
+		float viewportAspect = float(width) / float(height);
+		float lcdAspect = float(Lcd::WIDTH) / float(Lcd::HEIGHT);
+
+		float scaleX, scaleY;
+		if(lcdAspect < viewportAspect) {
+			scaleX = lcdAspect / viewportAspect;
+			scaleY = 1.0f;
+		} else {
+			scaleX = 1.0f;
+			scaleY = viewportAspect / lcdAspect;
+		}
+
+		glUseProgram(m_shaderProgram);
+		GLint loc = glGetUniformLocation(m_shaderProgram, "u_aspect");
+		glUniform2f(loc, scaleX, scaleY);
+	}
+
+	bool render(const Glib::RefPtr<Gdk::GLContext> &context) {
 		if(!m_initialized) { return true; }
 
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(m_shaderProgram);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Lcd::WIDTH, Lcd::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, m_frontBuffer);
-
-		glUseProgram(m_shaderProgram);
 
 		glBindVertexArray(m_VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -116,12 +138,17 @@ class OpenGlSubsystem {
 										 "layout (location = 1) in vec3 aColor;\n"
 										 "layout (location = 2) in vec2 aTexCoord;\n"
 										 "\n"
+										 "uniform vec2 u_aspect;\n"
+										 "\n"
 										 "out vec3 ourColor;\n"
 										 "out vec2 TexCoord;\n"
 										 "\n"
 										 "void main()\n"
 										 "{\n"
-										 "    gl_Position = vec4(aPos, 1.0);\n"
+										 "    vec3 pos = aPos;\n"
+										 "    pos.x *= u_aspect.x;\n"
+										 "    pos.y *= u_aspect.y;\n"
+										 "    gl_Position = vec4(pos, 1.0);\n"
 										 "    ourColor = aColor;\n"
 										 "    TexCoord = aTexCoord;\n"
 										 "}\n";
