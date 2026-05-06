@@ -1,7 +1,9 @@
 find_package(PkgConfig REQUIRED)
+find_package(OpenGL REQUIRED)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-4.0)
 pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 pkg_check_modules(PORTAUDIO REQUIRED IMPORTED_TARGET portaudio-2.0)
+pkg_check_modules(GLEW REQUIRED IMPORTED_TARGET glew)
 
 file(GLOB_RECURSE sources *.cpp)
 add_executable(zirc-gtk ${sources})
@@ -9,6 +11,8 @@ target_link_libraries(zirc-gtk PRIVATE zirc-lib
     PkgConfig::GTKMM
     PkgConfig::FONTCONFIG
     PkgConfig::PORTAUDIO
+    OpenGL::GL
+    PkgConfig::GLEW
 )
 
 target_include_directories(zirc-gtk PUBLIC .)

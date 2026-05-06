@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GL/glew.h>
+#include <GL/gl.h>
 #include <chrono>
 #include <cstring>
 #include <gtkmm.h>
@@ -42,30 +44,6 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	void resetGameBoy();
 	void removeGameBoy();
 
-	void frameDrawCallback(const Cairo::RefPtr<Cairo::Context> &cr, int w, int h) {
-		m_surface->flush();
-
-		unsigned char *pixels = m_surface->get_data();
-		int stride = m_surface->get_stride();
-
-		m_surface->mark_dirty();
-
-		cr->set_source_rgb(0, 0, 0);
-		cr->paint();
-
-		double size = std::min(w, h);
-		double offsetX = (w - size) / 2.0;
-		double offsetY = (h - size) / 2.0;
-
-		cr->translate(offsetX, offsetY);
-		cr->scale(size / Lcd::WIDTH, size / Lcd::HEIGHT);
-
-		auto pattern = Cairo::SurfacePattern::create(m_surface);
-		pattern->set_filter(Cairo::SurfacePattern::Filter::NEAREST);
-		cr->set_source(pattern);
-		cr->paint();
-	}
-
 	void stop() { m_running = false; }
 	bool running() const override { return m_running; }
 
@@ -81,16 +59,16 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	}
 
 	void drawPixel(uint8_t x, uint8_t y, Color color) override {
-		char *px = m_backBuffer + y * m_surface->get_stride() + x * 4;
-		px[0] = color.blue();
+		GLubyte *px = m_backBuffer + (Lcd::HEIGHT - 1 - y) * Lcd::WIDTH * 3 + x * 3;
+		px[0] = color.red();
 		px[1] = color.green();
-		px[2] = color.red();
+		px[2] = color.blue();
 	}
 
-	void showFrame() override { m_drawingArea.queue_draw(); }
+	void showFrame() override { m_glArea.queue_render(); }
 	void swapBuffers() override {
-		std::memcpy(m_surface->get_data(), m_backBuffer, sizeof(unsigned char) * m_surface->get_stride() * Lcd::HEIGHT);
-		std::memset(m_backBuffer, 0, sizeof(unsigned char) * m_surface->get_stride() * Lcd::HEIGHT);
+		std::memcpy(m_frontBuffer, m_backBuffer, sizeof(m_backBuffer));
+		std::memset(m_backBuffer, 0, sizeof(m_backBuffer));
 	}
 
 	static int audioCallback(const void *input, void *output, unsigned long framesPerBuffer,
@@ -115,10 +93,28 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	void handleKeyPressed(guint keyVal) { handleKey(keyVal, true); }
 	void handleKeyReleased(guint keyVal) { handleKey(keyVal, false); }
 
+	bool glDraw(const Glib::RefPtr<Gdk::GLContext> &context) {
+		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Lcd::WIDTH, Lcd::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, m_frontBuffer);
+
+		glUseProgram(m_shaderProgram);
+
+		glBindVertexArray(m_VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		return true;
+	}
+
+	void realizeOpenGl();
+
   private:
 	const char *setupAudio();
 	void setupWindow();
-	void setupDrawingArea();
+	void setupOpenGl();
 	void setupKeyController();
 
 	bool tick() {
@@ -165,9 +161,25 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	bool m_running = true;
 
-	Gtk::DrawingArea m_drawingArea;
-	Cairo::RefPtr<Cairo::ImageSurface> m_surface;
-	char m_backBuffer[Lcd::WIDTH * Lcd::HEIGHT * 4];
+	Gtk::GLArea m_glArea;
+
+	unsigned int m_shaderProgram, m_VAO;
+	// clang-format off
+	float m_vertices[32] = {
+		-1.0f, 1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f,  -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+		1.0f,  1.0f,  0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+	};
+	unsigned int m_indices[6] = {
+	    0, 1, 2,
+		0, 2, 3
+	};
+	// clang-format on
+
+	unsigned int m_texture;
+	GLubyte m_backBuffer[Lcd::WIDTH * Lcd::HEIGHT * 3] = {0};
+	GLubyte m_frontBuffer[Lcd::WIDTH * Lcd::HEIGHT * 3] = {0};
 
 	PaStream *m_stream = nullptr;
 	bool m_audioPaused = true;

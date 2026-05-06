@@ -9,7 +9,7 @@ void PlatformGtk::addGameBoy(GameBoy *gameBoy, const std::string &romName) {
 
 	set_title("Zirc Emulator - " + romName);
 
-	m_drawingArea.set_visible();
+	m_glArea.set_visible();
 	m_noRomLabel.set_visible(false);
 }
 
@@ -27,7 +27,7 @@ void PlatformGtk::removeGameBoy() {
 	delete m_gameBoy;
 	m_gameBoy = nullptr;
 
-	m_drawingArea.set_visible(false);
+	m_glArea.set_visible(false);
 	m_noRomLabel.set_visible();
 
 	set_title("Zirc Emulator");

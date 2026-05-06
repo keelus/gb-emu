@@ -25,6 +25,8 @@
 					gtkmm4
 					portaudio
 					fontconfig
+					libGL
+					glew
 				];
 			};
 	};
