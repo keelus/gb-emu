@@ -8,6 +8,7 @@
 #include <gtkmm/error.h>
 #include <gtkmm/filedialog.h>
 #include <gtkmm/label.h>
+#include <gtkmm/object.h>
 #include <gtkmm/popovermenubar.h>
 
 #include "gtk.hpp"
@@ -109,10 +110,12 @@ void File::appendDebugSection() {
 
 void File::appendExitSection() {
 	auto exitSection = Gio::Menu::create();
+	exitSection->append("Preferences", "fileExit.preferences");
 	exitSection->append("Exit", "fileExit.exit");
 	m_menu->append_section({}, exitSection);
 
 	auto actionGroup = Gio::SimpleActionGroup::create();
+	actionGroup->add_action("preferences", [this]() { m_platform.requestOpenPreferencesWindow(); });
 	actionGroup->add_action("exit", [this]() { m_platform.close(); });
 	m_platform.insert_action_group("fileExit", actionGroup);
 }

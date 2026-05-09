@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <glibmm/main.h>
 #include <gtkmm.h>
 #include <gtkmm/window.h>
 #include <ratio>
@@ -12,6 +13,7 @@
 #include "joypad.hpp"
 #include "menu_bar/menu_bar.hpp"
 #include "platform.hpp"
+#include "preferences_window.hpp"
 #include "subsystems/opengl.hpp"
 #include "subsystems/portaudio.hpp"
 
@@ -57,6 +59,23 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	void handleKeyPressed(guint keyVal) { handleKey(keyVal, true); }
 	void handleKeyReleased(guint keyVal) { handleKey(keyVal, false); }
+
+	void requestOpenPreferencesWindow() {
+		if(m_preferencesWindow) {
+			std::cout << "Already opened" << std::endl;
+			return;
+		}
+
+		m_preferencesWindow = std::make_unique<PreferencesWindow>();
+		m_preferencesWindow->set_transient_for(*this);
+		m_preferencesWindow->signal_close_request().connect(
+			[this]() -> bool {
+				Glib::signal_idle().connect_once([this]() { m_preferencesWindow.reset(); });
+				return true;
+			},
+			false);
+		m_preferencesWindow->show();
+	}
 
   private:
 	void setupWindow();
@@ -116,4 +135,6 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	OpenGlSubsystem m_openGlSubsystem;
 	PortAudioSubsystem m_portAudioSubsystem;
+
+	std::shared_ptr<PreferencesWindow> m_preferencesWindow = nullptr;
 };
