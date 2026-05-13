@@ -66,7 +66,7 @@ class PlatformGtk : public Platform, public Gtk::Window {
 			return;
 		}
 
-		m_preferencesWindow = std::make_unique<PreferencesWindow>();
+		m_preferencesWindow = std::make_unique<PreferencesWindow>(*this);
 		m_preferencesWindow->set_transient_for(*this);
 		m_preferencesWindow->signal_close_request().connect(
 			[this]() -> bool {
@@ -75,6 +75,20 @@ class PlatformGtk : public Platform, public Gtk::Window {
 			},
 			false);
 		m_preferencesWindow->show();
+	}
+
+	void updateCustomBootRom() {
+		if(!m_gameBoy) { return; }
+		if(!Config::useCustomBootRom) {
+			m_gameBoy->disableCustomBootRom();
+			return;
+		}
+
+		try {
+			m_gameBoy->loadCustomBootRom(Config::customBootRomPath);
+		} catch(const std::runtime_error &e) {
+			std::cout << "[WARNING] The custom boot ROM file was not loaded: \"" << e.what() << "\"" << std::endl;
+		}
 	}
 
   private:

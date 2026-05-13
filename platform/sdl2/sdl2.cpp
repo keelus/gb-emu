@@ -2,6 +2,7 @@
 #include <cstdint>
 
 #include "sdl2.hpp"
+#include "config.hpp"
 
 uint8_t activeColorPalette = 0;
 
@@ -61,7 +62,6 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	const char *bootRomPath = NULL;
 	const char *romPath = NULL;
 
 	for(size_t i = 1; i < argc; i++) {
@@ -69,7 +69,8 @@ int main(int argc, char *argv[]) {
 
 		if(!strcmp(arg, "-b") || !strcmp(arg, "--boot-rom")) {
 			assert(i + 1 < argc && "There was no boot ROM provided after the argument.");
-			bootRomPath = argv[++i];
+			Config::useCustomBootRom = true;
+			Config::customBootRomPath = argv[++i];
 		} else if(!strcmp(arg, "-f") || !strcmp(arg, "--no-fps")) {
 			Config::limitFps = false;
 		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
@@ -92,7 +93,8 @@ int main(int argc, char *argv[]) {
 
 	PlatformSdl2 platform;
 
-	GameBoy gb(romPath, bootRomPath, platform);
+	GameBoy gb(romPath, platform);
+	if(Config::useCustomBootRom) { gb.loadCustomBootRom(Config::customBootRomPath); }
 	gb.debugCartridge();
 
 	platform.addGameBoy(&gb);

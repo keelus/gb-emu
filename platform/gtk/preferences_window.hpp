@@ -1,36 +1,39 @@
 #pragma once
 
 #include <gtkmm/box.h>
+#include <gtkmm/button.h>
+#include <gtkmm/checkbutton.h>
+#include <gtkmm/entry.h>
 #include <gtkmm/enums.h>
+#include <gtkmm/error.h>
+#include <gtkmm/filechooser.h>
+#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/filedialog.h>
 #include <gtkmm/image.h>
 #include <gtkmm/label.h>
 #include <gtkmm/listbox.h>
 #include <gtkmm/listboxrow.h>
 #include <gtkmm/object.h>
 #include <gtkmm/orientable.h>
+#include <gtkmm/separator.h>
 #include <gtkmm/stacksidebar.h>
 #include <gtkmm/stackswitcher.h>
+#include <gtkmm/text.h>
 #include <gtkmm/window.h>
+
+class PlatformGtk;
+
 class PreferencesWindow : public Gtk::Window {
   public:
-	PreferencesWindow() {
-		set_title("Preferences - Zirc Emulator");
-		set_default_size(512, 512);
+	PreferencesWindow(PlatformGtk &platform);
 
-		auto sideBar = Gtk::make_managed<Gtk::StackSidebar>();
-		auto stack = Gtk::make_managed<Gtk::Stack>();
+  private:
+	Gtk::CheckButton m_bootImageUseBuiltin, m_bootImageUseCustom;
 
-		Gtk::Label label{"Audio settings go here"};
-		auto page1 = stack->add(label, "audio", "Audio");
-		Gtk::Label label2{"Video settings go here"};
-		auto page2 = stack->add(label2, "video", "Video");
+	Gtk::Entry m_bootImageCustomTextField;
+	Gtk::Button m_bootImageCustomBrowseButton;
 
-		sideBar->set_stack(*stack);
+	Gtk::CheckButton m_skipBootCheckButton;
 
-		auto vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 5);
-		vbox->append(*sideBar);
-		vbox->append(*stack);
-
-		set_child(*vbox);
-	}
+	PlatformGtk &m_platform;
 };

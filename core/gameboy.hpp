@@ -10,13 +10,14 @@
 #include "graphics/ppu.hpp"
 #include "timer.hpp"
 #include <cstdint>
+#include <fstream>
 #include <memory>
 
 class GameBoy {
   public:
-	GameBoy(const std::string &cartridgePath, const char *bootRomPath, Platform &platform)
+	GameBoy(const std::string &cartridgePath, Platform &platform)
 		: m_apu(platform), m_cpu(m_bus), m_ppu(m_bus, m_lcd), m_lcd(platform), m_timer(m_bus) {
-		m_cartridge = Cartridge::createCartridge(cartridgePath, bootRomPath);
+		m_cartridge = Cartridge::createCartridge(cartridgePath);
 
 		m_bus.addApu(&m_apu);
 		m_bus.addCartridge(m_cartridge.get());
@@ -51,6 +52,24 @@ class GameBoy {
 
 		m_prevDiv = 0;
 	}
+
+	void loadCustomBootRom(const std::string &bootRomPath) {
+		std::ifstream bootRomFile(bootRomPath, std::ios::binary | std::ios::ate);
+		if(!bootRomFile) { throw std::runtime_error("Could not open the custom boot ROM file."); }
+
+		std::streamsize bootRomSize = bootRomFile.tellg();
+		if(bootRomSize != 256) { throw std::runtime_error("The boot ROM's size must be exactly 256 bytes long."); }
+
+		std::array<char, 256> bootRom;
+		bootRomFile.seekg(0, std::ios::beg);
+		if(!bootRomFile.read(bootRom.data(), 256)) {
+			throw std::runtime_error("Failed to read from the custom boot ROM file.");
+		}
+
+		m_cartridge->setCustomBootRom(bootRom.data());
+	}
+
+	void disableCustomBootRom() { m_cartridge->disableCustomBootRom(); }
 
 	static constexpr float FRAMES_PER_SECOND = 59.7f;
 	static constexpr float CYCLES_PER_FRAME = (Cpu::CLOCK_SPEED / FRAMES_PER_SECOND);

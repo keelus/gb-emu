@@ -18,10 +18,9 @@
 
 class NoMBC : public Cartridge {
   public:
-	NoMBC(const std::vector<uint8_t> cartridgeData, const char *customBootRom) : Cartridge(cartridgeData) {
+	NoMBC(const std::vector<uint8_t> cartridgeData) : Cartridge(cartridgeData) {
 		assert(type() == 0x00);
 		std::memcpy(m_rom, cartridgeData.data(), sizeof(uint8_t) * cartridgeData.size());
-		setCustomBootRom(customBootRom);
 	}
 
 	uint8_t read8(const uint16_t address) const override {

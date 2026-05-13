@@ -194,7 +194,7 @@ class Cartridge {
 			   "Cartridge: Header checksum is not valid.");
 	}
 
-	static std::unique_ptr<Cartridge> createCartridge(const std::string &path, const char *bootRomPath);
+	static std::unique_ptr<Cartridge> createCartridge(const std::string &path);
 
 	void debug(void) const {
 		std::cout << "== ROM DEBUG ==" << std::endl;
@@ -233,14 +233,11 @@ class Cartridge {
 	virtual void reset() { m_bootRomMapped = true; }
 
 	void setCustomBootRom(const char *customBootRom) {
-		if(!customBootRom) {
-			m_usingCustomBootRom = false;
-			return;
-		}
-
 		m_usingCustomBootRom = true;
 		std::memcpy(m_customBootRom.data(), customBootRom, sizeof(char) * 256);
 	}
+
+	void disableCustomBootRom() { m_usingCustomBootRom = false; }
 
   protected:
 	uint8_t read8BootRom(const uint16_t address) const {
