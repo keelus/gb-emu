@@ -41,7 +41,7 @@ void File::appendRomSection() {
 				auto file = dialog->open_finish(result);
 				romPath = std::filesystem::path(file->get_path());
 
-				gameBoy = new GameBoy(romPath, m_platform);
+				gameBoy = new GameBoy(romPath, nullptr, m_platform);
 			} catch(const Gtk::DialogError &e) {
 
 			} catch(const std::runtime_error &e) {

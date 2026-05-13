@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -193,7 +194,7 @@ class Cartridge {
 			   "Cartridge: Header checksum is not valid.");
 	}
 
-	static std::unique_ptr<Cartridge> createCartridge(const std::string &path);
+	static std::unique_ptr<Cartridge> createCartridge(const std::string &path, const char *bootRomPath);
 
 	void debug(void) const {
 		std::cout << "== ROM DEBUG ==" << std::endl;
@@ -231,6 +232,21 @@ class Cartridge {
 
 	virtual void reset() { m_bootRomMapped = true; }
 
+	void setCustomBootRom(const char *customBootRom) {
+		if(!customBootRom) {
+			m_usingCustomBootRom = false;
+			return;
+		}
+
+		m_usingCustomBootRom = true;
+		std::memcpy(m_customBootRom.data(), customBootRom, sizeof(char) * 256);
+	}
+
+  protected:
+	uint8_t read8BootRom(const uint16_t address) const {
+		return m_usingCustomBootRom ? m_customBootRom[address] : BOOT_ROM[address];
+	}
+
   private:
 	static uint8_t calculateHeaderChecksum(const std::vector<uint8_t> cartridgeData) {
 		uint8_t checksum = 0;
@@ -257,5 +273,7 @@ class Cartridge {
 	bool m_cgbFlag;
 	bool m_sgbFlag;
 
+	bool m_usingCustomBootRom = false;
+	std::array<char, 256> m_customBootRom;
 	bool m_bootRomMapped;
 };

@@ -51,7 +51,7 @@ const std::unordered_map<RamType, uint8_t> RAM_BANK_AMOUNT = {
 
 class MBC1 : public Cartridge {
   public:
-	MBC1(const std::vector<uint8_t> cartridgeData) : Cartridge(cartridgeData) {
+	MBC1(const std::vector<uint8_t> cartridgeData, const char *customBootRom) : Cartridge(cartridgeData) {
 		uint16_t romBankAmount = ROM_BANK_AMOUNT.at(romType());
 		uint8_t ramBankAmount = RAM_BANK_AMOUNT.at(ramType());
 
@@ -79,11 +79,13 @@ class MBC1 : public Cartridge {
 				memset(m_ramBanks[ramBankIndex].data(), 0, sizeof(uint8_t) * RAM_BANK_SIZE);
 			}
 		}
+
+		setCustomBootRom(customBootRom);
 	}
 
 	uint8_t read8(const uint16_t address) const override {
 		if(IN_RANGE(address, 0x0000, 0x3FFF)) {
-			if(isBootRomMapped() && address <= 0x100) { return BOOT_ROM[address]; }
+			if(isBootRomMapped() && address <= 0x100) { return read8BootRom(address); }
 			return m_romBanks.at(0).at(address);
 		}
 

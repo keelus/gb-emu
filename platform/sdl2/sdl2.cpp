@@ -47,6 +47,7 @@ PlatformSdl2::PlatformSdl2() {
 void printUsage(const char *argv0, const bool isHelpMessage) {
 	std::cout << "Usage: " << argv0 << " [options] <ROM path>" << std::endl;
 	std::cout << "Options:" << std::endl;
+	std::cout << "\t -b, --boot-rom\t\tPath to a custom boot ROM" << std::endl;
 	std::cout << "\t -s, --serial\t\tEnable serial output" << std::endl;
 	std::cout << "\t -f, --no-fps\t\tDisable 59.70fps limit" << std::endl;
 	std::cout << "\t -d, --debug\t\tEnable debug output" << std::endl;
@@ -60,13 +61,15 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	const char *bootRomPath = NULL;
 	const char *romPath = NULL;
 
 	for(size_t i = 1; i < argc; i++) {
 		const char *arg = argv[i];
 
-		if(!strcmp(arg, "-s") || !strcmp(arg, "--serial")) {
-			Config::serialOutput = true;
+		if(!strcmp(arg, "-b") || !strcmp(arg, "--boot-rom")) {
+			assert(i + 1 < argc && "There was no boot ROM provided after the argument.");
+			bootRomPath = argv[++i];
 		} else if(!strcmp(arg, "-f") || !strcmp(arg, "--no-fps")) {
 			Config::limitFps = false;
 		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
@@ -89,7 +92,7 @@ int main(int argc, char *argv[]) {
 
 	PlatformSdl2 platform;
 
-	GameBoy gb(romPath, platform);
+	GameBoy gb(romPath, bootRomPath, platform);
 	gb.debugCartridge();
 
 	platform.addGameBoy(&gb);

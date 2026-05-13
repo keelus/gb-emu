@@ -14,9 +14,9 @@
 
 class GameBoy {
   public:
-	GameBoy(const std::string &cartridgePath, Platform &platform)
+	GameBoy(const std::string &cartridgePath, const char *bootRomPath, Platform &platform)
 		: m_apu(platform), m_cpu(m_bus), m_ppu(m_bus, m_lcd), m_lcd(platform), m_timer(m_bus) {
-		m_cartridge = Cartridge::createCartridge(cartridgePath);
+		m_cartridge = Cartridge::createCartridge(cartridgePath, bootRomPath);
 
 		m_bus.addApu(&m_apu);
 		m_bus.addCartridge(m_cartridge.get());
