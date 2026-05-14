@@ -4,13 +4,12 @@
 #include <portaudio.h>
 
 #include "audio/ringbuffer.hpp"
+#include "backends/audio/audio_backend.hpp"
 #include "utils.hpp"
 
-class PortAudioSubsystem {
+class AudioBackendPortAudio : public AudioBackend {
   public:
-	PortAudioSubsystem() {
-		std::cout << "PortAudioSubsystem constructor running." << std::endl;
-
+	void initialize() override {
 		PaError err = Pa_Initialize();
 		if(err != paNoError) {
 			m_initializationError = Pa_GetErrorText(err);
@@ -22,7 +21,7 @@ class PortAudioSubsystem {
 			return;
 		}
 
-		err = Pa_OpenDefaultStream(&m_stream, 0, 1, paFloat32, AUDIO_SAMPLE_RATE, AUDIO_SAMPLE_AMOUNT, audioCallback,
+		err = Pa_OpenDefaultStream(&m_stream, 0, 1, paFloat32, audioSampleRate(), audioSampleAmount(), audioCallback,
 								   this);
 		if(err != paNoError) {
 			m_stream = nullptr;
@@ -55,7 +54,7 @@ class PortAudioSubsystem {
 		m_initialized = true;
 	}
 
-	~PortAudioSubsystem() {
+	~AudioBackendPortAudio() override {
 		if(!m_initialized) { return; }
 
 		Pa_StopStream(m_stream);
@@ -67,7 +66,7 @@ class PortAudioSubsystem {
 	static int audioCallback(const void *input, void *output, unsigned long framesPerBuffer,
 							 const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags,
 							 void *userData) {
-		PortAudioSubsystem *audioSubsystem = static_cast<PortAudioSubsystem *>(userData);
+		AudioBackendPortAudio *audioSubsystem = static_cast<AudioBackendPortAudio *>(userData);
 		float *buffer = (float *)output;
 
 		for(size_t i = 0; i < framesPerBuffer; i++) {
@@ -79,20 +78,18 @@ class PortAudioSubsystem {
 		return paContinue;
 	}
 
-	void pushSample(float sample) { m_audioSampleBuffer.pushSample(sample); }
+	void pushSample(float sample) override { m_audioSampleBuffer.pushSample(sample); }
 
-	void reset() {
+	void restart() override {
 		m_audioPaused = true;
 		m_audioSampleBuffer.reset();
 	}
 
-	void pause() { m_audioPaused = true; }
-	void unPause() { m_audioPaused = false; }
+	bool isPaused() override { return m_audioPaused; }
+	void pause() override { m_audioPaused = true; }
+	void unPause() override { m_audioPaused = false; }
 
-	bool initialized() const { return m_initialized; }
-
-	float audioSampleRate() const { return AUDIO_SAMPLE_RATE; }
-	size_t audioSampleAmount() const { return AUDIO_SAMPLE_AMOUNT; }
+	bool initialized() const override { return m_initialized; }
 
   private:
 	bool m_initialized = false;
@@ -101,6 +98,4 @@ class PortAudioSubsystem {
 	PaStream *m_stream = nullptr;
 	bool m_audioPaused = true;
 	AudioRingBuffer<4096> m_audioSampleBuffer;
-	static constexpr float AUDIO_SAMPLE_RATE = 44100.0;
-	static constexpr size_t AUDIO_SAMPLE_AMOUNT = 1024;
 };

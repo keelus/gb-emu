@@ -38,4 +38,5 @@ class PreferencesWindow : public Gtk::Window {
 
 	PlatformGtk &m_platform;
 	Gtk::DropDown m_videoBackendDropdown;
+	Gtk::DropDown m_audioBackendDropdown;
 };

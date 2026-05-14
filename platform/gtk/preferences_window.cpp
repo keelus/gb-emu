@@ -12,23 +12,39 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 	auto sideBar = Gtk::make_managed<Gtk::StackSidebar>();
 	auto stack = Gtk::make_managed<Gtk::Stack>();
 
-	Gtk::Label label{"Audio settings go here"};
-	auto page1 = stack->add(label, "audio", "Audio");
+	Gtk::Box audioPanel;
+	audioPanel.set_hexpand();
+	audioPanel.set_vexpand();
+	audioPanel.set_orientation(Gtk::Orientation::VERTICAL);
 
-	Gtk::Box videoPanel;
-	videoPanel.set_hexpand();
-	videoPanel.set_vexpand();
-	videoPanel.set_orientation(Gtk::Orientation::VERTICAL);
+	{
+		std::vector<Glib::ustring> strings{"PortAudio", "SDL2"};
+		auto options = Gtk::StringList::create(strings);
+		m_audioBackendDropdown.set_model(options);
+		audioPanel.append(m_audioBackendDropdown);
+		m_audioBackendDropdown.property_selected().signal_changed().connect([this]() {
+			Config::gtkAudioBackend = m_audioBackendDropdown.get_selected();
+			m_platform.reloadAudioBackend();
+		});
+		auto page2 = stack->add(audioPanel, "audio", "Audio");
+	}
 
-	std::vector<Glib::ustring> strings{"OpenGL", "GTK (software)"};
-	auto options = Gtk::StringList::create(strings);
-	m_videoBackendDropdown.set_model(options);
-	videoPanel.append(m_videoBackendDropdown);
-	m_videoBackendDropdown.property_selected().signal_changed().connect([this]() {
-		Config::gtkVideoBackend = m_videoBackendDropdown.get_selected();
-		m_platform.reloadVideoBackend();
-	});
-	auto page2 = stack->add(videoPanel, "video", "Video");
+	{
+		Gtk::Box videoPanel;
+		videoPanel.set_hexpand();
+		videoPanel.set_vexpand();
+		videoPanel.set_orientation(Gtk::Orientation::VERTICAL);
+
+		std::vector<Glib::ustring> strings{"OpenGL", "GTK (software)"};
+		auto options = Gtk::StringList::create(strings);
+		m_videoBackendDropdown.set_model(options);
+		videoPanel.append(m_videoBackendDropdown);
+		m_videoBackendDropdown.property_selected().signal_changed().connect([this]() {
+			Config::gtkVideoBackend = m_videoBackendDropdown.get_selected();
+			m_platform.reloadVideoBackend();
+		});
+		auto page2 = stack->add(videoPanel, "video", "Video");
+	}
 
 	Gtk::Box bootPanel;
 	bootPanel.set_hexpand();

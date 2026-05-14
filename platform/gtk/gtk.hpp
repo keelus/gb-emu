@@ -9,9 +9,12 @@
 #include <stdexcept>
 #include <thread>
 
-#include "backends/video/video_backend.hpp"
+#include "backends/audio/audio_backend.hpp"
+#include "backends/audio/portaudio.hpp"
+#include "backends/audio/sdl2.hpp"
 #include "backends/video/opengl.hpp"
 #include "backends/video/software.hpp"
+#include "backends/video/video_backend.hpp"
 #include "config.hpp"
 #include "gameboy.hpp"
 #include "graphics/background_fifo.hpp"
@@ -19,7 +22,6 @@
 #include "menu_bar/menu_bar.hpp"
 #include "platform.hpp"
 #include "preferences_window.hpp"
-#include "subsystems/portaudio.hpp"
 
 class PlatformGtk : public Platform, public Gtk::Window {
   public:
@@ -27,6 +29,7 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		setupWindow();
 		reloadVideoBackend();
 		m_videoBackend->setVisible(false);
+		reloadAudioBackend();
 	}
 
 	~PlatformGtk() {}
@@ -53,6 +56,25 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		m_contentBox.append(*m_videoBackend->getGtkWidget());
 	}
 
+	void reloadAudioBackend() {
+		bool wasPaused = false;
+		if(m_audioBackend) {
+			wasPaused = m_audioBackend->isPaused();
+			m_audioBackend.reset();
+		}
+
+		if(Config::gtkAudioBackend == 0) {
+			m_audioBackend = std::make_unique<AudioBackendPortAudio>();
+		} else if(Config::gtkAudioBackend == 1) {
+			m_audioBackend = std::make_unique<AudioBackendSdl2>();
+		} else {
+			throw std::runtime_error("Unknown audio backend.");
+		}
+
+		m_audioBackend->initialize();
+		if(!wasPaused) { m_audioBackend->unPause(); }
+	}
+
 	void stop() { m_running = false; }
 	bool running() const override { return m_running; }
 
@@ -77,11 +99,11 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	}
 
 	float getAudioAmplitude() const override { return 1.0; }
-	float getAudioSampleRate() const override { return m_portAudioSubsystem.audioSampleRate(); }
-	void pushAudioSample(float sample) override { m_portAudioSubsystem.pushSample(sample); }
-	void muteAudio() override { m_portAudioSubsystem.pause(); }
-	void unmuteAudio() override { m_portAudioSubsystem.unPause(); }
-	void resetAudio() { m_portAudioSubsystem.reset(); }
+	float getAudioSampleRate() const override { return m_audioBackend->audioSampleRate(); }
+	void pushAudioSample(float sample) override { m_audioBackend->pushSample(sample); }
+	void muteAudio() override { m_audioBackend->pause(); }
+	void unmuteAudio() override { m_audioBackend->unPause(); }
+	void resetAudio() { m_audioBackend->restart(); }
 
 	void handleKeyPressed(guint keyVal) { handleKey(keyVal, true); }
 	void handleKeyReleased(guint keyVal) { handleKey(keyVal, false); }
@@ -175,7 +197,7 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	Gtk::Box m_contentBox;
 
 	std::unique_ptr<VideoBackend> m_videoBackend = nullptr;
-	PortAudioSubsystem m_portAudioSubsystem;
+	std::unique_ptr<AudioBackend> m_audioBackend = nullptr;
 
 	std::shared_ptr<PreferencesWindow> m_preferencesWindow = nullptr;
 };
