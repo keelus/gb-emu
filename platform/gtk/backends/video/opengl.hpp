@@ -3,26 +3,27 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <cstring>
-#include <gtkmm/alertdialog.h>
 #include <gtkmm/glarea.h>
 #include <iostream>
 
+#include "backends/video/video_backend.hpp"
+#include "common.hpp"
 #include "graphics/lcd.hpp"
 #include "utils.hpp"
 
-class OpenGlSubsystem {
+class VideoBackendOpenGl : public VideoBackend {
   public:
-	OpenGlSubsystem() {
+	void initialize() override {
 		m_glArea.set_size_request(Lcd::WIDTH, Lcd::HEIGHT);
 		m_glArea.set_required_version(3, 3);
-		m_glArea.signal_render().connect(sigc::mem_fun(*this, &OpenGlSubsystem::render), false);
-		m_glArea.signal_realize().connect(sigc::mem_fun(*this, &OpenGlSubsystem::realize));
-		m_glArea.signal_resize().connect(sigc::mem_fun(*this, &OpenGlSubsystem::resize));
+		m_glArea.signal_render().connect(sigc::mem_fun(*this, &VideoBackendOpenGl::render), false);
+		m_glArea.signal_realize().connect(sigc::mem_fun(*this, &VideoBackendOpenGl::realize));
+		m_glArea.signal_resize().connect(sigc::mem_fun(*this, &VideoBackendOpenGl::resize));
 		m_glArea.set_hexpand();
 		m_glArea.set_vexpand();
 	}
 
-	~OpenGlSubsystem() {
+	~VideoBackendOpenGl() {
 		if(!m_initialized) { return; }
 
 		if(m_texture) {
@@ -51,6 +52,65 @@ class OpenGlSubsystem {
 		}
 	}
 
+	void queueRender() override { m_glArea.queue_render(); }
+
+	void swapBuffers() override {
+		std::memcpy(m_frontBuffer, m_backBuffer, sizeof(m_backBuffer));
+		std::memset(m_backBuffer, 0, sizeof(m_backBuffer));
+	}
+
+	void setVisible(bool visible) override { m_glArea.set_visible(visible); }
+
+	Gtk::GLArea *getGtkWidget() override { return &m_glArea; }
+
+	void drawPixel(uint8_t x, uint8_t y, Color color) override {
+		GLubyte *px = m_backBuffer + (Lcd::HEIGHT - 1 - y) * Lcd::WIDTH * 3 + x * 3;
+		px[0] = color.red();
+		px[1] = color.green();
+		px[2] = color.blue();
+	}
+
+  private:
+	void resize(int width, int height) {
+		if(width < 0) { width = 1; }
+		if(height < 0) { height = 1; }
+
+		float viewportAspect = float(width) / float(height);
+		float lcdAspect = float(Lcd::WIDTH) / float(Lcd::HEIGHT);
+
+		float scaleX, scaleY;
+		if(lcdAspect < viewportAspect) {
+			scaleX = lcdAspect / viewportAspect;
+			scaleY = 1.0f;
+		} else {
+			scaleX = 1.0f;
+			scaleY = viewportAspect / lcdAspect;
+		}
+
+		glUseProgram(m_shaderProgram);
+		GLint loc = glGetUniformLocation(m_shaderProgram, "u_aspect");
+		glUniform2f(loc, scaleX, scaleY);
+	}
+
+
+	bool render(const Glib::RefPtr<Gdk::GLContext> &context) {
+		if(!m_initialized) { return true; }
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(m_shaderProgram);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Lcd::WIDTH, Lcd::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, m_frontBuffer);
+
+		glBindVertexArray(m_VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		return true;
+	}
+
 	void realize() {
 		m_glArea.make_current();
 		try {
@@ -77,59 +137,6 @@ class OpenGlSubsystem {
 		setupTexture();
 
 		m_initialized = true;
-	}
-
-	void resize(int width, int height) {
-		if(width < 0) { width = 1; }
-		if(height < 0) { height = 1; }
-
-		float viewportAspect = float(width) / float(height);
-		float lcdAspect = float(Lcd::WIDTH) / float(Lcd::HEIGHT);
-
-		float scaleX, scaleY;
-		if(lcdAspect < viewportAspect) {
-			scaleX = lcdAspect / viewportAspect;
-			scaleY = 1.0f;
-		} else {
-			scaleX = 1.0f;
-			scaleY = viewportAspect / lcdAspect;
-		}
-
-		glUseProgram(m_shaderProgram);
-		GLint loc = glGetUniformLocation(m_shaderProgram, "u_aspect");
-		glUniform2f(loc, scaleX, scaleY);
-	}
-
-	bool render(const Glib::RefPtr<Gdk::GLContext> &context) {
-		if(!m_initialized) { return true; }
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glUseProgram(m_shaderProgram);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Lcd::WIDTH, Lcd::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, m_frontBuffer);
-
-		glBindVertexArray(m_VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		return true;
-	}
-
-	void drawPixel(uint8_t x, uint8_t y, Color color) {
-		GLubyte *px = m_backBuffer + (Lcd::HEIGHT - 1 - y) * Lcd::WIDTH * 3 + x * 3;
-		px[0] = color.red();
-		px[1] = color.green();
-		px[2] = color.blue();
-	}
-
-	void queueRender() { m_glArea.queue_render(); }
-
-	void swapBuffers() {
-		std::memcpy(m_frontBuffer, m_backBuffer, sizeof(m_backBuffer));
-		std::memset(m_backBuffer, 0, sizeof(m_backBuffer));
 	}
 
 	void setupShaders() {
@@ -228,11 +235,6 @@ class OpenGlSubsystem {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
-	Gtk::GLArea *getGlArea() { return &m_glArea; }
-
-	bool initialized() const { return m_initialized; }
-
-  private:
 	Gtk::GLArea m_glArea;
 
 	GLuint m_VAO = 0, m_VBO = 0, m_EBO = 0;

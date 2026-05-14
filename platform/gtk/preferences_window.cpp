@@ -1,6 +1,9 @@
 
 #include "config.hpp"
 #include "gtk.hpp"
+#include <giomm/listmodel.h>
+#include <gtkmm/dropdown.h>
+#include <gtkmm/stringlist.h>
 
 PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platform) {
 	set_title("Preferences - Zirc Emulator");
@@ -11,8 +14,21 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 
 	Gtk::Label label{"Audio settings go here"};
 	auto page1 = stack->add(label, "audio", "Audio");
-	Gtk::Label label2{"Video settings go here"};
-	auto page2 = stack->add(label2, "video", "Video");
+
+	Gtk::Box videoPanel;
+	videoPanel.set_hexpand();
+	videoPanel.set_vexpand();
+	videoPanel.set_orientation(Gtk::Orientation::VERTICAL);
+
+	std::vector<Glib::ustring> strings{"OpenGL", "GTK (software)"};
+	auto options = Gtk::StringList::create(strings);
+	m_videoBackendDropdown.set_model(options);
+	videoPanel.append(m_videoBackendDropdown);
+	m_videoBackendDropdown.property_selected().signal_changed().connect([this]() {
+		Config::gtkVideoBackend = m_videoBackendDropdown.get_selected();
+		m_platform.reloadVideoBackend();
+	});
+	auto page2 = stack->add(videoPanel, "video", "Video");
 
 	Gtk::Box bootPanel;
 	bootPanel.set_hexpand();

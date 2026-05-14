@@ -6,16 +6,12 @@ void PlatformGtk::setupWindow() {
 
 	setupKeyController();
 
-	Gtk::Box box;
-	set_child(box);
-	box.set_orientation(Gtk::Orientation::VERTICAL);
+	set_child(m_contentBox);
+	m_contentBox.set_orientation(Gtk::Orientation::VERTICAL);
 
-	box.append(*m_menuBar.getMenuBar());
+	m_contentBox.append(*m_menuBar.getMenuBar());
 
-	box.append(*m_openGlSubsystem.getGlArea());
-	m_openGlSubsystem.getGlArea()->set_visible(false);
-
-	box.append(m_noRomLabel);
+	m_contentBox.append(m_noRomLabel);
 	m_noRomLabel.set_hexpand();
 	m_noRomLabel.set_vexpand();
 
@@ -46,7 +42,7 @@ void PlatformGtk::addGameBoy(GameBoy *gameBoy, const std::string &romName) {
 
 	set_title("Zirc Emulator - " + romName);
 
-	m_openGlSubsystem.getGlArea()->set_visible();
+	m_videoBackend->setVisible(true);
 	m_noRomLabel.set_visible(false);
 }
 
@@ -64,7 +60,7 @@ void PlatformGtk::removeGameBoy() {
 	delete m_gameBoy;
 	m_gameBoy = nullptr;
 
-	m_openGlSubsystem.getGlArea()->set_visible(false);
+	m_videoBackend->setVisible(false);
 	m_noRomLabel.set_visible();
 
 	set_title("Zirc Emulator");

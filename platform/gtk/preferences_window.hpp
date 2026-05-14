@@ -3,6 +3,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/button.h>
 #include <gtkmm/checkbutton.h>
+#include <gtkmm/dropdown.h>
 #include <gtkmm/entry.h>
 #include <gtkmm/enums.h>
 #include <gtkmm/error.h>
@@ -36,4 +37,5 @@ class PreferencesWindow : public Gtk::Window {
 	Gtk::CheckButton m_skipBootCheckButton;
 
 	PlatformGtk &m_platform;
+	Gtk::DropDown m_videoBackendDropdown;
 };

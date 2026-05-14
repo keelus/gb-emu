@@ -4,9 +4,14 @@
 #include <glibmm/main.h>
 #include <gtkmm.h>
 #include <gtkmm/window.h>
+#include <memory>
 #include <ratio>
+#include <stdexcept>
 #include <thread>
 
+#include "backends/video/video_backend.hpp"
+#include "backends/video/opengl.hpp"
+#include "backends/video/software.hpp"
 #include "config.hpp"
 #include "gameboy.hpp"
 #include "graphics/background_fifo.hpp"
@@ -14,18 +19,39 @@
 #include "menu_bar/menu_bar.hpp"
 #include "platform.hpp"
 #include "preferences_window.hpp"
-#include "subsystems/opengl.hpp"
 #include "subsystems/portaudio.hpp"
 
 class PlatformGtk : public Platform, public Gtk::Window {
   public:
-	PlatformGtk(int argc, char *argv[]) : m_menuBar(*this) { setupWindow(); }
+	PlatformGtk(int argc, char *argv[]) : m_menuBar(*this) {
+		setupWindow();
+		reloadVideoBackend();
+		m_videoBackend->setVisible(false);
+	}
 
 	~PlatformGtk() {}
 
 	void addGameBoy(GameBoy *gameBoy, const std::string &romName);
 	void resetGameBoy();
 	void removeGameBoy();
+
+	void reloadVideoBackend() {
+		if(m_videoBackend) {
+			m_contentBox.remove(*m_videoBackend->getGtkWidget());
+			m_videoBackend.reset();
+		}
+
+		if(Config::gtkVideoBackend == 0) {
+			m_videoBackend = std::make_unique<VideoBackendOpenGl>();
+		} else if(Config::gtkVideoBackend == 1) {
+			m_videoBackend = std::make_unique<VideoBackendSoftware>();
+		} else {
+			throw std::runtime_error("Unknown video backend.");
+		}
+
+		m_videoBackend->initialize();
+		m_contentBox.append(*m_videoBackend->getGtkWidget());
+	}
 
 	void stop() { m_running = false; }
 	bool running() const override { return m_running; }
@@ -41,12 +67,12 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		}
 	}
 
-	void drawPixel(uint8_t x, uint8_t y, Color color) override { m_openGlSubsystem.drawPixel(x, y, color); }
+	void drawPixel(uint8_t x, uint8_t y, Color color) override { m_videoBackend->drawPixel(x, y, color); }
 
-	void showFrame() override { m_openGlSubsystem.queueRender(); }
+	void showFrame() override { m_videoBackend->queueRender(); }
 
 	void swapBuffers() override {
-		m_openGlSubsystem.swapBuffers();
+		m_videoBackend->swapBuffers();
 		activeColorPalette = m_nextActiveColorPalette;
 	}
 
@@ -146,8 +172,9 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	GameBoy *m_gameBoy = nullptr;
 
 	GtkMenuBar::MenuBar m_menuBar;
+	Gtk::Box m_contentBox;
 
-	OpenGlSubsystem m_openGlSubsystem;
+	std::unique_ptr<VideoBackend> m_videoBackend = nullptr;
 	PortAudioSubsystem m_portAudioSubsystem;
 
 	std::shared_ptr<PreferencesWindow> m_preferencesWindow = nullptr;
