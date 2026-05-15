@@ -1,5 +1,5 @@
 
-#include <core/config.hpp>
+#include <zirc/config.hpp>
 #include "gtk.hpp"
 #include <giomm/listmodel.h>
 #include <gtkmm/dropdown.h>

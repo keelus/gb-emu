@@ -6,11 +6,11 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <core/audio/ringbuffer.hpp>
-#include <core/config.hpp>
-#include <core/gameboy.hpp>
-#include <core/joypad.hpp>
-#include <core/platform.hpp>
+#include <zirc/audio/ringbuffer.hpp>
+#include <zirc/config.hpp>
+#include <zirc/gameboy.hpp>
+#include <zirc/joypad.hpp>
+#include <zirc/platform.hpp>
 
 #define SCALE 5
 #define FRAME_BUFFER_SIZE (Lcd::WIDTH * Lcd::HEIGHT)

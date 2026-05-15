@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <gtkmm/widget.h>
-#include <core/common.hpp>
+#include <zirc/common.hpp>
 
 class VideoBackend {
   public:
