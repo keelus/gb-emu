@@ -7,8 +7,8 @@
 #include <iostream>
 
 #include "backends/video/video_backend.hpp"
-#include "common.hpp"
-#include "graphics/lcd.hpp"
+#include <core/common.hpp>
+#include <core/graphics/lcd.hpp>
 #include "utils.hpp"
 
 class VideoBackendOpenGl : public VideoBackend {

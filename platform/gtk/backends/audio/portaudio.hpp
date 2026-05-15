@@ -3,7 +3,7 @@
 #include <iostream>
 #include <portaudio.h>
 
-#include "audio/ringbuffer.hpp"
+#include <core/audio/ringbuffer.hpp>
 #include "backends/audio/audio_backend.hpp"
 #include "utils.hpp"
 

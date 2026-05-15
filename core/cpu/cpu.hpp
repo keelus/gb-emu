@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "alu.hpp"
-#include "bus.hpp"
+#include "../bus.hpp"
 
 class Cpu {
   public:

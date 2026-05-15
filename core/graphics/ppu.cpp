@@ -4,10 +4,10 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include "common.hpp"
-#include "graphics/background_fifo.hpp"
-#include "graphics/lcd.hpp"
-#include "graphics/sprite_fifo.hpp"
+#include "../common.hpp"
+#include "background_fifo.hpp"
+#include "lcd.hpp"
+#include "sprite_fifo.hpp"
 #include "ppu.hpp"
 
 Color colorPalettes[3][4] = {

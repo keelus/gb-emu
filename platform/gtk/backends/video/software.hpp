@@ -4,7 +4,7 @@
 #include <gtkmm/drawingarea.h>
 
 #include "backends/video/video_backend.hpp"
-#include "graphics/lcd.hpp"
+#include <core/graphics/lcd.hpp>
 
 class VideoBackendSoftware : public VideoBackend {
   public:

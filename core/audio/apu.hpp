@@ -4,8 +4,8 @@
 #include "channel2.hpp"
 #include "channel3.hpp"
 #include "channel4.hpp"
-#include "platform.hpp"
-#include "common.hpp"
+#include "../platform.hpp"
+#include "../common.hpp"
 #include <cassert>
 #include <cstdint>
 #include <iostream>

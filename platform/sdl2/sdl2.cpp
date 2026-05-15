@@ -2,7 +2,7 @@
 #include <cstdint>
 
 #include "sdl2.hpp"
-#include "config.hpp"
+#include <core/config.hpp>
 
 uint8_t activeColorPalette = 0;
 

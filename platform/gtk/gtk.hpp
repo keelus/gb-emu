@@ -15,12 +15,12 @@
 #include "backends/video/opengl.hpp"
 #include "backends/video/software.hpp"
 #include "backends/video/video_backend.hpp"
-#include "config.hpp"
-#include "gameboy.hpp"
-#include "graphics/background_fifo.hpp"
-#include "joypad.hpp"
+#include <core/config.hpp>
+#include <core/gameboy.hpp>
+#include <core/graphics/background_fifo.hpp>
+#include <core/joypad.hpp>
 #include "menu_bar/menu_bar.hpp"
-#include "platform.hpp"
+#include <core/platform.hpp>
 #include "preferences_window.hpp"
 
 class PlatformGtk : public Platform, public Gtk::Window {

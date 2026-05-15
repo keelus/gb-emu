@@ -1,6 +1,6 @@
 #include "cartridge.hpp"
-#include "cartridge/no_mbc.hpp"
-#include "cartridge/mbc1.hpp"
+#include "no_mbc.hpp"
+#include "mbc1.hpp"
 #include <fstream>
 #include <iomanip>
 #include <ios>

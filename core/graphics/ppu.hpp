@@ -1,9 +1,9 @@
 #pragma once
 
 #include "background_fifo.hpp"
-#include "bus.hpp"
-#include "graphics/lcd.hpp"
-#include "graphics/sprite_fifo.hpp"
+#include "../bus.hpp"
+#include "lcd.hpp"
+#include "sprite_fifo.hpp"
 #include <cstdint>
 #include <cstring>
 

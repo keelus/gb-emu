@@ -1,5 +1,5 @@
 
-#include "config.hpp"
+#include <core/config.hpp>
 #include "gtk.hpp"
 #include <giomm/listmodel.h>
 #include <gtkmm/dropdown.h>

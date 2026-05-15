@@ -1,7 +1,7 @@
 #pragma once
 
-#include "bus.hpp"
-#include "graphics/lcd.hpp"
+#include "../bus.hpp"
+#include "lcd.hpp"
 #include <cassert>
 #include <cstdint>
 #include <optional>

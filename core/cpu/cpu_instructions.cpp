@@ -1,5 +1,5 @@
 #include <array>
-#include "config.hpp"
+#include "../config.hpp"
 #include "cpu.hpp"
 #include <cassert>
 #include <cstdint>

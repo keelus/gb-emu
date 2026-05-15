@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <sys/types.h>
 
-#include "platform.hpp"
+#include "../platform.hpp"
 
 class Lcd {
   public:

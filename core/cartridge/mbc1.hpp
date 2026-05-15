@@ -1,5 +1,5 @@
 #include "cartridge.hpp"
-#include "common.hpp"
+#include "../common.hpp"
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
