@@ -3,8 +3,8 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "memory.hpp"
 #include "common.hpp"
+#include "memory.hpp"
 
 uint8_t Memory::read8(const uint16_t address) const {
 	if(IN_RANGE(address, 0xC000, 0xDFFF)) {

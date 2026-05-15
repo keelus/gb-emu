@@ -1,11 +1,12 @@
 #include <array>
-#include "../config.hpp"
-#include "cpu.hpp"
 #include <cstdint>
 #include <iomanip>
 #include <ios>
 #include <iostream>
 #include <sstream>
+
+#include "../config.hpp"
+#include "cpu.hpp"
 
 // Useful to visually see the OPCODE-MNEMONIC/CYCLE
 #define OP(op, data) data

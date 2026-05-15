@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cstdint>
+
 #include "audio/apu.hpp"
 #include "cartridge/cartridge.hpp"
+#include "joypad.hpp"
 #include "memory.hpp"
 #include "timer.hpp"
-#include "joypad.hpp"
-#include <cstdint>
-#include <cstring>
 
 #define IO_MEM_SIZE 128
 

@@ -1,14 +1,15 @@
 #pragma once
 
+#include <cassert>
+#include <cstdint>
+#include <iostream>
+
+#include "../common.hpp"
+#include "../platform.hpp"
 #include "channel1.hpp"
 #include "channel2.hpp"
 #include "channel3.hpp"
 #include "channel4.hpp"
-#include "../platform.hpp"
-#include "../common.hpp"
-#include <cassert>
-#include <cstdint>
-#include <iostream>
 
 #define APU_RATE (1 << 20)
 

@@ -2,7 +2,6 @@
 
 #include "cartridge.hpp"
 #include "../common.hpp"
-#include <array>
 #include <cassert>
 #include <cstdint>
 #include <cstring>

@@ -1,7 +1,8 @@
-#include "gameboy.hpp"
-#include "cpu/cpu.hpp"
 #include <cstdint>
 #include <stdexcept>
+
+#include "cpu/cpu.hpp"
+#include "gameboy.hpp"
 
 void GameBoy::start(void) {
 	if(m_cartridge->type() != 0) { throw std::runtime_error("\"ROM only\" cartridges are supported.\n"); }

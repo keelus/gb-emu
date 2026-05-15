@@ -1,10 +1,11 @@
-#include "cartridge.hpp"
-#include "../common.hpp"
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+
+#include "../common.hpp"
+#include "cartridge.hpp"
 
 // clang-format off
 const std::unordered_map<RomType, uint16_t> ROM_BANK_AMOUNT = {

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <bitset>
 #include <cstdint>
 
-#include "alu.hpp"
 #include "../bus.hpp"
+#include "alu.hpp"
 
 class Cpu {
   public:

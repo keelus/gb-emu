@@ -1,12 +1,13 @@
 #pragma once
 
-#include "lfsr.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+
+#include "lfsr.hpp"
 
 class Channel4 {
   public:

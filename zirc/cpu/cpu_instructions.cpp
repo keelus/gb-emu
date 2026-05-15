@@ -1,6 +1,4 @@
 #include <array>
-#include "../config.hpp"
-#include "cpu.hpp"
 #include <cassert>
 #include <cstdint>
 #include <iomanip>
@@ -8,6 +6,9 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+#include "../config.hpp"
+#include "cpu.hpp"
 
 // Useful to visually see the OPCODE-MNEMONIC/CYCLE
 #define OP(op, data) data

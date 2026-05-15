@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../bus.hpp"
-#include "lcd.hpp"
 #include <cassert>
 #include <cstdint>
-#include <optional>
 #include <deque>
+#include <optional>
+
+#include "../bus.hpp"
+#include "lcd.hpp"
 
 extern uint8_t activeColorPalette;
 extern Color colorPalettes[3][4];

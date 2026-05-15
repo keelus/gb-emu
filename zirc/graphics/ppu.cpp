@@ -7,8 +7,8 @@
 #include "../common.hpp"
 #include "background_fifo.hpp"
 #include "lcd.hpp"
-#include "sprite_fifo.hpp"
 #include "ppu.hpp"
+#include "sprite_fifo.hpp"
 
 Color colorPalettes[3][4] = {
 	{

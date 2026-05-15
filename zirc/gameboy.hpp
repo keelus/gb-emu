@@ -1,17 +1,18 @@
 #pragma once
 
+#include <cstdint>
+#include <fstream>
+#include <memory>
+
 #include "audio/apu.hpp"
 #include "bus.hpp"
 #include "cartridge/cartridge.hpp"
 #include "cpu/cpu.hpp"
 #include "graphics/lcd.hpp"
+#include "graphics/ppu.hpp"
 #include "joypad.hpp"
 #include "memory.hpp"
-#include "graphics/ppu.hpp"
 #include "timer.hpp"
-#include <cstdint>
-#include <fstream>
-#include <memory>
 
 class GameBoy {
   public:

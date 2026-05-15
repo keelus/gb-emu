@@ -1,15 +1,16 @@
-#include "bus.hpp"
-#include "cartridge/cartridge.hpp"
-#include "config.hpp"
-#include "cpu/cpu.hpp"
-#include "common.hpp"
-#include "graphics/ppu.hpp"
 #include <cstdint>
 #include <immintrin.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+#include "bus.hpp"
+#include "cartridge/cartridge.hpp"
+#include "common.hpp"
+#include "config.hpp"
+#include "cpu/cpu.hpp"
+#include "graphics/ppu.hpp"
 
 #define IS_CARTRIDGE(address) (IN_RANGE(address, 0x0000, 0x7FFF) || IN_RANGE(address, 0xA000, 0xBFFF))
 #define IS_PPU(address) (IN_RANGE(address, 0x8000, 0x9FFF) || IN_RANGE(address, 0xFE00, 0xFE9F))

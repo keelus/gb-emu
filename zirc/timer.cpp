@@ -1,6 +1,7 @@
-#include "timer.hpp"
-#include "bus.hpp"
 #include <cstdint>
+
+#include "bus.hpp"
+#include "timer.hpp"
 
 void Timer::tickOne() {
 	m_clk++;

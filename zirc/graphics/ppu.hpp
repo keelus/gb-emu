@@ -1,11 +1,12 @@
 #pragma once
 
-#include "background_fifo.hpp"
-#include "../bus.hpp"
-#include "lcd.hpp"
-#include "sprite_fifo.hpp"
 #include <cstdint>
 #include <cstring>
+
+#include "../bus.hpp"
+#include "background_fifo.hpp"
+#include "lcd.hpp"
+#include "sprite_fifo.hpp"
 
 #define PPU_VRAM_SIZE 8192
 #define PPU_OAM_SIZE 160
