@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstdint>
 #include <deque>
-#include <optional>
 
 #include "../bus.hpp"
 #include "lcd.hpp"
@@ -111,8 +110,8 @@ class SpriteFifo {
 		bool isTransparent;
 	};
 
-	std::optional<SpritePixel> pop() {
-		if(m_pixels.empty()) { return std::nullopt; }
+	bool pop(SpritePixel &spritePixel) {
+		if(m_pixels.empty()) { return false; }
 
 		Pixel px = m_pixels.front();
 		m_pixels.pop_front();
@@ -120,8 +119,11 @@ class SpriteFifo {
 		const uint8_t palette = (m_spriteAttrs & 0x10) ? m_bus.read8(0xFF49) : m_bus.read8(0xFF48);
 		uint8_t shade = (palette >> (px.color * 2)) & 0b11;
 
-		return (SpritePixel){
-			.color = colorPalettes[activeColorPalette][shade], .behindBg = px.behindBg, .isTransparent = px.color == 0};
+		spritePixel.color = colorPalettes[activeColorPalette][shade];
+		spritePixel.behindBg = px.behindBg;
+		spritePixel.isTransparent = px.color == 0;
+
+		return true;
 	}
 
 	void getTileHLine(uint8_t &byte0, uint8_t &byte1) const {

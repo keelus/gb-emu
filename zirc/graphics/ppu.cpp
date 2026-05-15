@@ -120,14 +120,16 @@ void Ppu::tickDot() {
 			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx, m_wy, m_wx, m_wly);
 		}
 
-		std::optional<BackgroundFifo::BgPixel> bgPx = m_backgroundFifo.pop();
-		if(bgPx.has_value()) {
-			std::optional<SpriteFifo::SpritePixel> spritePx = m_spriteFifo.pop();
+		BackgroundFifo::BgPixel bgPx;
+		bool poppedBgPx = m_backgroundFifo.pop(bgPx);
+		if(poppedBgPx) {
+			SpriteFifo::SpritePixel spritePx;
+			bool poppedSpritePx = m_spriteFifo.pop(spritePx);
 
-			if(!spritePx.has_value() || spritePx->isTransparent || (spritePx->behindBg && !bgPx->isTransparent)) {
-				m_lcd.drawPixel(m_ly, bgPx->color);
+			if(!poppedSpritePx || spritePx.isTransparent || (spritePx.behindBg && !bgPx.isTransparent)) {
+				m_lcd.drawPixel(m_ly, bgPx.color);
 			} else {
-				m_lcd.drawPixel(m_ly, spritePx->color);
+				m_lcd.drawPixel(m_ly, spritePx.color);
 			}
 		}
 

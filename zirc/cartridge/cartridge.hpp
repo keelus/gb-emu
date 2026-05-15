@@ -11,7 +11,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -59,7 +58,7 @@ enum class RamType {
 };
 
 // clang-format off
-const std::unordered_map<uint8_t, std::string_view> CARTRIDGE_TYPES = {
+const std::unordered_map<uint8_t, const char *> CARTRIDGE_TYPES = {
 	{0x00,                       "ROM ONLY"},
 	{0x01,                           "MBC1"},
 	{0x02,                       "MBC1+RAM"},
@@ -92,7 +91,7 @@ const std::unordered_map<uint8_t, std::string_view> CARTRIDGE_TYPES = {
 
 #define CARTRIDGE_ROM_TYPE_OFFSET 0x148
 
-const std::unordered_map<RomType, std::string_view> ROM_TYPES = {
+const std::unordered_map<RomType, const char *> ROM_TYPES = {
 	{RomType::Banks2,   "32 KiB [2 ROM banks (no-baking)]"},
 	{RomType::Banks4,               "64 KiB [4 ROM banks]"},
 	{RomType::Banks8,              "128 KiB [8 ROM banks]"},
@@ -109,7 +108,7 @@ const std::unordered_map<RomType, std::string_view> ROM_TYPES = {
 
 #define CARTRIDGE_RAM_TYPE_OFFSET 0x149
 
-const std::unordered_map<RamType, std::string_view> RAM_TYPES = {
+const std::unordered_map<RamType, const char *> RAM_TYPES = {
 	{RamType::NoRam,            "0 [No RAM]"},
 	{RamType::Banks1,       "8 KiB [1 bank]"},
 	{RamType::Banks4,     "32 KiB [4 banks]"},

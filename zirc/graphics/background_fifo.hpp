@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <deque>
-#include <optional>
 
 #include "../bus.hpp"
 #include "lcd.hpp"
@@ -117,8 +116,8 @@ class BackgroundFifo {
 		bool isTransparent;
 	};
 
-	std::optional<BgPixel> pop() {
-		if(m_pixels.empty() || m_lcd.screenX() >= Lcd::WIDTH) { return std::nullopt; }
+	bool pop(BgPixel &bgPixel) {
+		if(m_pixels.empty() || m_lcd.screenX() >= Lcd::WIDTH) { return false; }
 
 		Pixel px = m_pixels.front();
 		m_pixels.pop_front();
@@ -129,10 +128,11 @@ class BackgroundFifo {
 		if(m_firstCopyPixelsRemaining == 0) {
 			if(m_pixelsOddDiscardRemaining == 0) {
 				m_pixelsRendered++;
-				return (BgPixel){
-					.color = colorPalettes[activeColorPalette][shade],
-					.isTransparent = px.color == 0,
-				};
+
+				bgPixel.color = colorPalettes[activeColorPalette][shade];
+				bgPixel.isTransparent = px.color == 0;
+
+				return true;
 			} else {
 				m_pixelsOddDiscardRemaining--;
 			}
@@ -141,7 +141,7 @@ class BackgroundFifo {
 			m_xFetch = 0;
 		}
 
-		return std::nullopt;
+		return false;
 	}
 
 	void getTileHLine(uint16_t tileMapIndex, uint8_t offset, uint8_t &byte0, uint8_t &byte1,
