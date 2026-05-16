@@ -11,7 +11,6 @@ void printUsage(const char *argv0, const bool isHelpMessage) {
 	std::cout << "Options:" << std::endl;
 	std::cout << "\t -b, --boot-rom\t\tPath to a custom boot ROM" << std::endl;
 	std::cout << "\t -s, --serial\t\tEnable serial output" << std::endl;
-	std::cout << "\t -f, --no-fps\t\tDisable 59.70fps limit" << std::endl;
 	std::cout << "\t -d, --debug\t\tEnable debug output" << std::endl;
 	std::cout << "\t -i, --skip-intro\tSkip boot intro" << std::endl;
 	std::cout << "\t -h, --help\t\tShow " << (isHelpMessage ? "this" : "the") << " help message and exit" << std::endl;
@@ -38,17 +37,15 @@ int main(int argc, char *argv[]) {
 
 		if(!strcmp(arg, "-b") || !strcmp(arg, "--boot-rom")) {
 			assert(i + 1 < argc && "There was no boot ROM provided after the argument.");
-			Config::useCustomBootRom = true;
-			Config::customBootRomPath = argv[++i];
-		} else if(!strcmp(arg, "-f") || !strcmp(arg, "--no-fps")) {
-			Config::limitFps = false;
+			Config::get().useCustomBootRom = true;
+			Config::get().customBootRomPath = argv[++i];
 		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
-			Config::debugOutput = true;
+			Config::get().debugOutput = true;
 		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
 			printUsage(argv[0], true);
 			return EXIT_SUCCESS;
 		} else if(!strcmp(arg, "-i") || !strcmp(arg, "--skip-intro")) {
-			Config::skipIntro = true;
+			Config::get().skipIntro = true;
 		} else {
 			romPath = arg;
 		}
@@ -65,12 +62,12 @@ int main(int argc, char *argv[]) {
 	PlatformHeadless platform;
 
 	GameBoy gb(romPath, platform);
-	if(Config::useCustomBootRom) { gb.loadCustomBootRom(Config::customBootRomPath); }
+	if(Config::get().useCustomBootRom) { gb.loadCustomBootRom(Config::get().customBootRomPath); }
 	gb.debugCartridge();
 
 	platform.addGameBoy(&gb);
 
-	while(Config::skipIntro && !gb.introEnded()) {
+	while(Config::get().skipIntro && !gb.introEnded()) {
 		gb.tick();
 	}
 

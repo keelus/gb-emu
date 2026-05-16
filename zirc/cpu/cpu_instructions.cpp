@@ -536,7 +536,7 @@ constexpr std::array<uint8_t, 256> CPU_INSTRUCTION_CYCLES = {
 uint8_t Cpu::executeInstruction(void) {
 	if(m_halted) { return 4; } // TODO
 	uint8_t opcode = m_bus.read8(m_PC++);
-	if(opcode != 0xCB && Config::debugOutput) {
+	if(opcode != 0xCB && Config::get().debugOutput) {
 		std::cout << "Got instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
 				  << " at PC = 0x " << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 1) << ": \""
 				  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;

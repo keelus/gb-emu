@@ -1,4 +1,7 @@
+#pragma once
+
 #include <gtkmm/popovermenubar.h>
+
 #include "file/file.hpp"
 
 class PlatformGtk;

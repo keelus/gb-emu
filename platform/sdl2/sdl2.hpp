@@ -19,7 +19,7 @@ extern uint8_t activeColorPalette;
 
 class PlatformSdl2 : public Platform {
   public:
-	PlatformSdl2();
+	PlatformSdl2(bool limitFps);
 	~PlatformSdl2() {
 		if(m_texture) { SDL_DestroyTexture(m_texture); }
 		if(m_renderer) { SDL_DestroyRenderer(m_renderer); }
@@ -77,7 +77,7 @@ class PlatformSdl2 : public Platform {
 	}
 
 	void afterFrame() override {
-		if(Config::limitFps) {
+		if(m_limitFps) {
 			Uint32 frameMs = SDL_GetTicks() - m_frameStart;
 			if(frameMs < GameBoy::MS_PER_FRAME) { SDL_Delay(GameBoy::MS_PER_FRAME - frameMs); }
 		}
@@ -126,6 +126,7 @@ class PlatformSdl2 : public Platform {
 	bool m_running = true;
 
 	Uint32 m_frameStart = 0;
+	bool m_limitFps = false;
 
 	uint32_t m_buffers[2][FRAME_BUFFER_SIZE] = {0};
 	uint32_t m_backBufferIndex = 0;

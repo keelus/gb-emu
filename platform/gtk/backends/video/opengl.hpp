@@ -5,10 +5,10 @@
 #include <cstring>
 #include <gtkmm/glarea.h>
 #include <iostream>
-
-#include "backends/video/video_backend.hpp"
 #include <zirc/common.hpp>
 #include <zirc/graphics/lcd.hpp>
+
+#include "backends/video/video_backend.hpp"
 #include "utils.hpp"
 
 class VideoBackendOpenGl : public VideoBackend {

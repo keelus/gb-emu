@@ -1,9 +1,10 @@
 
-#include <zirc/config.hpp>
-#include "gtk.hpp"
 #include <giomm/listmodel.h>
 #include <gtkmm/dropdown.h>
 #include <gtkmm/stringlist.h>
+#include <zirc/config.hpp>
+
+#include "gtk.hpp"
 
 PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platform) {
 	set_title("Preferences - Zirc Emulator");
@@ -23,7 +24,7 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 		m_audioBackendDropdown.set_model(options);
 		audioPanel.append(m_audioBackendDropdown);
 		m_audioBackendDropdown.property_selected().signal_changed().connect([this]() {
-			Config::gtkAudioBackend = m_audioBackendDropdown.get_selected();
+			GtkConfig::get().audioBackend = m_audioBackendDropdown.get_selected();
 			m_platform.reloadAudioBackend();
 		});
 		auto page2 = stack->add(audioPanel, "audio", "Audio");
@@ -40,7 +41,7 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 		m_videoBackendDropdown.set_model(options);
 		videoPanel.append(m_videoBackendDropdown);
 		m_videoBackendDropdown.property_selected().signal_changed().connect([this]() {
-			Config::gtkVideoBackend = m_videoBackendDropdown.get_selected();
+			GtkConfig::get().videoBackend = m_videoBackendDropdown.get_selected();
 			m_platform.reloadVideoBackend();
 		});
 		auto page2 = stack->add(videoPanel, "video", "Video");
@@ -55,18 +56,18 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 	bootPanel.append(bootImageTitle);
 
 	m_bootImageUseBuiltin.set_label("Use builtin boot image.");
-	m_bootImageUseBuiltin.set_active(!Config::useCustomBootRom);
+	m_bootImageUseBuiltin.set_active(!Config::get().useCustomBootRom);
 
 	m_bootImageUseCustom.set_label("Use custom boot image (if file is found and valid).");
-	m_bootImageUseCustom.set_active(Config::useCustomBootRom);
+	m_bootImageUseCustom.set_active(Config::get().useCustomBootRom);
 	m_bootImageUseCustom.set_group(m_bootImageUseBuiltin);
 
 	m_bootImageUseBuiltin.signal_toggled().connect([this]() {
-		Config::useCustomBootRom = !m_bootImageUseBuiltin.get_active();
+		Config::get().useCustomBootRom = !m_bootImageUseBuiltin.get_active();
 		m_platform.updateCustomBootRom();
 
-		m_bootImageCustomBrowseButton.set_sensitive(Config::useCustomBootRom);
-		m_bootImageCustomTextField.set_editable(Config::useCustomBootRom);
+		m_bootImageCustomBrowseButton.set_sensitive(Config::get().useCustomBootRom);
+		m_bootImageCustomTextField.set_editable(Config::get().useCustomBootRom);
 	});
 
 	bootPanel.append(m_bootImageUseBuiltin);
@@ -77,22 +78,22 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 	customFileBox.set_margin_end(5);
 	customFileBox.set_margin_bottom(5);
 
-	m_bootImageCustomTextField.set_editable(Config::useCustomBootRom);
+	m_bootImageCustomTextField.set_editable(Config::get().useCustomBootRom);
 	m_bootImageCustomTextField.set_hexpand();
 	m_bootImageCustomTextField.set_margin_end(5);
-	m_bootImageCustomTextField.set_text(Config::customBootRomPath);
+	m_bootImageCustomTextField.set_text(Config::get().customBootRomPath);
 	customFileBox.append(m_bootImageCustomTextField);
 
 	m_bootImageCustomBrowseButton.set_label("Browse");
-	m_bootImageCustomBrowseButton.set_sensitive(Config::useCustomBootRom);
+	m_bootImageCustomBrowseButton.set_sensitive(Config::get().useCustomBootRom);
 	m_bootImageCustomBrowseButton.signal_clicked().connect([this]() {
 		auto fileChooser = Gtk::FileDialog::create();
 		fileChooser->set_modal();
 		fileChooser->open(*this, [this, fileChooser](Glib::RefPtr<Gio::AsyncResult> &result) {
 			try {
 				auto file = fileChooser->open_finish(result);
-				Config::customBootRomPath = file->get_path();
-				m_bootImageCustomTextField.set_text(Config::customBootRomPath);
+				Config::get().customBootRomPath = file->get_path();
+				m_bootImageCustomTextField.set_text(Config::get().customBootRomPath);
 				m_platform.updateCustomBootRom();
 			} catch(const Gtk::DialogError &e) { std::cout << "FileDialog error: " << e.what() << std::endl; }
 		});
@@ -104,10 +105,10 @@ PreferencesWindow::PreferencesWindow(PlatformGtk &platform) : m_platform(platfor
 	Gtk::Separator sep;
 	bootPanel.append(sep);
 
-	m_skipBootCheckButton.set_active(Config::skipIntro);
+	m_skipBootCheckButton.set_active(Config::get().skipIntro);
 	m_skipBootCheckButton.set_label("Skip boot intro");
 	m_skipBootCheckButton.signal_toggled().connect(
-		[this]() { Config::skipIntro = m_skipBootCheckButton.get_active(); });
+		[this]() { Config::get().skipIntro = m_skipBootCheckButton.get_active(); });
 	bootPanel.append(m_skipBootCheckButton);
 
 	auto page3 = stack->add(bootPanel, "boot", "Boot");

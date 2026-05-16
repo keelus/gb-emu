@@ -8,6 +8,11 @@
 #include <ratio>
 #include <stdexcept>
 #include <thread>
+#include <zirc/config.hpp>
+#include <zirc/gameboy.hpp>
+#include <zirc/graphics/background_fifo.hpp>
+#include <zirc/joypad.hpp>
+#include <zirc/platform.hpp>
 
 #include "backends/audio/audio_backend.hpp"
 #include "backends/audio/portaudio.hpp"
@@ -15,12 +20,8 @@
 #include "backends/video/opengl.hpp"
 #include "backends/video/software.hpp"
 #include "backends/video/video_backend.hpp"
-#include <zirc/config.hpp>
-#include <zirc/gameboy.hpp>
-#include <zirc/graphics/background_fifo.hpp>
-#include <zirc/joypad.hpp>
+#include "gtk_config.hpp"
 #include "menu_bar/menu_bar.hpp"
-#include <zirc/platform.hpp>
 #include "preferences_window.hpp"
 
 class PlatformGtk : public Platform, public Gtk::Window {
@@ -44,9 +45,9 @@ class PlatformGtk : public Platform, public Gtk::Window {
 			m_videoBackend.reset();
 		}
 
-		if(Config::gtkVideoBackend == 0) {
+		if(GtkConfig::get().videoBackend == 0) {
 			m_videoBackend = std::make_unique<VideoBackendOpenGl>();
-		} else if(Config::gtkVideoBackend == 1) {
+		} else if(GtkConfig::get().videoBackend == 1) {
 			m_videoBackend = std::make_unique<VideoBackendSoftware>();
 		} else {
 			throw std::runtime_error("Unknown video backend.");
@@ -63,9 +64,9 @@ class PlatformGtk : public Platform, public Gtk::Window {
 			m_audioBackend.reset();
 		}
 
-		if(Config::gtkAudioBackend == 0) {
+		if(GtkConfig::get().audioBackend == 0) {
 			m_audioBackend = std::make_unique<AudioBackendPortAudio>();
-		} else if(Config::gtkAudioBackend == 1) {
+		} else if(GtkConfig::get().audioBackend == 1) {
 			m_audioBackend = std::make_unique<AudioBackendSdl2>();
 		} else {
 			throw std::runtime_error("Unknown audio backend.");
@@ -127,13 +128,13 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	void updateCustomBootRom() {
 		if(!m_gameBoy) { return; }
-		if(!Config::useCustomBootRom) {
+		if(!Config::get().useCustomBootRom) {
 			m_gameBoy->disableCustomBootRom();
 			return;
 		}
 
 		try {
-			m_gameBoy->loadCustomBootRom(Config::customBootRomPath);
+			m_gameBoy->loadCustomBootRom(Config::get().customBootRomPath);
 		} catch(const std::runtime_error &e) {
 			std::cout << "[WARNING] The custom boot ROM file was not loaded: \"" << e.what() << "\"" << std::endl;
 		}
@@ -146,7 +147,7 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	bool tick() {
 		if(!m_gameBoy) { return true; }
 
-		while(Config::skipIntro && !m_gameBoy->introEnded()) {
+		while(Config::get().skipIntro && !m_gameBoy->introEnded()) {
 			m_gameBoy->tick();
 		}
 

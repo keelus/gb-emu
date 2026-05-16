@@ -533,7 +533,7 @@ constexpr std::array<uint8_t, 256> CPU_CB_INSTRUCTION_CYCLES = {
 
 uint8_t Cpu::executeCbInstruction(void) {
 	uint8_t opcode = m_bus.read8(m_PC++);
-	if(Config::debugOutput) {
+	if(Config::get().debugOutput) {
 		std::cout << "Got prefixed instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)
 				  << " at PC=0x" << std::hex << std::setw(4) << std::setfill('0') << int(m_PC - 2) << ": \""
 				  << CPU_CB_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;

@@ -38,6 +38,7 @@ class PlatformHeadless : public Platform {
 	uint8_t m_nextActiveColorPalette = activeColorPalette;
 
 	bool m_running = true;
+	bool m_limitFps = true;
 
 	static constexpr float AUDIO_SAMPLE_RATE = 44100.0;
 	static constexpr size_t AUDIO_SAMPLE_AMOUNT = 1024;

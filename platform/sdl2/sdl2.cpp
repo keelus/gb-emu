@@ -6,7 +6,7 @@
 
 uint8_t activeColorPalette = 0;
 
-PlatformSdl2::PlatformSdl2() {
+PlatformSdl2::PlatformSdl2(bool limitFps) : m_limitFps(limitFps) {
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
 		std::cerr << "Platform[SDL2]: SDL_Init error: " << SDL_GetError() << std::endl;
 		exit(1);
@@ -63,23 +63,24 @@ int main(int argc, char *argv[]) {
 	}
 
 	const char *romPath = NULL;
+	bool limitFps = true;
 
 	for(size_t i = 1; i < argc; i++) {
 		const char *arg = argv[i];
 
 		if(!strcmp(arg, "-b") || !strcmp(arg, "--boot-rom")) {
 			assert(i + 1 < argc && "There was no boot ROM provided after the argument.");
-			Config::useCustomBootRom = true;
-			Config::customBootRomPath = argv[++i];
+			Config::get().useCustomBootRom = true;
+			Config::get().customBootRomPath = argv[++i];
 		} else if(!strcmp(arg, "-f") || !strcmp(arg, "--no-fps")) {
-			Config::limitFps = false;
+			limitFps = false;
 		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
-			Config::debugOutput = true;
+			Config::get().debugOutput = true;
 		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
 			printUsage(argv[0], true);
 			return EXIT_SUCCESS;
 		} else if(!strcmp(arg, "-i") || !strcmp(arg, "--skip-intro")) {
-			Config::skipIntro = true;
+			Config::get().skipIntro = true;
 		} else {
 			romPath = arg;
 		}
@@ -91,15 +92,15 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	PlatformSdl2 platform;
+	PlatformSdl2 platform(limitFps);
 
 	GameBoy gb(romPath, platform);
-	if(Config::useCustomBootRom) { gb.loadCustomBootRom(Config::customBootRomPath); }
+	if(Config::get().useCustomBootRom) { gb.loadCustomBootRom(Config::get().customBootRomPath); }
 	gb.debugCartridge();
 
 	platform.addGameBoy(&gb);
 
-	while(Config::skipIntro && !gb.introEnded()) {
+	while(Config::get().skipIntro && !gb.introEnded()) {
 		gb.tick();
 	}
 

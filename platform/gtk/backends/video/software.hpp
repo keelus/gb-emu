@@ -2,9 +2,9 @@
 
 #include <cstring>
 #include <gtkmm/drawingarea.h>
+#include <zirc/graphics/lcd.hpp>
 
 #include "backends/video/video_backend.hpp"
-#include <zirc/graphics/lcd.hpp>
 
 class VideoBackendSoftware : public VideoBackend {
   public:

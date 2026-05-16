@@ -272,7 +272,7 @@ void Bus::ioWrite8(const uint16_t address, const uint8_t value) {
 
 	/* Serial transfers */
 	case 0xFF01:
-		if(Config::serialOutput) { std::cout << uint8_t(value); }
+		if(Config::get().serialOutput) { std::cout << uint8_t(value); }
 		break;
 	case 0xFF02: break;
 

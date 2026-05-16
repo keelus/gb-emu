@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <portaudio.h>
-
 #include <zirc/audio/ringbuffer.hpp>
+
 #include "backends/audio/audio_backend.hpp"
 #include "utils.hpp"
 

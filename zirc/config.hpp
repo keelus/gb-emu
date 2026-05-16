@@ -1,16 +1,24 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 
-namespace Config {
-extern bool limitFps;
-extern bool debugOutput;
-extern bool serialOutput;
-extern bool skipIntro;
+class Config {
+  public:
+	Config(Config &) = delete;
+	void operator=(const Config &) = delete;
 
-extern bool useCustomBootRom;
-extern std::string customBootRomPath;
-extern uint8_t gtkVideoBackend; // 0 -> OpenGL, 1 -> GTK/software
-extern uint8_t gtkAudioBackend; // 0 -> PortAudio, 1 -> SDL2
+	static Config &get() {
+		static Config config;
+		return config;
+	}
+
+	bool debugOutput = false;
+	bool serialOutput = false;
+	bool skipIntro = false;
+
+	bool useCustomBootRom = false;
+	std::string customBootRomPath{""};
+
+  private:
+	Config() = default;
 }; // namespace Config
