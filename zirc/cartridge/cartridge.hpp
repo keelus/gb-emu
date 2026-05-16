@@ -192,6 +192,8 @@ class Cartridge {
 			   "Cartridge: Header checksum is not valid.");
 	}
 
+	virtual ~Cartridge() = default;
+
 	static std::unique_ptr<Cartridge> createCartridge(const std::string &path);
 
 	void debug(void) const {
