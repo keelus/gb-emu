@@ -36,6 +36,6 @@ template <std::size_t Size> class AudioRingBuffer {
 
   private:
 	float m_buffer[Size];
-	std::atomic<size_t> m_head = 0;
-	std::atomic<size_t> m_tail = 0;
+	std::atomic<size_t> m_head{0};
+	std::atomic<size_t> m_tail{0};
 };

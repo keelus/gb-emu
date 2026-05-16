@@ -61,6 +61,6 @@ class NoMBC : public Cartridge {
 	}
 
   private:
-	char m_rom[CARTRIDGE_ROM_SIZE];
-	char m_ram[CARTRIDGE_RAM_SIZE];
+	uint8_t m_rom[CARTRIDGE_ROM_SIZE];
+	uint8_t m_ram[CARTRIDGE_RAM_SIZE];
 };

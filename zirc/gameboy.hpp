@@ -17,7 +17,7 @@
 class GameBoy {
   public:
 	GameBoy(const std::string &cartridgePath, Platform &platform)
-		: m_apu(platform), m_cpu(m_bus), m_ppu(m_bus, m_lcd), m_lcd(platform), m_timer(m_bus) {
+		: m_apu(platform), m_cpu(m_bus), m_lcd(platform), m_ppu(m_bus, m_lcd), m_timer(m_bus) {
 		m_cartridge = Cartridge::createCartridge(cartridgePath);
 
 		m_bus.addApu(&m_apu);
@@ -67,7 +67,7 @@ class GameBoy {
 			throw std::runtime_error("Failed to read from the custom boot ROM file.");
 		}
 
-		m_cartridge->setCustomBootRom(bootRom.data());
+		m_cartridge->setCustomBootRom(reinterpret_cast<uint8_t *>(bootRom.data()));
 	}
 
 	void disableCustomBootRom() { m_cartridge->disableCustomBootRom(); }

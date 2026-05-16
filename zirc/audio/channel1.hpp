@@ -74,17 +74,17 @@ class Channel1 {
 			m_periodSweepAcc++;
 			if(m_periodSweepAcc > getPace()) {
 				m_periodSweepAcc = 0;
-				uint8_t finalStep = getPeriod() / powf(2, getIndividualStep());
+				uint16_t finalStep = getPeriod() / static_cast<uint16_t>(powf(2, getIndividualStep()));
 				bool overflows = false;
 				if(getPeriodDirection() == 0 && getPeriod() < 0x7FF) {
-					int newPeriod = getPeriod() + finalStep;
+					uint16_t newPeriod = getPeriod() + finalStep;
 					if(newPeriod > 0x7FF) {
 						overflows = true;
 					} else {
 						setPeriod(newPeriod);
 					}
 				} else if(getPeriodDirection() != 0 && getPeriod() > 0) {
-					int newPeriod = (getPeriod() - finalStep);
+					uint16_t newPeriod = (getPeriod() - finalStep);
 					if(newPeriod > 0x7FF) {
 						overflows = true;
 					} else {
@@ -104,9 +104,9 @@ class Channel1 {
 		if(!m_isOn) { return; }
 
 		double freq = getFrequency();
-		if(freq > sampleRate / 2.0) { freq = sampleRate / 2.0; }
+		if(freq > static_cast<double>(sampleRate) / 2.0) { freq = static_cast<double>(sampleRate) / 2.0; }
 
-		m_phase += 2.0 * M_PI * freq / sampleRate;
+		m_phase += 2.0 * M_PI * freq / static_cast<double>(sampleRate);
 		if(m_phase >= 2.0 * M_PI) { m_phase -= 2.0 * M_PI; }
 	}
 
@@ -166,10 +166,10 @@ class Channel1 {
 
 	void turnOn() { m_isOn = true; }
 
-	uint16_t getPeriod() const { return (static_cast<uint16_t>(m_nr14 & 0x7) << 8) | static_cast<uint16_t>(m_nr13); }
+	uint16_t getPeriod() const { return static_cast<uint16_t>(((m_nr14 & 0x7) << 8) | m_nr13); }
 	void setPeriod(const uint16_t value) {
-		m_nr13 = value & 0xFF;
-		m_nr14 = (m_nr14 & 0xF8) | (value >> 8);
+		m_nr13 = static_cast<uint8_t>(value & 0xFF);
+		m_nr14 = static_cast<uint8_t>((m_nr14 & 0xF8) | (value >> 8));
 	}
 
 	double getFrequency() const {

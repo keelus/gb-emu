@@ -60,7 +60,7 @@ class MBC1 : public Cartridge {
 			throw std::runtime_error("Cartridge[MBC1]: 1MiB or more cartridges are not supported yet.");
 		}
 
-		m_romBanks.resize(int(romBankAmount));
+		m_romBanks.resize(romBankAmount);
 		for(size_t i = 0; i < romBankAmount; i++) {
 			memset(m_romBanks[i].data(), 0, sizeof(uint8_t) * ROM_BANK_SIZE);
 		}
@@ -75,7 +75,7 @@ class MBC1 : public Cartridge {
 		if(m_hasRam) {
 			assert(ramBankAmount > 0 && "Cartridge[MBC1]: Cartridge type indicates RAM, but RAM type is 0.\n");
 
-			m_ramBanks.resize(int(ramBankAmount));
+			m_ramBanks.resize(ramBankAmount);
 			for(size_t ramBankIndex = 0; ramBankIndex < ramBankAmount; ramBankIndex++) {
 				memset(m_ramBanks[ramBankIndex].data(), 0, sizeof(uint8_t) * RAM_BANK_SIZE);
 			}

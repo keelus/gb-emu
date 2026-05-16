@@ -271,7 +271,7 @@ constexpr std::array<const char *, 256> CPU_CB_INSTRUCTION_MNEMONICS = {
     OP(0xFF, "SET 7, A")
 };
 
-constexpr std::array<int, 256> CPU_CB_INSTRUCTION_CYCLES = {
+constexpr std::array<uint8_t, 256> CPU_CB_INSTRUCTION_CYCLES = {
     OP(0x00, 8),
     OP(0x01, 8),
     OP(0x02, 8),
@@ -531,7 +531,7 @@ constexpr std::array<int, 256> CPU_CB_INSTRUCTION_CYCLES = {
 };
 // clang-format on
 
-int Cpu::executeCbInstruction(void) {
+uint8_t Cpu::executeCbInstruction(void) {
 	uint8_t opcode = m_bus.read8(m_PC++);
 	if(Config::debugOutput) {
 		std::cout << "Got prefixed instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << int(opcode)

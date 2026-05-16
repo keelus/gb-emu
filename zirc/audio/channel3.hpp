@@ -46,7 +46,7 @@ class Channel3 {
 		switch(address) {
 		case 0xFF1A: return m_nr30;
 		case 0xFF1C: return m_nr32;
-		case 0xFF1E: return static_cast<uint8_t>(m_lengthEnabled) << 6; break;
+		case 0xFF1E: return static_cast<uint8_t>(m_lengthEnabled << 6); break;
 		default: {
 			if(address >= 0xFF30 && address <= 0xFF3F) { return m_wave[address - 0xFF30]; }
 

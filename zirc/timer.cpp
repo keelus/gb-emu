@@ -13,7 +13,6 @@ void Timer::tickOne() {
 
 	uint16_t mask;
 	uint8_t mode = m_tac & 0x3;
-	bool timaIncrements = false;
 	switch(mode) {
 	case 0b00: mask = 1 << 9; break;
 	case 0b01: mask = 1 << 3; break;

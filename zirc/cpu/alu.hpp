@@ -44,7 +44,7 @@ class ALU {
 	}
 
 	static Result8 add8WithCarry(uint8_t a, uint8_t b, bool carry) {
-		uint16_t result = static_cast<uint16_t>(a) + static_cast<uint16_t>(b) + (carry ? 1 : 0);
+		uint16_t result = static_cast<uint16_t>(a + b + (carry ? 1 : 0));
 		Result8 res;
 
 		res.value = static_cast<uint8_t>(result);
@@ -79,7 +79,7 @@ class ALU {
 	}
 
 	static Result8 sub8WithCarry(uint8_t a, uint8_t b, bool carry) {
-		int16_t result = static_cast<uint16_t>(a) - static_cast<uint16_t>(b) - (carry ? 1 : 0);
+		int16_t result = static_cast<int16_t>(a - b - (carry ? 1 : 0));
 		Result8 res;
 
 		res.value = static_cast<uint8_t>(result);
@@ -146,7 +146,7 @@ class ALU {
 		Result8 res;
 
 		res.flag_c = a >> 7;
-		res.value = (a << 1) | static_cast<uint8_t>(flag_c);
+		res.value = static_cast<uint8_t>((a << 1) | flag_c);
 
 		return res;
 	}
@@ -156,7 +156,7 @@ class ALU {
 		Result8 res;
 
 		res.flag_c = a & 1;
-		res.value = (a >> 1) | (static_cast<uint8_t>(flag_c) << 7);
+		res.value = static_cast<uint8_t>((a >> 1) | (flag_c << 7));
 
 		return res;
 	}
@@ -165,7 +165,7 @@ class ALU {
 		Result8 res;
 
 		res.flag_c = a >> 7;
-		res.value = (a << 1);
+		res.value = static_cast<uint8_t>(a << 1);
 
 		return res;
 	}

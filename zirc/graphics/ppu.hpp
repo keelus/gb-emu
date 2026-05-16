@@ -16,7 +16,7 @@ extern uint8_t activeColorPalette;
 class Ppu {
   public:
 	enum class PpuMode { OAM_SCAN = 2, DRAWING = 3, HBLANK = 0, VBLANK = 1 };
-	Ppu(Bus &bus, Lcd &lcd) : m_bus(bus), m_backgroundFifo(bus, lcd), m_spriteFifo(bus, lcd), m_lcd(lcd) { reset(); }
+	Ppu(Bus &bus, Lcd &lcd) : m_backgroundFifo(bus, lcd), m_spriteFifo(bus), m_bus(bus), m_lcd(lcd) { reset(); }
 
 	void tick(uint8_t cycles);
 
@@ -53,8 +53,8 @@ class Ppu {
 	uint8_t read8(const uint16_t address) const;
 
 	uint8_t getLcdStatus() const {
-		return m_lcdStatus | (static_cast<uint8_t>(m_lyc == m_ly) << 2) |
-			   (((m_control & 0b10000000) == 0) ? 0 : (static_cast<uint8_t>(m_mode) & 0x3));
+		return static_cast<uint8_t>(m_lcdStatus | ((m_lyc == m_ly) << 2) |
+									((m_control & 0b10000000) ? 0 : (static_cast<uint8_t>(m_mode) & 0x3)));
 	}
 	void setLcdStatus(const uint8_t newLcdStatus) {
 		if(newLcdStatus != 0) {

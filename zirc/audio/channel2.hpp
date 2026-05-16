@@ -129,10 +129,10 @@ class Channel2 {
 
 	void turnOn() { m_isOn = true; }
 
-	uint16_t getPeriod() const { return (static_cast<uint16_t>(m_nr24 & 0x7) << 8) | static_cast<uint16_t>(m_nr23); }
+	uint16_t getPeriod() const { return static_cast<uint16_t>(((m_nr24 & 0x7) << 8) | m_nr23); }
 	void setPeriod(const uint16_t value) {
-		m_nr23 = value & 0xFF;
-		m_nr24 = (m_nr24 & 0xF8) | (value >> 8);
+		m_nr23 = static_cast<uint8_t>(value & 0xFF);
+		m_nr24 = static_cast<uint8_t>((m_nr24 & 0xF8) | (value >> 8));
 	}
 
 	double getFrequency() const {

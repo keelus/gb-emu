@@ -74,10 +74,10 @@ class Apu {
 		if(m_divApu % 4 == 0) { m_channel1.doEventFrequencySweep(); }
 	}
 
-	void tick(const int tStates) {
+	void tick(const uint8_t tStates) {
 		assert(tStates % 4 == 0);
 
-		for(size_t i = 0; i < tStates; i += 4) {
+		for(uint8_t i = 0; i < tStates; i += 4) {
 			m_channel1.tick(APU_RATE);
 			m_channel2.tick(APU_RATE);
 			m_channel3.tick(APU_RATE);

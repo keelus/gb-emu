@@ -31,8 +31,7 @@ class BackgroundFifo {
 		m_isWindow = isWindow;
 	}
 
-	void tickDot(const uint8_t ly, const uint8_t scy, const uint8_t scx, const uint8_t wy, const uint8_t wx,
-				 const uint8_t wly) {
+	void tickDot(const uint8_t ly, const uint8_t scy, const uint8_t scx, const uint8_t wly) {
 		if(m_lcd.screenX() >= Lcd::WIDTH) { return; }
 
 		m_dotsCurrentState++;
@@ -42,14 +41,14 @@ class BackgroundFifo {
 		case State::FetchTileNumber: {
 			if(m_dotsCurrentState == 2 && !m_isWindow) {
 				m_tileOffset = ((scx) / 8 + m_xFetch) & 0x1F;
-				m_tileOffset += 32 * (((ly + scy) & 0xFF) / 8);
+				m_tileOffset += static_cast<uint16_t>(32 * (((ly + scy) & 0xFF) / 8));
 				m_tileOffset &= 0x3FF;
 
 				m_state = State::FetchLow;
 				m_dotsCurrentState = 0;
 			} else if(m_dotsCurrentState == 2 && m_isWindow) {
 				m_tileOffset = m_xFetch;
-				m_tileOffset += 32 * (wly / 8);
+				m_tileOffset += static_cast<uint16_t>(32 * (wly / 8));
 				m_tileOffset &= 0x3FF;
 
 				m_state = State::FetchLow;
@@ -60,7 +59,7 @@ class BackgroundFifo {
 		case State::FetchLow: {
 			if(m_dotsCurrentState == 2) {
 				uint8_t byte1;
-				size_t offset = 2 * ((ly + scy) % 8);
+				uint8_t offset = 2 * ((ly + scy) % 8);
 				if(m_isWindow) { offset = 2 * (wly % 8); }
 				getTileHLine(m_tileOffset, offset, m_tileLow, byte1,
 							 ((m_bus.read8(0xFF40) >> (m_isWindow ? 6 : 3)) & 1) != 0);
@@ -73,7 +72,7 @@ class BackgroundFifo {
 		case State::FetchHigh: {
 			if(m_dotsCurrentState == 2) {
 				uint8_t byte0;
-				size_t offset = 2 * ((ly + scy) % 8);
+				uint8_t offset = 2 * ((ly + scy) % 8);
 				if(m_isWindow) { offset = 2 * (wly % 8); }
 				getTileHLine(m_tileOffset, offset, byte0, m_tileHigh,
 							 ((m_bus.read8(0xFF40) >> (m_isWindow ? 6 : 3)) & 1) != 0);
@@ -89,7 +88,7 @@ class BackgroundFifo {
 					for(int i = 0; i < 8; i++) {
 						uint8_t lower = (m_tileLow >> (7 - i)) & 1;
 						uint8_t upper = (m_tileHigh >> (7 - i)) & 1;
-						uint8_t colorId = (upper << 1) | lower;
+						uint8_t colorId = static_cast<uint8_t>((upper << 1) | lower);
 
 						bool bgEnabled = (m_bus.read8(0xFF40)) & 0x1;
 						if(bgEnabled) {
@@ -153,13 +152,13 @@ class BackgroundFifo {
 
 		uint8_t tileBit = ((m_bus.read8(0xFF40) >> 4) & 1) != 0;
 		if(tileBit) {
-			finalTileAddress = 0x8000 + index * 16;
+			finalTileAddress = static_cast<uint16_t>(0x8000 + index * 16);
 		} else {
-			finalTileAddress = 0x9000 + (int8_t)index * 16;
+			finalTileAddress = static_cast<uint16_t>(0x9000 + (int8_t)index * 16);
 		}
 
 		byte0 = m_bus.read8(finalTileAddress + offset);
-		byte1 = m_bus.read8(finalTileAddress + offset + 1);
+		byte1 = m_bus.read8(static_cast<uint16_t>(finalTileAddress + offset + 1));
 	}
 
 	struct Pixel {
@@ -194,8 +193,6 @@ class BackgroundFifo {
 
 	uint8_t m_firstCopyPixelsRemaining = 8;
 	uint8_t m_pixelsOddDiscardRemaining = 0;
-
-	bool m_started = false;
 
 	uint8_t m_pixelsRendered = 0;
 

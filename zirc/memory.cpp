@@ -37,7 +37,7 @@ void Memory::write8(const uint16_t address, const uint8_t value) {
 }
 
 uint16_t Memory::read16(const uint16_t address) const {
-	return (static_cast<uint16_t>(read8(address + 1)) << 8) | static_cast<uint16_t>(read8(address));
+	return static_cast<uint16_t>((read8(address + 1) << 8) | read8(address));
 }
 
 void Memory::write16(const uint16_t address, const uint16_t value) {

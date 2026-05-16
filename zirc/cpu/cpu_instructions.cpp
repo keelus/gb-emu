@@ -273,7 +273,7 @@ constexpr std::array<const char *, 256> CPU_INSTRUCTION_MNEMONICS = {
 	OP(0xFF, "RST $38")
 };
 
-constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
+constexpr std::array<uint8_t, 256> CPU_INSTRUCTION_CYCLES = {
 	OP(0x00, 4),
 	OP(0x01, 12),
 	OP(0x02, 8),
@@ -533,7 +533,7 @@ constexpr std::array<int, 256> CPU_INSTRUCTION_CYCLES = {
 };
 // clang-format on
 
-int Cpu::executeInstruction(void) {
+uint8_t Cpu::executeInstruction(void) {
 	if(m_halted) { return 4; } // TODO
 	uint8_t opcode = m_bus.read8(m_PC++);
 	if(opcode != 0xCB && Config::debugOutput) {
@@ -542,7 +542,7 @@ int Cpu::executeInstruction(void) {
 				  << CPU_INSTRUCTION_MNEMONICS.at(opcode) << "\"" << std::endl;
 	}
 
-	int cycles = CPU_INSTRUCTION_CYCLES.at(opcode);
+	uint8_t cycles = CPU_INSTRUCTION_CYCLES.at(opcode);
 
 	switch(opcode) {
 	case 0x00: // NOP
@@ -572,7 +572,7 @@ int Cpu::executeInstruction(void) {
 	case 0x08: { // LD [imm16], SP
 		uint8_t low = m_bus.read8(m_PC++);
 		uint8_t high = m_bus.read8(m_PC++);
-		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		uint16_t address = static_cast<uint16_t>((high << 8) | low);
 		m_bus.write16(address, m_SP);
 		break;
 	}
@@ -710,7 +710,7 @@ int Cpu::executeInstruction(void) {
 		doLd(m_L, m_bus.read8(m_PC++));
 		break;
 	case 0x2F: // CPL
-		m_A = ~m_A;
+		m_A = static_cast<uint8_t>(~m_A);
 		setFlag<Flag::N>(true);
 		setFlag<Flag::H>(true);
 		break;
@@ -720,7 +720,7 @@ int Cpu::executeInstruction(void) {
 	case 0x31: { // LD SP, imm16
 		uint8_t low = m_bus.read8(m_PC++);
 		uint8_t high = m_bus.read8(m_PC++);
-		m_SP = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		m_SP = static_cast<uint16_t>((high << 8) | low);
 		break;
 	}
 	case 0x32: // LD [HL-], A
@@ -1282,7 +1282,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xE8: { // ADD SP, e8
 		int8_t imm8 = static_cast<int8_t>(m_bus.read8(m_PC++));
-		uint16_t result = (m_SP + imm8);
+		uint16_t result = static_cast<uint16_t>(m_SP + imm8);
 
 		setFlag<Cpu::Flag::Z>(0);
 		setFlag<Cpu::Flag::N>(0);
@@ -1298,7 +1298,7 @@ int Cpu::executeInstruction(void) {
 	case 0xEA: { // LD [imm16], A
 		uint8_t low = m_bus.read8(m_PC++);
 		uint8_t high = m_bus.read8(m_PC++);
-		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		uint16_t address = static_cast<uint16_t>((high << 8) | low);
 		m_bus.write8(address, m_A);
 		break;
 	}
@@ -1339,7 +1339,7 @@ int Cpu::executeInstruction(void) {
 		break;
 	case 0xF8: { // LD HL, SP+e8
 		int8_t imm8 = static_cast<int8_t>(m_bus.read8(m_PC++));
-		uint16_t result = (m_SP + imm8);
+		uint16_t result = static_cast<uint16_t>(m_SP + imm8);
 
 		m_H = static_cast<uint8_t>(static_cast<uint16_t>(result) >> 8);
 		m_L = static_cast<uint8_t>(static_cast<uint16_t>(result));
@@ -1358,7 +1358,7 @@ int Cpu::executeInstruction(void) {
 	case 0xFA: { // LD A, [imm16]
 		uint8_t low = m_bus.read8(m_PC++);
 		uint8_t high = m_bus.read8(m_PC++);
-		uint16_t address = (static_cast<uint16_t>(high) << 8) | static_cast<uint16_t>(low);
+		uint16_t address = static_cast<uint16_t>((high << 8) | low);
 		doLd(m_A, m_bus.read8(address));
 		break;
 	}

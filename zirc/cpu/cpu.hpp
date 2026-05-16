@@ -47,34 +47,35 @@ class Cpu {
 
 	uint8_t A(void) const { return m_A; }
 	uint8_t F(void) const { return m_F; }
-	uint16_t AF(void) const { return (static_cast<uint16_t>(m_A) << 8) | static_cast<uint16_t>(m_F); }
+	uint16_t AF(void) const { return static_cast<uint16_t>((m_A << 8) | m_F); }
 
 	template <Flag Fbit> bool getFlag(void) const { return (m_F & static_cast<uint8_t>(Fbit)) != 0; }
 	template <Flag Fbit> void setFlag(bool value) {
+		uint8_t bit = static_cast<uint8_t>(Fbit);
 		if(value) {
-			m_F |= static_cast<uint8_t>(Fbit);
+			m_F |= bit;
 		} else {
-			m_F &= ~(static_cast<uint8_t>(Fbit));
+			m_F &= static_cast<uint8_t>(~bit);
 		}
 	}
 
 	uint8_t B(void) const { return m_B; }
 	uint8_t C(void) const { return m_C; }
-	uint16_t BC(void) const { return (static_cast<uint16_t>(m_B) << 8) | static_cast<uint16_t>(m_C); }
+	uint16_t BC(void) const { return static_cast<uint16_t>((m_B << 8) | m_C); }
 
 	uint8_t D(void) const { return m_D; }
 	uint8_t E(void) const { return m_E; }
-	uint16_t DE(void) const { return (static_cast<uint16_t>(m_D) << 8) | static_cast<uint16_t>(m_E); }
+	uint16_t DE(void) const { return static_cast<uint16_t>((m_D << 8) | m_E); }
 
 	uint8_t H(void) const { return m_H; }
 	uint8_t L(void) const { return m_L; }
-	uint16_t HL(void) const { return (static_cast<uint16_t>(m_H) << 8) | static_cast<uint16_t>(m_L); }
+	uint16_t HL(void) const { return static_cast<uint16_t>((m_H << 8) | m_L); }
 
 	uint16_t SP(void) const { return m_SP; }
 	uint16_t PC(void) const { return m_PC; }
 
-	int executeInstruction(void);
-	int executeCbInstruction(void);
+	uint8_t executeInstruction(void);
+	uint8_t executeCbInstruction(void);
 
 	enum class InterruptFlag : uint8_t {
 		Joypad = 0b10000,
@@ -94,10 +95,11 @@ class Cpu {
 		return (m_interruptFlag & static_cast<uint8_t>(Fbit)) != 0;
 	}
 	template <InterruptFlag Fbit> void setInterruptFlag(bool value) {
+		uint8_t bit = static_cast<uint8_t>(Fbit);
 		if(value) {
-			m_interruptFlag |= static_cast<uint8_t>(Fbit);
+			m_interruptFlag |= bit;
 		} else {
-			m_interruptFlag &= ~(static_cast<uint8_t>(Fbit));
+			m_interruptFlag &= static_cast<uint8_t>(~bit);
 		}
 	}
 	void setInterruptFlagRaw(const uint8_t newInterruptFlag) { m_interruptFlag = newInterruptFlag; }
@@ -230,7 +232,7 @@ class Cpu {
 
 	void doInc16(uint16_t &value) { value = ALU::inc16(value).value; }
 	void doInc16(uint8_t &upper, uint8_t &lower) {
-		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		uint16_t value = static_cast<uint16_t>((upper << 8) | lower);
 		uint16_t result = ALU::inc16(value).value;
 
 		upper = static_cast<uint8_t>(result >> 8);
@@ -255,7 +257,7 @@ class Cpu {
 		m_bus.write8(address, res.value);
 	}
 	void doDec(uint8_t &upper, uint8_t lower) {
-		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		uint16_t value = static_cast<uint16_t>((upper << 8) | lower);
 		uint16_t result = ALU::dec16(value).value;
 
 		upper = static_cast<uint8_t>(result >> 8);
@@ -264,7 +266,7 @@ class Cpu {
 
 	void doDec16(uint16_t &value) { value = ALU::dec16(value).value; }
 	void doDec16(uint8_t &upper, uint8_t &lower) {
-		uint16_t value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		uint16_t value = static_cast<uint16_t>((upper << 8) | lower);
 		uint16_t result = ALU::dec16(value).value;
 
 		upper = static_cast<uint8_t>(result >> 8);
@@ -272,11 +274,11 @@ class Cpu {
 	}
 
 	void doJr() {
-		int8_t offset = m_bus.read8(m_PC++);
+		int8_t offset = static_cast<int8_t>(m_bus.read8(m_PC++));
 		m_PC = static_cast<uint16_t>(static_cast<int32_t>(m_PC) + offset);
 	}
 	bool doJr(bool condition) {
-		int8_t offset = m_bus.read8(m_PC++);
+		int8_t offset = static_cast<int8_t>(m_bus.read8(m_PC++));
 		if(condition) { m_PC = static_cast<uint16_t>(static_cast<int32_t>(m_PC) + offset); }
 		return condition;
 	}
@@ -296,7 +298,7 @@ class Cpu {
 	void doPop(uint16_t &value) {
 		uint8_t upper, lower;
 		doPop(upper, lower);
-		value = (static_cast<uint16_t>(upper) << 8) | static_cast<uint16_t>(lower);
+		value = static_cast<uint16_t>((upper << 8) | lower);
 	}
 	void doPop(uint8_t &upper, uint8_t &lower) {
 		lower = m_bus.read8(m_SP++);
@@ -432,7 +434,7 @@ class Cpu {
 	}
 
 	void doSwap(uint8_t &reg) {
-		reg = ((reg & 0xF) << 4) | ((reg & 0xF0) >> 4);
+		reg = static_cast<uint8_t>(((reg & 0xF) << 4) | ((reg & 0xF0) >> 4));
 		setFlag<Flag::Z>(reg == 0);
 		setFlag<Flag::N>(0);
 		setFlag<Flag::H>(0);
@@ -471,7 +473,7 @@ class Cpu {
 		doBit(value, bit);
 	}
 
-	void doRes(uint8_t &reg, uint8_t bit) { reg &= ~(1 << bit); }
+	void doRes(uint8_t &reg, uint8_t bit) { reg &= static_cast<uint8_t>(~(1 << bit)); }
 
 	void doRes(uint16_t address, uint8_t bit) {
 		uint8_t value = m_bus.read8(address);

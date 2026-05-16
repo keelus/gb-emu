@@ -83,11 +83,11 @@ void Ppu::tickDot() {
 
 			m_spritesToDraw.clear();
 			for(size_t i = 0; i < 40; i++) {
-				uint8_t y = m_bus.read8(0xFE00 + i * 4);
+				uint8_t y = m_bus.read8(static_cast<uint16_t>(0xFE00 + i * 4));
 				if(y == 0) { continue; }
 				if(y >= Lcd::HEIGHT + 16) { continue; }
 
-				uint8_t x = m_bus.read8(0xFE00 + i * 4 + 1);
+				uint8_t x = m_bus.read8(static_cast<uint16_t>(0xFE00 + i * 4 + 1));
 				if(x == 0) { continue; }
 				if(x >= Lcd::WIDTH + 8) { continue; }
 
@@ -117,7 +117,7 @@ void Ppu::tickDot() {
 				return;
 			}
 		} else {
-			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx, m_wy, m_wx, m_wly);
+			m_backgroundFifo.tickDot(m_ly, m_scy, m_scx, m_wly);
 		}
 
 		BackgroundFifo::BgPixel bgPx;
@@ -205,7 +205,7 @@ bool Ppu::checkSpritesToDraw() {
 		if(m_spritesToDraw.at(i).x <= m_lcd.screenX() + 8) {
 			m_fetchingSprites = true;
 			m_fetchingSpriteIndex = m_spritesToDraw.at(i).index;
-			m_spritesToDraw.erase(m_spritesToDraw.begin() + i);
+			m_spritesToDraw.erase(m_spritesToDraw.begin() + static_cast<std::ptrdiff_t>(i));
 			return true;
 		}
 	}

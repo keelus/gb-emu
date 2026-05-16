@@ -13,9 +13,10 @@ std::unique_ptr<Cartridge> Cartridge::createCartridge(const std::string &path) {
 	if(!file) { throw std::runtime_error("Could not open the cartridge file.\n"); }
 
 	std::streamsize size = file.tellg();
+	if(size < 0) { throw std::runtime_error("Failed to read the size of the cartridge file.\n"); }
 	file.seekg(0, std::ios::beg);
 
-	std::vector<uint8_t> fileData(size);
+	std::vector<uint8_t> fileData(static_cast<size_t>(size));
 
 	if(!file.read(reinterpret_cast<char *>(fileData.data()), size)) {
 		throw std::runtime_error("Failed to read from the cartridge file.\n");

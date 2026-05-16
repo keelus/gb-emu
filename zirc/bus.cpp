@@ -43,7 +43,7 @@ uint8_t Bus::read8(const uint16_t address) const {
 }
 
 uint16_t Bus::read16(const uint16_t address) const {
-	return (static_cast<uint16_t>(read8(address + 1)) << 8) | static_cast<uint16_t>(read8(address));
+	return static_cast<uint16_t>((read8(address + 1) << 8) | read8(address));
 }
 
 void Bus::write8(const uint16_t address, const uint8_t value) {
@@ -495,7 +495,7 @@ void Bus::requestInterrupt(InterruptRequestType interruptType) {
 
 void Bus::doDmaTransfer(void) {
 	for(uint8_t offset = 0; offset <= 0x9F; offset++) {
-		const uint16_t source = (static_cast<uint16_t>(m_oamSourceAndStart) << 8) | offset;
+		const uint16_t source = static_cast<uint16_t>((m_oamSourceAndStart << 8) | offset);
 		const uint16_t destination = 0xFE00 | offset;
 
 		const uint8_t value = read8(source);

@@ -180,9 +180,8 @@ class Cartridge {
 													  CARTRIDGE_MANUFRACTURER_CODE_LEN);
 
 		m_oldLicenseeCode = fileData[CARTRIDGE_OLD_LICENSEE_CODE_OFFSET];
-		m_newLicenseeCode =
-			(static_cast<uint16_t>(static_cast<uint8_t>(fileData[CARTRIDGE_NEW_LICENSEE_CODE_OFFSET])) << 8) |
-			static_cast<uint16_t>(static_cast<uint8_t>(fileData[CARTRIDGE_NEW_LICENSEE_CODE_OFFSET + 1]));
+		m_newLicenseeCode = static_cast<uint16_t>((fileData[CARTRIDGE_NEW_LICENSEE_CODE_OFFSET] << 8) |
+												  fileData[CARTRIDGE_NEW_LICENSEE_CODE_OFFSET + 1]);
 
 		m_cgbFlag = fileData[CARTRIDGE_CGB_FLAG_OFFSET];
 		m_sgbFlag = fileData[CARTRIDGE_SGB_FLAG_OFFSET];
@@ -231,9 +230,9 @@ class Cartridge {
 
 	virtual void reset() { m_bootRomMapped = true; }
 
-	void setCustomBootRom(const char *customBootRom) {
+	void setCustomBootRom(const uint8_t *customBootRom) {
 		m_usingCustomBootRom = true;
-		std::memcpy(m_customBootRom.data(), customBootRom, sizeof(char) * 256);
+		std::memcpy(m_customBootRom.data(), customBootRom, sizeof(uint8_t) * 256);
 	}
 
 	void disableCustomBootRom() { m_usingCustomBootRom = false; }
@@ -247,7 +246,7 @@ class Cartridge {
 	static uint8_t calculateHeaderChecksum(const std::vector<uint8_t> cartridgeData) {
 		uint8_t checksum = 0;
 		for(uint16_t index = 0x134; index <= 0x14C; index++) {
-			checksum = checksum - cartridgeData[index] - 1;
+			checksum = static_cast<uint8_t>(checksum - cartridgeData[index] - 1);
 		}
 
 		return checksum;
@@ -270,6 +269,6 @@ class Cartridge {
 	bool m_sgbFlag;
 
 	bool m_usingCustomBootRom = false;
-	std::array<char, 256> m_customBootRom;
+	std::array<uint8_t, 256> m_customBootRom;
 	bool m_bootRomMapped;
 };

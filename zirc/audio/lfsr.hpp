@@ -7,12 +7,12 @@ class Lfsr {
 	void tick() {
 		uint16_t result = (m_currentState & 0x1) == ((m_currentState >> 1) & 0x1);
 
-		m_currentState &= ~(1 << 15);
-		m_currentState |= (result << 15);
+		m_currentState &= static_cast<uint16_t>(~(1 << 15));
+		m_currentState |= static_cast<uint16_t>(result << 15);
 
 		if(m_isShortMode) {
-			m_currentState &= ~(1 << 7);
-			m_currentState |= (result << 7);
+			m_currentState &= static_cast<uint16_t>(~(1 << 7));
+			m_currentState |= static_cast<uint16_t>(result << 7);
 		}
 
 		m_currentState >>= 1;
