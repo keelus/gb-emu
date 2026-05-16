@@ -33,7 +33,7 @@ void PlatformGtk::setupKeyController() {
 	add_controller(keyController);
 }
 
-void PlatformGtk::addGameBoy(GameBoy *gameBoy, const std::string &romName) {
+void PlatformGtk::addGameBoy(Zirc::GameBoy *gameBoy, const std::string &romName) {
 	if(m_gameBoy) { delete m_gameBoy; }
 	m_gameBoy = gameBoy;
 

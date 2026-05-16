@@ -10,6 +10,7 @@
 #include "ppu.hpp"
 #include "sprite_fifo.hpp"
 
+namespace Zirc {
 Color colorPalettes[3][4] = {
 	{
 		// Gray
@@ -212,3 +213,4 @@ bool Ppu::checkSpritesToDraw() {
 
 	return false;
 }
+} // namespace Zirc

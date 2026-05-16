@@ -9,6 +9,7 @@
 
 #include "lfsr.hpp"
 
+namespace Zirc {
 class Channel4 {
   public:
 	Channel4() { reset(); }
@@ -149,3 +150,4 @@ class Channel4 {
 
 	double m_tickSampleAcc;
 };
+} // namespace Zirc

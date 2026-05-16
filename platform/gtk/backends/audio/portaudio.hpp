@@ -97,5 +97,5 @@ class AudioBackendPortAudio : public AudioBackend {
 
 	PaStream *m_stream = nullptr;
 	bool m_audioPaused = true;
-	AudioRingBuffer<4096> m_audioSampleBuffer;
+	Zirc::AudioRingBuffer<4096> m_audioSampleBuffer;
 };

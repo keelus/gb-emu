@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+namespace Zirc {
 class Lfsr {
   public:
 	void tick() {
@@ -29,3 +30,4 @@ class Lfsr {
 	bool m_isShortMode;
 	uint16_t m_currentState;
 };
+} // namespace Zirc

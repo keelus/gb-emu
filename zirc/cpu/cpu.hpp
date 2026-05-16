@@ -5,6 +5,7 @@
 #include "../bus.hpp"
 #include "alu.hpp"
 
+namespace Zirc {
 class Cpu {
   public:
 	Cpu(Bus &bus) : m_bus(bus) { reset(); }
@@ -503,3 +504,4 @@ class Cpu {
 
 	Bus &m_bus;
 };
+} // namespace Zirc

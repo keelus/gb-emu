@@ -6,8 +6,9 @@
 
 #include "../bus.hpp"
 #include "lcd.hpp"
+#include "zirc/config.hpp"
 
-extern uint8_t activeColorPalette;
+namespace Zirc {
 extern Color colorPalettes[3][4];
 
 class SpriteFifo {
@@ -121,7 +122,7 @@ class SpriteFifo {
 		const uint8_t palette = (m_spriteAttrs & 0x10) ? m_bus.read8(0xFF49) : m_bus.read8(0xFF48);
 		uint8_t shade = (palette >> (px.color * 2)) & 0b11;
 
-		spritePixel.color = colorPalettes[activeColorPalette][shade];
+		spritePixel.color = colorPalettes[Config::get().activeColorPalette][shade];
 		spritePixel.behindBg = px.behindBg;
 		spritePixel.isTransparent = px.color == 0;
 
@@ -175,3 +176,4 @@ class SpriteFifo {
 	uint8_t m_spriteIndex;
 	bool m_drawingBottom = false;
 };
+} // namespace Zirc

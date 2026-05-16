@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace Zirc {
 class Bus;
 
 class Timer {
@@ -50,3 +51,4 @@ class Timer {
 
 	Bus &m_bus;
 };
+}; // namespace Zirc

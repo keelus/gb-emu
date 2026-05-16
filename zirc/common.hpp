@@ -4,6 +4,7 @@
 
 #define IN_RANGE(address, start, end) ((address) >= (start) && (address) <= (end))
 
+namespace Zirc {
 class Color {
   public:
 	Color() {}
@@ -22,3 +23,4 @@ class Color {
 	uint8_t m_green = 0;
 	uint8_t m_blue = 0;
 };
+} // namespace Zirc

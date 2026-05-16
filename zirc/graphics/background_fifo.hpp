@@ -5,8 +5,9 @@
 
 #include "../bus.hpp"
 #include "lcd.hpp"
+#include "zirc/config.hpp"
 
-extern uint8_t activeColorPalette;
+namespace Zirc {
 extern Color colorPalettes[3][4];
 
 class BackgroundFifo {
@@ -128,7 +129,7 @@ class BackgroundFifo {
 			if(m_pixelsOddDiscardRemaining == 0) {
 				m_pixelsRendered++;
 
-				bgPixel.color = colorPalettes[activeColorPalette][shade];
+				bgPixel.color = colorPalettes[Config::get().activeColorPalette][shade];
 				bgPixel.isTransparent = px.color == 0;
 
 				return true;
@@ -200,3 +201,4 @@ class BackgroundFifo {
 
 	bool m_isWindow = false;
 };
+} // namespace Zirc

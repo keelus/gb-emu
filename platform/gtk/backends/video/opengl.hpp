@@ -14,7 +14,7 @@
 class VideoBackendOpenGl : public VideoBackend {
   public:
 	void initialize() override {
-		m_glArea.set_size_request(Lcd::WIDTH, Lcd::HEIGHT);
+		m_glArea.set_size_request(Zirc::Lcd::WIDTH, Zirc::Lcd::HEIGHT);
 		m_glArea.set_required_version(3, 3);
 		m_glArea.signal_render().connect(sigc::mem_fun(*this, &VideoBackendOpenGl::render), false);
 		m_glArea.signal_realize().connect(sigc::mem_fun(*this, &VideoBackendOpenGl::realize));
@@ -63,8 +63,8 @@ class VideoBackendOpenGl : public VideoBackend {
 
 	Gtk::GLArea *getGtkWidget() override { return &m_glArea; }
 
-	void drawPixel(uint8_t x, uint8_t y, Color color) override {
-		GLubyte *px = m_backBuffer + (Lcd::HEIGHT - 1 - y) * Lcd::WIDTH * 3 + x * 3;
+	void drawPixel(uint8_t x, uint8_t y, Zirc::Color color) override {
+		GLubyte *px = m_backBuffer + (Zirc::Lcd::HEIGHT - 1 - y) * Zirc::Lcd::WIDTH * 3 + x * 3;
 		px[0] = color.red();
 		px[1] = color.green();
 		px[2] = color.blue();
@@ -76,7 +76,7 @@ class VideoBackendOpenGl : public VideoBackend {
 		if(height < 0) { height = 1; }
 
 		float viewportAspect = float(width) / float(height);
-		float lcdAspect = float(Lcd::WIDTH) / float(Lcd::HEIGHT);
+		float lcdAspect = float(Zirc::Lcd::WIDTH) / float(Zirc::Lcd::HEIGHT);
 
 		float scaleX, scaleY;
 		if(lcdAspect < viewportAspect) {
@@ -103,7 +103,8 @@ class VideoBackendOpenGl : public VideoBackend {
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Lcd::WIDTH, Lcd::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, m_frontBuffer);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Zirc::Lcd::WIDTH, Zirc::Lcd::HEIGHT, GL_RGB, GL_UNSIGNED_BYTE,
+						m_frontBuffer);
 
 		glBindVertexArray(m_VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -229,7 +230,8 @@ class VideoBackendOpenGl : public VideoBackend {
 		glGenTextures(1, &m_texture);
 		glBindTexture(GL_TEXTURE_2D, m_texture);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, Lcd::WIDTH, Lcd::HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, m_frontBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, Zirc::Lcd::WIDTH, Zirc::Lcd::HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE,
+					 m_frontBuffer);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -240,8 +242,8 @@ class VideoBackendOpenGl : public VideoBackend {
 	GLuint m_VAO = 0, m_VBO = 0, m_EBO = 0;
 	GLuint m_shaderProgram = 0, m_texture = 0;
 
-	GLubyte m_backBuffer[Lcd::WIDTH * Lcd::HEIGHT * 3] = {0};
-	GLubyte m_frontBuffer[Lcd::WIDTH * Lcd::HEIGHT * 3] = {0};
+	GLubyte m_backBuffer[Zirc::Lcd::WIDTH * Zirc::Lcd::HEIGHT * 3] = {0};
+	GLubyte m_frontBuffer[Zirc::Lcd::WIDTH * Zirc::Lcd::HEIGHT * 3] = {0};
 
 	bool m_initialized = false;
 };

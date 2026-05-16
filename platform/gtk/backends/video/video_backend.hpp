@@ -14,5 +14,5 @@ class VideoBackend {
 	virtual void setVisible(bool visible) = 0;
 	virtual Gtk::Widget *getGtkWidget() = 0;
 
-	virtual void drawPixel(uint8_t x, uint8_t y, Color color) = 0;
+	virtual void drawPixel(uint8_t x, uint8_t y, Zirc::Color color) = 0;
 };

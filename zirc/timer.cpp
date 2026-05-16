@@ -3,6 +3,7 @@
 #include "bus.hpp"
 #include "timer.hpp"
 
+namespace Zirc {
 void Timer::tickOne() {
 	m_clk++;
 
@@ -34,3 +35,4 @@ void Timer::tickOne() {
 
 	m_prevClk = m_clk;
 }
+} // namespace Zirc

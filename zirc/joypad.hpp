@@ -3,6 +3,7 @@
 #include <bitset>
 #include <cstdint>
 
+namespace Zirc {
 class Joypad {
   public:
 	Joypad() { reset(); }
@@ -53,3 +54,4 @@ class Joypad {
 	std::bitset<4> m_buttons, m_dPad;
 	SelectedOutput m_selectedOutput;
 };
+} // namespace Zirc

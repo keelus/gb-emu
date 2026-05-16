@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
+namespace Zirc {
 class Config {
   public:
 	Config(Config &) = delete;
@@ -16,9 +18,12 @@ class Config {
 	bool serialOutput = false;
 	bool skipIntro = false;
 
+	uint8_t activeColorPalette = 0;
+
 	bool useCustomBootRom = false;
 	std::string customBootRomPath{""};
 
   private:
 	Config() = default;
-}; // namespace Config
+};
+} // namespace Zirc

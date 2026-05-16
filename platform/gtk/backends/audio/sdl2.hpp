@@ -88,7 +88,7 @@ class AudioBackendSdl2 : public AudioBackend {
 	bool m_audioPaused = false;
 	SDL_AudioSpec m_spec;
 
-	AudioRingBuffer<4096> m_audioSampleBuffer;
+	Zirc::AudioRingBuffer<4096> m_audioSampleBuffer;
 
 	static constexpr float AUDIO_SAMPLE_RATE = 44100.0;
 	static constexpr size_t AUDIO_SAMPLE_AMOUNT = 1024;

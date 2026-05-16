@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
+namespace Zirc {
 #define WORK_RAM_SIZE (1 << 13)
 #define HIGH_RAM_SIZE (1 << 7)
 
@@ -31,3 +32,4 @@ class Memory {
 	uint8_t m_wram[WORK_RAM_SIZE];
 	uint8_t m_hram[HIGH_RAM_SIZE];
 };
+} // namespace Zirc

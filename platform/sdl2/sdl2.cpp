@@ -1,10 +1,7 @@
 #include <SDL.h>
-#include <cstdint>
-
-#include "sdl2.hpp"
 #include <zirc/config.hpp>
 
-uint8_t activeColorPalette = 0;
+#include "sdl2.hpp"
 
 PlatformSdl2::PlatformSdl2(bool limitFps) : m_limitFps(limitFps) {
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
@@ -12,7 +9,8 @@ PlatformSdl2::PlatformSdl2(bool limitFps) : m_limitFps(limitFps) {
 		exit(1);
 	}
 
-	m_window = SDL_CreateWindow("Zirc Emulator", 100, 100, Lcd::WIDTH * SCALE, Lcd::HEIGHT * SCALE, SDL_WINDOW_SHOWN);
+	m_window = SDL_CreateWindow("Zirc Emulator", 100, 100, Zirc::Lcd::WIDTH * SCALE, Zirc::Lcd::HEIGHT * SCALE,
+								SDL_WINDOW_SHOWN);
 	if(!m_window) {
 		std::cerr << "Platform[SDL2]: SDL_CreateWindow error: " << SDL_GetError() << std::endl;
 		exit(1);
@@ -25,8 +23,8 @@ PlatformSdl2::PlatformSdl2(bool limitFps) : m_limitFps(limitFps) {
 		exit(1);
 	}
 
-	m_texture =
-		SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, Lcd::WIDTH, Lcd::HEIGHT);
+	m_texture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, Zirc::Lcd::WIDTH,
+								  Zirc::Lcd::HEIGHT);
 	if(!m_texture) {
 		std::cerr << "Platform[SDL2]: SDL_CreateTexture error: " << SDL_GetError() << std::endl;
 		exit(1);
@@ -70,17 +68,17 @@ int main(int argc, char *argv[]) {
 
 		if(!strcmp(arg, "-b") || !strcmp(arg, "--boot-rom")) {
 			assert(i + 1 < argc && "There was no boot ROM provided after the argument.");
-			Config::get().useCustomBootRom = true;
-			Config::get().customBootRomPath = argv[++i];
+			Zirc::Config::get().useCustomBootRom = true;
+			Zirc::Config::get().customBootRomPath = argv[++i];
 		} else if(!strcmp(arg, "-f") || !strcmp(arg, "--no-fps")) {
 			limitFps = false;
 		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
-			Config::get().debugOutput = true;
+			Zirc::Config::get().debugOutput = true;
 		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
 			printUsage(argv[0], true);
 			return EXIT_SUCCESS;
 		} else if(!strcmp(arg, "-i") || !strcmp(arg, "--skip-intro")) {
-			Config::get().skipIntro = true;
+			Zirc::Config::get().skipIntro = true;
 		} else {
 			romPath = arg;
 		}
@@ -94,13 +92,13 @@ int main(int argc, char *argv[]) {
 
 	PlatformSdl2 platform(limitFps);
 
-	GameBoy gb(romPath, platform);
-	if(Config::get().useCustomBootRom) { gb.loadCustomBootRom(Config::get().customBootRomPath); }
+	Zirc::GameBoy gb(romPath, platform);
+	if(Zirc::Config::get().useCustomBootRom) { gb.loadCustomBootRom(Zirc::Config::get().customBootRomPath); }
 	gb.debugCartridge();
 
 	platform.addGameBoy(&gb);
 
-	while(Config::get().skipIntro && !gb.introEnded()) {
+	while(Zirc::Config::get().skipIntro && !gb.introEnded()) {
 		gb.tick();
 	}
 
@@ -108,7 +106,7 @@ int main(int argc, char *argv[]) {
 		platform.beforeFrame();
 
 		int cycles = 0;
-		while(cycles < GameBoy::CYCLES_PER_FRAME) {
+		while(cycles < Zirc::GameBoy::CYCLES_PER_FRAME) {
 			cycles += gb.tick();
 		}
 

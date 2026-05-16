@@ -24,7 +24,7 @@
 #include "menu_bar/menu_bar.hpp"
 #include "preferences_window.hpp"
 
-class PlatformGtk : public Platform, public Gtk::Window {
+class PlatformGtk : public Zirc::Platform, public Gtk::Window {
   public:
 	PlatformGtk(int argc, char *argv[]) : m_menuBar(*this) {
 		setupWindow();
@@ -35,7 +35,7 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	~PlatformGtk() {}
 
-	void addGameBoy(GameBoy *gameBoy, const std::string &romName);
+	void addGameBoy(Zirc::GameBoy *gameBoy, const std::string &romName);
 	void resetGameBoy();
 	void removeGameBoy();
 
@@ -85,18 +85,18 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		using namespace std::chrono;
 
 		auto frameMs = std::chrono::steady_clock::now() - m_frameStart;
-		if(frameMs < duration<float, std::milli>(GameBoy::MS_PER_FRAME)) {
-			std::this_thread::sleep_for(duration<float, std::milli>(GameBoy::MS_PER_FRAME) - frameMs);
+		if(frameMs < duration<float, std::milli>(Zirc::GameBoy::MS_PER_FRAME)) {
+			std::this_thread::sleep_for(duration<float, std::milli>(Zirc::GameBoy::MS_PER_FRAME) - frameMs);
 		}
 	}
 
-	void drawPixel(uint8_t x, uint8_t y, Color color) override { m_videoBackend->drawPixel(x, y, color); }
+	void drawPixel(uint8_t x, uint8_t y, Zirc::Color color) override { m_videoBackend->drawPixel(x, y, color); }
 
 	void showFrame() override { m_videoBackend->queueRender(); }
 
 	void swapBuffers() override {
 		m_videoBackend->swapBuffers();
-		activeColorPalette = m_nextActiveColorPalette;
+		Zirc::Config::get().activeColorPalette = m_nextActiveColorPalette;
 	}
 
 	float getAudioAmplitude() const override { return 1.0; }
@@ -128,13 +128,13 @@ class PlatformGtk : public Platform, public Gtk::Window {
 
 	void updateCustomBootRom() {
 		if(!m_gameBoy) { return; }
-		if(!Config::get().useCustomBootRom) {
+		if(!Zirc::Config::get().useCustomBootRom) {
 			m_gameBoy->disableCustomBootRom();
 			return;
 		}
 
 		try {
-			m_gameBoy->loadCustomBootRom(Config::get().customBootRomPath);
+			m_gameBoy->loadCustomBootRom(Zirc::Config::get().customBootRomPath);
 		} catch(const std::runtime_error &e) {
 			std::cout << "[WARNING] The custom boot ROM file was not loaded: \"" << e.what() << "\"" << std::endl;
 		}
@@ -147,12 +147,12 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	bool tick() {
 		if(!m_gameBoy) { return true; }
 
-		while(Config::get().skipIntro && !m_gameBoy->introEnded()) {
+		while(Zirc::Config::get().skipIntro && !m_gameBoy->introEnded()) {
 			m_gameBoy->tick();
 		}
 
 		int cycles = 0;
-		while(cycles < GameBoy::CYCLES_PER_FRAME) {
+		while(cycles < Zirc::GameBoy::CYCLES_PER_FRAME) {
 			cycles += m_gameBoy->tick();
 		}
 
@@ -163,19 +163,19 @@ class PlatformGtk : public Platform, public Gtk::Window {
 	void handleKey(guint keyVal, bool pressed) {
 		if(!m_gameBoy) { return; }
 
-		Joypad::Key key;
+		Zirc::Joypad::Key key;
 		switch(keyVal) {
 		case GDK_KEY_0: m_nextActiveColorPalette = 0; return;
 		case GDK_KEY_1: m_nextActiveColorPalette = 1; return;
 		case GDK_KEY_2: m_nextActiveColorPalette = 2; return;
-		case GDK_KEY_Up: key = Joypad::Key::Up; break;
-		case GDK_KEY_Down: key = Joypad::Key::Down; break;
-		case GDK_KEY_Left: key = Joypad::Key::Left; break;
-		case GDK_KEY_Right: key = Joypad::Key::Right; break;
-		case GDK_KEY_Return: key = Joypad::Key::Start; break;
-		case GDK_KEY_BackSpace: key = Joypad::Key::Select; break;
-		case GDK_KEY_a: key = Joypad::Key::A; break;
-		case GDK_KEY_b: key = Joypad::Key::B; break;
+		case GDK_KEY_Up: key = Zirc::Joypad::Key::Up; break;
+		case GDK_KEY_Down: key = Zirc::Joypad::Key::Down; break;
+		case GDK_KEY_Left: key = Zirc::Joypad::Key::Left; break;
+		case GDK_KEY_Right: key = Zirc::Joypad::Key::Right; break;
+		case GDK_KEY_Return: key = Zirc::Joypad::Key::Start; break;
+		case GDK_KEY_BackSpace: key = Zirc::Joypad::Key::Select; break;
+		case GDK_KEY_a: key = Zirc::Joypad::Key::A; break;
+		case GDK_KEY_b: key = Zirc::Joypad::Key::B; break;
 		default: return;
 		}
 
@@ -186,13 +186,13 @@ class PlatformGtk : public Platform, public Gtk::Window {
 		}
 	}
 
-	uint8_t m_nextActiveColorPalette = activeColorPalette;
+	uint8_t m_nextActiveColorPalette = Zirc::Config::get().activeColorPalette;
 
 	bool m_running = true;
 
 	Gtk::Label m_noRomLabel{"There is no ROM loaded"};
 
-	GameBoy *m_gameBoy = nullptr;
+	Zirc::GameBoy *m_gameBoy = nullptr;
 
 	GtkMenuBar::MenuBar m_menuBar;
 	Gtk::Box m_contentBox;

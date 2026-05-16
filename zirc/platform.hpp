@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 
+namespace Zirc {
 class GameBoy;
 
 class Platform {
@@ -29,3 +30,4 @@ class Platform {
   protected:
 	GameBoy *m_gameBoy = nullptr;
 };
+} // namespace Zirc

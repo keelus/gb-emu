@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <vector>
 
+namespace Zirc {
 #define CARTRIDGE_ROM_SIZE (1 << 15)
 #define CARTRIDGE_RAM_SIZE (1 << 13)
 
@@ -64,3 +65,4 @@ class NoMBC : public Cartridge {
 	uint8_t m_rom[CARTRIDGE_ROM_SIZE];
 	uint8_t m_ram[CARTRIDGE_RAM_SIZE];
 };
+} // namespace Zirc

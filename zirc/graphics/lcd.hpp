@@ -6,6 +6,7 @@
 
 #include "../platform.hpp"
 
+namespace Zirc {
 class Lcd {
   public:
 	Lcd(Platform &platform) : m_platform(platform) {}
@@ -28,3 +29,4 @@ class Lcd {
 	uint8_t m_screenX = 0;
 	Platform &m_platform;
 };
+} // namespace Zirc

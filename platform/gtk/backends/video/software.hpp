@@ -11,10 +11,10 @@ class VideoBackendSoftware : public VideoBackend {
 	void initialize() override {
 		m_drawingArea.set_vexpand();
 		m_drawingArea.set_hexpand();
-		m_drawingArea.set_size_request(Lcd::WIDTH, Lcd::HEIGHT);
+		m_drawingArea.set_size_request(Zirc::Lcd::WIDTH, Zirc::Lcd::HEIGHT);
 
-		m_surface = Cairo::ImageSurface::create(Cairo::Surface::Format::RGB24, Lcd::WIDTH, Lcd::HEIGHT);
-		std::memset(m_backBuffer, 0, m_surface->get_stride() * Lcd::HEIGHT);
+		m_surface = Cairo::ImageSurface::create(Cairo::Surface::Format::RGB24, Zirc::Lcd::WIDTH, Zirc::Lcd::HEIGHT);
+		std::memset(m_backBuffer, 0, m_surface->get_stride() * Zirc::Lcd::HEIGHT);
 
 		m_drawingArea.set_draw_func(sigc::mem_fun(*this, &VideoBackendSoftware::render));
 	}
@@ -22,14 +22,15 @@ class VideoBackendSoftware : public VideoBackend {
 	void queueRender() override { m_drawingArea.queue_draw(); }
 
 	void swapBuffers() override {
-		std::memcpy(m_surface->get_data(), m_backBuffer, sizeof(unsigned char) * m_surface->get_stride() * Lcd::HEIGHT);
-		std::memset(m_backBuffer, 0, sizeof(unsigned char) * m_surface->get_stride() * Lcd::HEIGHT);
+		std::memcpy(m_surface->get_data(), m_backBuffer,
+					sizeof(unsigned char) * m_surface->get_stride() * Zirc::Lcd::HEIGHT);
+		std::memset(m_backBuffer, 0, sizeof(unsigned char) * m_surface->get_stride() * Zirc::Lcd::HEIGHT);
 	}
 
 	void setVisible(bool visible) override { m_drawingArea.set_visible(visible); }
 	Gtk::DrawingArea *getGtkWidget() override { return &m_drawingArea; }
 
-	void drawPixel(uint8_t x, uint8_t y, Color color) override {
+	void drawPixel(uint8_t x, uint8_t y, Zirc::Color color) override {
 		char *px = m_backBuffer + y * m_surface->get_stride() + x * 4;
 		px[0] = color.blue();
 		px[1] = color.green();
@@ -53,7 +54,7 @@ class VideoBackendSoftware : public VideoBackend {
 		double offsetY = (h - size) / 2.0;
 
 		cr->translate(offsetX, offsetY);
-		cr->scale(size / Lcd::WIDTH, size / Lcd::HEIGHT);
+		cr->scale(size / Zirc::Lcd::WIDTH, size / Zirc::Lcd::HEIGHT);
 
 		auto pattern = Cairo::SurfacePattern::create(m_surface);
 		pattern->set_filter(Cairo::SurfacePattern::Filter::NEAREST);
@@ -63,5 +64,5 @@ class VideoBackendSoftware : public VideoBackend {
 
 	Gtk::DrawingArea m_drawingArea;
 	Cairo::RefPtr<Cairo::ImageSurface> m_surface;
-	char m_backBuffer[Lcd::WIDTH * Lcd::HEIGHT * 4];
+	char m_backBuffer[Zirc::Lcd::WIDTH * Zirc::Lcd::HEIGHT * 4];
 };

@@ -35,13 +35,13 @@ void File::appendRomSection() {
 		dialog->set_title("Select a ROM file");
 
 		dialog->open(m_platform, [this, dialog](Glib::RefPtr<Gio::AsyncResult> &result) {
-			GameBoy *gameBoy = nullptr;
+			Zirc::GameBoy *gameBoy = nullptr;
 			std::filesystem::path romPath;
 			try {
 				auto file = dialog->open_finish(result);
 				romPath = std::filesystem::path(file->get_path());
 
-				gameBoy = new GameBoy(romPath, m_platform);
+				gameBoy = new Zirc::GameBoy(romPath, m_platform);
 			} catch(const Gtk::DialogError &e) {
 
 			} catch(const std::runtime_error &e) {

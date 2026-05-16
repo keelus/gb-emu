@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
+namespace Zirc {
 #define CARTRIDGE_NINTENDO_LOGO_OFFSET 0x104
 #define CARTRIDGE_NINTENDO_LOGO_LEN 48
 
@@ -274,3 +275,4 @@ class Cartridge {
 	std::array<uint8_t, 256> m_customBootRom;
 	bool m_bootRomMapped;
 };
+} // namespace Zirc

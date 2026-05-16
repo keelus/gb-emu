@@ -1,10 +1,7 @@
 #include <csignal>
-#include <cstdint>
-
-#include "headless.hpp"
 #include <zirc/config.hpp>
 
-uint8_t activeColorPalette = 0;
+#include "headless.hpp"
 
 void printUsage(const char *argv0, const bool isHelpMessage) {
 	std::cout << "Usage: " << argv0 << " [options] <ROM path>" << std::endl;
@@ -37,15 +34,15 @@ int main(int argc, char *argv[]) {
 
 		if(!strcmp(arg, "-b") || !strcmp(arg, "--boot-rom")) {
 			assert(i + 1 < argc && "There was no boot ROM provided after the argument.");
-			Config::get().useCustomBootRom = true;
-			Config::get().customBootRomPath = argv[++i];
+			Zirc::Config::get().useCustomBootRom = true;
+			Zirc::Config::get().customBootRomPath = argv[++i];
 		} else if(!strcmp(arg, "-d") || !strcmp(arg, "--debug")) {
-			Config::get().debugOutput = true;
+			Zirc::Config::get().debugOutput = true;
 		} else if(!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
 			printUsage(argv[0], true);
 			return EXIT_SUCCESS;
 		} else if(!strcmp(arg, "-i") || !strcmp(arg, "--skip-intro")) {
-			Config::get().skipIntro = true;
+			Zirc::Config::get().skipIntro = true;
 		} else {
 			romPath = arg;
 		}
@@ -61,13 +58,13 @@ int main(int argc, char *argv[]) {
 
 	PlatformHeadless platform;
 
-	GameBoy gb(romPath, platform);
-	if(Config::get().useCustomBootRom) { gb.loadCustomBootRom(Config::get().customBootRomPath); }
+	Zirc::GameBoy gb(romPath, platform);
+	if(Zirc::Config::get().useCustomBootRom) { gb.loadCustomBootRom(Zirc::Config::get().customBootRomPath); }
 	gb.debugCartridge();
 
 	platform.addGameBoy(&gb);
 
-	while(Config::get().skipIntro && !gb.introEnded()) {
+	while(Zirc::Config::get().skipIntro && !gb.introEnded()) {
 		gb.tick();
 	}
 
@@ -75,7 +72,7 @@ int main(int argc, char *argv[]) {
 		platform.beforeFrame();
 
 		int cycles = 0;
-		while(cycles < GameBoy::CYCLES_PER_FRAME) {
+		while(cycles < Zirc::GameBoy::CYCLES_PER_FRAME) {
 			cycles += gb.tick();
 		}
 

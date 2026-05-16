@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstddef>
 
+namespace Zirc {
 template <std::size_t Size> class AudioRingBuffer {
   public:
 	AudioRingBuffer() { reset(); }
@@ -39,3 +40,4 @@ template <std::size_t Size> class AudioRingBuffer {
 	std::atomic<size_t> m_head{0};
 	std::atomic<size_t> m_tail{0};
 };
+} // namespace Zirc

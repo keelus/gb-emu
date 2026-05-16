@@ -11,6 +11,7 @@
 #include "channel3.hpp"
 #include "channel4.hpp"
 
+namespace Zirc {
 #define APU_RATE (1 << 20)
 
 class Apu {
@@ -141,3 +142,4 @@ class Apu {
 
 	Platform &m_platform;
 };
+} // namespace Zirc

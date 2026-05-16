@@ -14,6 +14,7 @@
 #include "memory.hpp"
 #include "timer.hpp"
 
+namespace Zirc {
 class GameBoy {
   public:
 	GameBoy(const std::string &cartridgePath, Platform &platform)
@@ -89,3 +90,4 @@ class GameBoy {
 
 	uint16_t m_prevDiv = 0;
 };
+} // namespace Zirc

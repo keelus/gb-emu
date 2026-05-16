@@ -1,5 +1,6 @@
 #include <cstdint>
 
+namespace Zirc {
 class ALU {
   public:
 	struct Result8 {
@@ -188,3 +189,4 @@ class ALU {
 		return res;
 	}
 };
+} // namespace Zirc

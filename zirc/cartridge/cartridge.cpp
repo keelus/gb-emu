@@ -8,6 +8,7 @@
 #include "no_mbc.hpp"
 #include "mbc1.hpp"
 
+namespace Zirc {
 std::unique_ptr<Cartridge> Cartridge::createCartridge(const std::string &path) {
 	std::ifstream file(path, std::ios::binary | std::ios::ate);
 	if(!file) { throw std::runtime_error("Could not open the cartridge file.\n"); }
@@ -37,3 +38,4 @@ std::unique_ptr<Cartridge> Cartridge::createCartridge(const std::string &path) {
 		throw std::runtime_error(stream.str());
 	}
 }
+} // namespace Zirc

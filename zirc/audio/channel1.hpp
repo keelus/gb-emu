@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+namespace Zirc {
 class Channel1 {
   public:
 	Channel1() { reset(); }
@@ -198,3 +199,4 @@ class Channel1 {
 	uint8_t m_volume;
 	bool m_enabledFlag;
 };
+} // namespace Zirc

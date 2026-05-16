@@ -7,6 +7,7 @@
 #include "../common.hpp"
 #include "cartridge.hpp"
 
+namespace Zirc {
 // clang-format off
 const std::unordered_map<RomType, uint16_t> ROM_BANK_AMOUNT = {
     {RomType::Banks2,     2},
@@ -183,3 +184,4 @@ class MBC1 : public Cartridge {
 	uint8_t m_ramBankNumber = 0;
 	bool m_ramEnabled = false;
 };
+} // namespace Zirc

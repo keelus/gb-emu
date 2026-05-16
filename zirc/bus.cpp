@@ -12,6 +12,7 @@
 #include "cpu/cpu.hpp"
 #include "graphics/ppu.hpp"
 
+namespace Zirc {
 #define IS_CARTRIDGE(address) (IN_RANGE(address, 0x0000, 0x7FFF) || IN_RANGE(address, 0xA000, 0xBFFF))
 #define IS_PPU(address) (IN_RANGE(address, 0x8000, 0x9FFF) || IN_RANGE(address, 0xFE00, 0xFE9F))
 #define IS_MEMORY(address) (IN_RANGE(address, 0xC000, 0xFDFF) || IN_RANGE(address, 0xFF80, 0xFFFE))
@@ -502,3 +503,4 @@ void Bus::doDmaTransfer(void) {
 		write8(destination, value);
 	}
 }
+} // namespace Zirc

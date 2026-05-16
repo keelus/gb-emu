@@ -8,10 +8,9 @@
 #include "lcd.hpp"
 #include "sprite_fifo.hpp"
 
+namespace Zirc {
 #define PPU_VRAM_SIZE 8192
 #define PPU_OAM_SIZE 160
-
-extern uint8_t activeColorPalette;
 
 class Ppu {
   public:
@@ -149,3 +148,4 @@ class Ppu {
 	uint8_t m_fetchingSpriteIndex;
 	bool checkSpritesToDraw();
 };
+} // namespace Zirc

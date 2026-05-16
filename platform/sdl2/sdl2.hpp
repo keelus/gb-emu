@@ -5,19 +5,17 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-
 #include <zirc/audio/ringbuffer.hpp>
 #include <zirc/config.hpp>
 #include <zirc/gameboy.hpp>
+#include <zirc/graphics/lcd.hpp>
 #include <zirc/joypad.hpp>
 #include <zirc/platform.hpp>
 
 #define SCALE 5
-#define FRAME_BUFFER_SIZE (Lcd::WIDTH * Lcd::HEIGHT)
+#define FRAME_BUFFER_SIZE (Zirc::Lcd::WIDTH * Zirc::Lcd::HEIGHT)
 
-extern uint8_t activeColorPalette;
-
-class PlatformSdl2 : public Platform {
+class PlatformSdl2 : public Zirc::Platform {
   public:
 	PlatformSdl2(bool limitFps);
 	~PlatformSdl2() {
@@ -29,10 +27,10 @@ class PlatformSdl2 : public Platform {
 
 	bool running() const override { return m_running; }
 
-	void drawPixel(uint8_t x, uint8_t y, Color color) override {
-		getBackBuffer()[y * Lcd::WIDTH + x] = (static_cast<uint32_t>(color.red()) << 16) |
-											  (static_cast<uint32_t>(color.green()) << 8) |
-											  (static_cast<uint32_t>(color.blue()));
+	void drawPixel(uint8_t x, uint8_t y, Zirc::Color color) override {
+		getBackBuffer()[y * Zirc::Lcd::WIDTH + x] = (static_cast<uint32_t>(color.red()) << 16) |
+													(static_cast<uint32_t>(color.green()) << 8) |
+													(static_cast<uint32_t>(color.blue()));
 	}
 
 	void beforeFrame() override {
@@ -52,16 +50,16 @@ class PlatformSdl2 : public Platform {
 				default: break;
 				}
 
-				Joypad::Key key;
+				Zirc::Joypad::Key key;
 				switch(event.key.keysym.sym) {
-				case SDLK_UP: key = Joypad::Key::Up; break;
-				case SDLK_DOWN: key = Joypad::Key::Down; break;
-				case SDLK_LEFT: key = Joypad::Key::Left; break;
-				case SDLK_RIGHT: key = Joypad::Key::Right; break;
-				case SDLK_RETURN: key = Joypad::Key::Start; break;
-				case SDLK_BACKSPACE: key = Joypad::Key::Select; break;
-				case SDLK_a: key = Joypad::Key::A; break;
-				case SDLK_b: key = Joypad::Key::B; break;
+				case SDLK_UP: key = Zirc::Joypad::Key::Up; break;
+				case SDLK_DOWN: key = Zirc::Joypad::Key::Down; break;
+				case SDLK_LEFT: key = Zirc::Joypad::Key::Left; break;
+				case SDLK_RIGHT: key = Zirc::Joypad::Key::Right; break;
+				case SDLK_RETURN: key = Zirc::Joypad::Key::Start; break;
+				case SDLK_BACKSPACE: key = Zirc::Joypad::Key::Select; break;
+				case SDLK_a: key = Zirc::Joypad::Key::A; break;
+				case SDLK_b: key = Zirc::Joypad::Key::B; break;
 				default: continue;
 				}
 
@@ -79,18 +77,18 @@ class PlatformSdl2 : public Platform {
 	void afterFrame() override {
 		if(m_limitFps) {
 			Uint32 frameMs = SDL_GetTicks() - m_frameStart;
-			if(frameMs < GameBoy::MS_PER_FRAME) { SDL_Delay(GameBoy::MS_PER_FRAME - frameMs); }
+			if(frameMs < Zirc::GameBoy::MS_PER_FRAME) { SDL_Delay(Zirc::GameBoy::MS_PER_FRAME - frameMs); }
 		}
 	}
 
 	void swapBuffers() override {
 		m_backBufferIndex = !m_backBufferIndex;
 		std::memset(getBackBuffer(), 0, sizeof(uint32_t) * FRAME_BUFFER_SIZE);
-		activeColorPalette = m_nextActiveColorPalette;
+		Zirc::Config::get().activeColorPalette = m_nextActiveColorPalette;
 	}
 
 	void showFrame() override {
-		SDL_UpdateTexture(m_texture, NULL, getFrontBuffer(), Lcd::WIDTH * sizeof(uint32_t));
+		SDL_UpdateTexture(m_texture, NULL, getFrontBuffer(), Zirc::Lcd::WIDTH * sizeof(uint32_t));
 		SDL_RenderCopy(m_renderer, m_texture, NULL, NULL);
 		SDL_RenderPresent(m_renderer);
 	}
@@ -121,7 +119,7 @@ class PlatformSdl2 : public Platform {
 	uint32_t *getFrontBuffer() { return m_buffers[m_backBufferIndex ? 0 : 1]; }
 	uint32_t *getBackBuffer() { return m_buffers[m_backBufferIndex ? 1 : 0]; }
 
-	uint8_t m_nextActiveColorPalette = activeColorPalette;
+	uint8_t m_nextActiveColorPalette = Zirc::Config::get().activeColorPalette;
 
 	bool m_running = true;
 
@@ -136,7 +134,7 @@ class PlatformSdl2 : public Platform {
 	SDL_Texture *m_texture = nullptr;
 	SDL_AudioSpec m_spec;
 
-	AudioRingBuffer<4096> m_audioSampleBuffer;
+	Zirc::AudioRingBuffer<4096> m_audioSampleBuffer;
 
 	static constexpr float AUDIO_SAMPLE_RATE = 44100.0;
 	static constexpr size_t AUDIO_SAMPLE_AMOUNT = 1024;

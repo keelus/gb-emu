@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 
+namespace Zirc {
 class Channel3 {
   public:
 	Channel3() { reset(); }
@@ -149,3 +150,4 @@ class Channel3 {
 
 	uint16_t m_lengthTimer;
 };
+} // namespace Zirc

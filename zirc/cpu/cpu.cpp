@@ -1,5 +1,6 @@
 #include "cpu.hpp"
 
+namespace Zirc {
 void Cpu::handleInterrupts(void) {
 	if(m_IME == 0) {
 		if((m_interruptEnable & m_interruptFlag) != 0) {
@@ -51,3 +52,4 @@ void Cpu::handleInterrupts(void) {
 		return;
 	}
 }
+} // namespace Zirc

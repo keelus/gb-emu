@@ -6,6 +6,7 @@
 #include "common.hpp"
 #include "memory.hpp"
 
+namespace Zirc {
 uint8_t Memory::read8(const uint16_t address) const {
 	if(IN_RANGE(address, 0xC000, 0xDFFF)) {
 		return m_wram[address - 0xC000];
@@ -44,3 +45,4 @@ void Memory::write16(const uint16_t address, const uint16_t value) {
 	write8(address, static_cast<uint8_t>(value));
 	write8(address + 1, static_cast<uint8_t>(value >> 8));
 }
+} // namespace Zirc

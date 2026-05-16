@@ -8,6 +8,7 @@
 #include "../config.hpp"
 #include "cpu.hpp"
 
+namespace Zirc {
 // Useful to visually see the OPCODE-MNEMONIC/CYCLE
 #define OP(op, data) data
 
@@ -1320,3 +1321,4 @@ uint8_t Cpu::executeCbInstruction(void) {
 
 	return CPU_CB_INSTRUCTION_CYCLES.at(opcode);
 }
+} // namespace Zirc

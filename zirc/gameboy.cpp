@@ -4,6 +4,7 @@
 #include "cpu/cpu.hpp"
 #include "gameboy.hpp"
 
+namespace Zirc {
 void GameBoy::start(void) {
 	if(m_cartridge->type() != 0) { throw std::runtime_error("\"ROM only\" cartridges are supported.\n"); }
 
@@ -29,3 +30,4 @@ int GameBoy::tick() {
 
 	return cycles;
 }
+} // namespace Zirc

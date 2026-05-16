@@ -8,6 +8,7 @@
 #include "memory.hpp"
 #include "timer.hpp"
 
+namespace Zirc {
 #define IO_MEM_SIZE 128
 
 class Cpu;
@@ -65,3 +66,4 @@ class Bus {
 
 	uint8_t m_oamSourceAndStart;
 };
+} // namespace Zirc
