@@ -84,7 +84,6 @@ class Channel3 {
 	float getSample(float amplitude) {
 		if(!isOn()) { return 0; }
 
-
 		float volume;
 		switch((m_nr32 >> 5) & 0x03) {
 		case 0: volume = 0.0f; break;

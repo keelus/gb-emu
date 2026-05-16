@@ -88,7 +88,10 @@ class Channel4 {
 		}
 	}
 
-	float getSample(const float amplitude) { return (m_lfsr.getBit() ? -1.0f : 1.0f) * amplitude * m_volume / 15.0f; }
+	float getSample(const float amplitude) {
+		if(!m_isOn) { return 0.0f; }
+		return (m_lfsr.getBit() ? -1.0f : 1.0f) * amplitude * m_volume / 15.0f;
+	}
 
 	bool isDacOn() const { return (m_nr42 & 0xF8) != 0; }
 

@@ -112,6 +112,8 @@ class Channel1 {
 	}
 
 	float getSample(const float amplitude) {
+		if(!isOn()) { return 0; }
+
 		uint8_t duty = (m_nr11 >> 6) & 0x3;
 		double dutyPercent = 0;
 		switch(duty) {
