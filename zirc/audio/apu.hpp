@@ -93,7 +93,7 @@ class Apu {
 			pushSample(sample);
 		}
 
-		bool allChannelsOff = !(m_channel1.isOn() | m_channel2.isOn());
+		bool allChannelsOff = !(m_channel1.isOn() || m_channel2.isOn() || m_channel3.isOn() || m_channel4.isOn());
 		if(allChannelsOff != m_prevAllChannelsOff) {
 			if(allChannelsOff) {
 				m_platform.muteAudio();

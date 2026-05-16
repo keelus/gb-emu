@@ -13,8 +13,14 @@ class Channel3 {
 
 	void write8(const uint16_t address, const uint8_t value) {
 		switch(address) {
-		case 0xFF1A: m_nr30 = value & 0x80; break;
-		case 0xFF1B: m_nr31 = value; break;
+		case 0xFF1A:
+			m_nr30 = value & 0x80;
+			if(!isDacOn()) turnOff();
+			break;
+		case 0xFF1B:
+			m_nr31 = value;
+			m_lengthTimer = 256 - value;
+			break;
 		case 0xFF1C: m_nr32 = value & 0x60; break;
 		case 0xFF1D: m_periodDivider = (m_periodDivider & 0x700) | static_cast<uint16_t>(value); break;
 		case 0xFF1E:
@@ -75,6 +81,9 @@ class Channel3 {
 	}
 
 	float getSample(float amplitude) {
+		if(!isOn()) { return 0; }
+
+
 		float volume;
 		switch((m_nr32 >> 5) & 0x03) {
 		case 0: volume = 0.0f; break;
