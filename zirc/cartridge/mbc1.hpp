@@ -84,7 +84,7 @@ class MBC1 : public Cartridge {
 
 	uint8_t read8(const uint16_t address) const override {
 		if(IN_RANGE(address, 0x0000, 0x3FFF)) {
-			if(isBootRomMapped() && address <= 0x100) { return read8BootRom(address); }
+			if(isBootRomMapped() && address < 0x100) { return read8BootRom(address); }
 			return m_romBanks.at(0).at(address);
 		}
 
