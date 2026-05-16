@@ -21,5 +21,6 @@ target_include_directories(zirc-gtk PUBLIC .)
 target_compile_options(zirc-gtk PRIVATE
     ${FONTCONFIG_CFLAGS}
     ${PORTAUDIO_CFLAGS}
+    ${GLEW_CFLAGS}
 )
 set_target_properties(zirc-gtk PROPERTIES OUTPUT_NAME "zirc")
